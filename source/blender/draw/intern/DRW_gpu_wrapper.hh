@@ -912,7 +912,7 @@ class Texture : NonCopyable {
                      bool cubemap)
   {
     if (h == 0) {
-      return GPU_texture_create_1d(name_, w, mip_len, format, usage, data);
+      return GPU_texture_create_2d(name_, w,1, mip_len, format, usage, data);
     }
     else if (cubemap) {
       if (layered) {
@@ -924,7 +924,7 @@ class Texture : NonCopyable {
     }
     else if (d == 0) {
       if (layered) {
-        return GPU_texture_create_1d_array(name_, w, h, mip_len, format, usage, data);
+        return GPU_texture_create_2d_array(name_, w, 1,d, mip_len, format, usage, data);
       }
       else {
         return GPU_texture_create_2d(name_, w, h, mip_len, format, usage, data);

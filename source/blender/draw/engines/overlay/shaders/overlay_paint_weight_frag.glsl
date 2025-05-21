@@ -76,7 +76,7 @@ void main()
   /* Weights are available */
   else {
     float weight = weight_interp.x;
-    vec4 weight_color = texture(colorramp, weight, 0);
+    vec4 weight_color = texture(colorramp, vec2(weight,0.0), 0.0);
     weight_color = apply_color_fac(weight_color);
 
     /* Contour display */
@@ -86,7 +86,7 @@ void main()
 
       vec4 grid = contour_grid(weight, weight_gradient);
 
-      weight_color = grid + weight_color * (1 - grid.a);
+      weight_color = grid + weight_color * (1.0 - grid.a);
     }
 
     /* Zero weight alert color. Nonlinear blend to reduce impact. */

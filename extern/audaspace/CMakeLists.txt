@@ -264,7 +264,7 @@ if(WIN32)
 		list(APPEND CMAKE_PREFIX_PATH ${LIBRARY_DIRS})
 	endif()
 else()
-	set(LIBRARIES ${CMAKE_DL_LIBS} -lpthread)
+#	set(LIBRARIES ${CMAKE_DL_LIBS} -lpthread)
 endif()
 
 set(STATIC_PLUGINS "")

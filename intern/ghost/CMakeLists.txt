@@ -336,13 +336,13 @@ elseif(WITH_GHOST_X11 OR WITH_GHOST_WAYLAND)
     endif()
 
     list(APPEND SRC
-      intern/GHOST_SystemWayland.cc
-      intern/GHOST_WindowWayland.cc
+      intern/GHOST_SystemAndroid.cc
+      intern/GHOST_WindowAndroid.cc
 
-      intern/GHOST_SystemWayland.hh
+      intern/GHOST_SystemAndroid.hh
       intern/GHOST_WaylandCursorSettings.hh
       intern/GHOST_WaylandUtils.hh
-      intern/GHOST_WindowWayland.hh
+      intern/GHOST_WindowAndroid.hh
     )
 
     set(INC_DST ${CMAKE_CURRENT_BINARY_DIR}/libwayland)
@@ -382,53 +382,53 @@ elseif(WITH_GHOST_X11 OR WITH_GHOST_WAYLAND)
       ${INC_DST}
     )
 
-    # Used when: LIBDECOR is not needed.
-    # `xdg-shell`.
-    generate_protocol_bindings(
-      "${WAYLAND_PROTOCOLS_DIR}/stable/xdg-shell/xdg-shell.xml"
-    )
-    # `xdg-decoration`.
-    generate_protocol_bindings(
-      "${WAYLAND_PROTOCOLS_DIR}/unstable/xdg-decoration/xdg-decoration-unstable-v1.xml"
-    )
-    # End LIBDECOR alternative.
-
-    # `xdg-output`.
-    generate_protocol_bindings(
-      "${WAYLAND_PROTOCOLS_DIR}/unstable/xdg-output/xdg-output-unstable-v1.xml"
-    )
-    # `xdg-activation`.
-    generate_protocol_bindings(
-      "${WAYLAND_PROTOCOLS_DIR}/staging/xdg-activation/xdg-activation-v1.xml"
-    )
-    # Fractional scale.
-    generate_protocol_bindings(
-      "${WAYLAND_PROTOCOLS_DIR}/staging/fractional-scale/fractional-scale-v1.xml"
-    )
-    # Viewport (only required when fractional scale is in use).
-    generate_protocol_bindings(
-      "${WAYLAND_PROTOCOLS_DIR}/stable/viewporter/viewporter.xml"
-    )
-    # Pointer-constraints.
-    generate_protocol_bindings(
-      "${WAYLAND_PROTOCOLS_DIR}/unstable/pointer-constraints/pointer-constraints-unstable-v1.xml"
-    )
-    # Relative-pointer.
-    generate_protocol_bindings(
-      "${WAYLAND_PROTOCOLS_DIR}/unstable/relative-pointer/relative-pointer-unstable-v1.xml"
-    )
-    # Pointer-gestures (multi-touch).
-    generate_protocol_bindings(
-      "${WAYLAND_PROTOCOLS_DIR}/unstable/pointer-gestures/pointer-gestures-unstable-v1.xml"
-    )
-    # Tablet.
-    generate_protocol_bindings(
-      "${WAYLAND_PROTOCOLS_DIR}/unstable/tablet/tablet-unstable-v2.xml"
-    )
-    # Primary-selection.
-    generate_protocol_bindings(
-      "${WAYLAND_PROTOCOLS_DIR}/unstable/primary-selection/primary-selection-unstable-v1.xml"
-    )
+#    # Used when: LIBDECOR is not needed.
+#    # `xdg-shell`.
+#    generate_protocol_bindings(
+#      "${WAYLAND_PROTOCOLS_DIR}/stable/xdg-shell/xdg-shell.xml"
+#    )
+#    # `xdg-decoration`.
+#    generate_protocol_bindings(
+#      "${WAYLAND_PROTOCOLS_DIR}/unstable/xdg-decoration/xdg-decoration-unstable-v1.xml"
+#    )
+#    # End LIBDECOR alternative.
+#
+#    # `xdg-output`.
+#    generate_protocol_bindings(
+#      "${WAYLAND_PROTOCOLS_DIR}/unstable/xdg-output/xdg-output-unstable-v1.xml"
+#    )
+#    # `xdg-activation`.
+#    generate_protocol_bindings(
+#      "${WAYLAND_PROTOCOLS_DIR}/staging/xdg-activation/xdg-activation-v1.xml"
+#    )
+#    # Fractional scale.
+#    generate_protocol_bindings(
+#      "${WAYLAND_PROTOCOLS_DIR}/staging/fractional-scale/fractional-scale-v1.xml"
+#    )
+#    # Viewport (only required when fractional scale is in use).
+#    generate_protocol_bindings(
+#      "${WAYLAND_PROTOCOLS_DIR}/stable/viewporter/viewporter.xml"
+#    )
+#    # Pointer-constraints.
+#    generate_protocol_bindings(
+#      "${WAYLAND_PROTOCOLS_DIR}/unstable/pointer-constraints/pointer-constraints-unstable-v1.xml"
+#    )
+#    # Relative-pointer.
+#    generate_protocol_bindings(
+#      "${WAYLAND_PROTOCOLS_DIR}/unstable/relative-pointer/relative-pointer-unstable-v1.xml"
+#    )
+#    # Pointer-gestures (multi-touch).
+#    generate_protocol_bindings(
+#      "${WAYLAND_PROTOCOLS_DIR}/unstable/pointer-gestures/pointer-gestures-unstable-v1.xml"
+#    )
+#    # Tablet.
+#    generate_protocol_bindings(
+#      "${WAYLAND_PROTOCOLS_DIR}/unstable/tablet/tablet-unstable-v2.xml"
+#    )
+#    # Primary-selection.
+#    generate_protocol_bindings(
+#      "${WAYLAND_PROTOCOLS_DIR}/unstable/primary-selection/primary-selection-unstable-v1.xml"
+#    )
 
     unset(INC_DST)
 

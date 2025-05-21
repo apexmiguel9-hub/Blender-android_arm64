@@ -9,7 +9,7 @@
 #define tile_to_fullres_factor float(DOF_TILE_DIVISOR)
 
 /* Error introduced by the random offset of the gathering kernel's center. */
-#define bluring_radius_error (1.0 + 1.0 / (gather_ring_count + 0.5))
+#define bluring_radius_error (1.0 + 1.0 / (float(gather_ring_count) + 0.5))
 
 void main()
 {
@@ -72,7 +72,7 @@ void main()
   for (int ring = 0; ring < ringCount && ring < DOF_DILATE_RING_COUNT; ring++) {
     float ring_distance = float(ring + 1);
 
-    ring_distance = (ring_distance * ringWidthMultiplier - 1) * tile_to_fullres_factor;
+    ring_distance = (ring_distance * float(ringWidthMultiplier) - 1.0) * tile_to_fullres_factor;
 
     /* NOTE(fclem): Unsure if both sides of the inequalities have the same unit. */
 #ifdef DILATE_MODE_MIN_MAX

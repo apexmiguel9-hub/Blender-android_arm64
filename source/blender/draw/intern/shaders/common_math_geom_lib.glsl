@@ -69,7 +69,7 @@ float line_aligned_plane_intersect_dist(vec3 line_origin, vec3 line_direction, v
 vec3 line_aligned_plane_intersect(vec3 line_origin, vec3 line_direction, vec3 plane_origin)
 {
   float dist = line_aligned_plane_intersect_dist(line_origin, line_direction, plane_origin);
-  if (dist < 0) {
+  if (dist < 0.0) {
     /* if intersection is behind we fake the intersection to be
      * really far and (hopefully) not inside the radius of interest */
     dist = 1e16;
@@ -86,11 +86,11 @@ float line_unit_sphere_intersect_dist(vec3 line_origin, vec3 line_direction)
 {
   float a = dot(line_direction, line_direction);
   float b = dot(line_direction, line_origin);
-  float c = dot(line_origin, line_origin) - 1;
+  float c = dot(line_origin, line_origin) - 1.0;
 
   float dist = 1e15;
   float determinant = b * b - a * c;
-  if (determinant >= 0) {
+  if (determinant >= 0.0) {
     dist = (sqrt(determinant) - b) / a;
   }
 
@@ -185,7 +185,7 @@ vec3 normal_decode(vec2 enc, vec3 view)
   float g = sqrt(1.0 - f / 4.0);
   vec3 n;
   n.xy = fenc * g;
-  n.z = 1 - f / 2;
+  n.z = 1.0 - f * 0.5;
   return n;
 }
 

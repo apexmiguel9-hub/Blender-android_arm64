@@ -346,7 +346,7 @@ wmWindow *wm_window_copy_test(bContext *C,
 
   wmWindow *win_dst = wm_window_copy(bmain, wm, win_src, duplicate_layout, child);
 
-  WM_check(C);
+  WM_check(C,false);
 
   if (win_dst->ghostwin) {
     WM_event_add_notifier_ex(wm, CTX_wm_window(C), NC_WINDOW | NA_ADDED, NULL);
@@ -657,7 +657,7 @@ static void wm_window_ensure_eventstate(wmWindow *win)
 static void wm_window_ghostwindow_add(wmWindowManager *wm,
                                       const char *title,
                                       wmWindow *win,
-                                      bool is_dialog)
+                                      bool is_dialog,int space_type)
 {
   /* A new window is created when page-flip mode is required for a window. */
   GHOST_GLSettings glSettings = {0};
@@ -689,7 +689,8 @@ static void wm_window_ghostwindow_add(wmWindowManager *wm,
                                                    win->sizey,
                                                    (GHOST_TWindowState)win->windowstate,
                                                    is_dialog,
-                                                   glSettings);
+                                                   glSettings,
+                                                   space_type+2);
 
   if (ghostwin) {
     win->gpuctx = GPU_context_create(ghostwin, NULL);
@@ -742,7 +743,7 @@ static void wm_window_ghostwindow_add(wmWindowManager *wm,
   }
 }
 
-static void wm_window_ghostwindow_ensure(wmWindowManager *wm, wmWindow *win, bool is_dialog)
+static void wm_window_ghostwindow_ensure(wmWindowManager *wm, wmWindow *win, bool is_dialog,int space_type)
 {
   if (win->ghostwin == NULL) {
     if ((win->sizex == 0) || (wm_init_state.override_flag & WIN_OVERRIDE_GEOM)) {
@@ -770,7 +771,7 @@ static void wm_window_ghostwindow_ensure(wmWindowManager *wm, wmWindow *win, boo
       win->cursor = WM_CURSOR_DEFAULT;
     }
 
-    wm_window_ghostwindow_add(wm, "Blender", win, is_dialog);
+    wm_window_ghostwindow_add(wm, "Blender", win, is_dialog,space_type);
   }
 
   if (win->ghostwin != NULL) {
@@ -823,7 +824,7 @@ void wm_window_ghostwindows_ensure(wmWindowManager *wm)
   }
 
   LISTBASE_FOREACH (wmWindow *, win, &wm->windows) {
-    wm_window_ghostwindow_ensure(wm, win, false);
+    wm_window_ghostwindow_ensure(wm, win, false,0);
   }
 }
 
@@ -913,16 +914,16 @@ wmWindow *WM_window_open(bContext *C,
   /* Reuse temporary windows when they share the same single area. */
   wmWindow *win = NULL;
   if (temp) {
-    LISTBASE_FOREACH (wmWindow *, win_iter, &wm->windows) {
-      const bScreen *screen = WM_window_get_active_screen(win_iter);
-      if (screen && screen->temp && BLI_listbase_is_single(&screen->areabase)) {
-        ScrArea *area = screen->areabase.first;
-        if (space_type == (area->butspacetype ? area->butspacetype : area->spacetype)) {
-          win = win_iter;
-          break;
-        }
-      }
-    }
+//    LISTBASE_FOREACH (wmWindow *, win_iter, &wm->windows) {
+//      const bScreen *screen = WM_window_get_active_screen(win_iter);
+//      if (screen && screen->temp && BLI_listbase_is_single(&screen->areabase)) {
+//        ScrArea *area = screen->areabase.first;
+//        if (space_type == (area->butspacetype ? area->butspacetype : area->spacetype)) {
+//          win = win_iter;
+//          break;
+//        }
+//      }
+//    }
   }
 
   /* add new window? */
@@ -964,9 +965,9 @@ wmWindow *WM_window_open(bContext *C,
   CTX_wm_window_set(C, win);
   const bool new_window = (win->ghostwin == NULL);
   if (new_window) {
-    wm_window_ghostwindow_ensure(wm, win, dialog);
+    wm_window_ghostwindow_ensure(wm, win, dialog,space_type);
   }
-  WM_check(C);
+  WM_check(C,false);
 
   /* It's possible `win->ghostwin == NULL`.
    * instead of attempting to cleanup here (in a half finished state),

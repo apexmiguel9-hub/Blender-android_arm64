@@ -23,7 +23,9 @@ void main()
 #endif
   PASS_SURFACE_INTERFACE(0);
   gl_Position = gl_in[0].gl_Position;
+  #  ifdef USE_WORLD_CLIP_PLANES
   gl_ClipDistance[0] = gl_in[0].gl_ClipDistance[0];
+  #  endif
   EmitVertex();
 
 #ifdef USE_ATTR
@@ -31,7 +33,9 @@ void main()
 #endif
   PASS_SURFACE_INTERFACE(1);
   gl_Position = gl_in[1].gl_Position;
+  #  ifdef USE_WORLD_CLIP_PLANES
   gl_ClipDistance[0] = gl_in[1].gl_ClipDistance[0];
+#  endif
   EmitVertex();
 
 #ifdef USE_ATTR
@@ -39,7 +43,9 @@ void main()
 #endif
   PASS_SURFACE_INTERFACE(2);
   gl_Position = gl_in[2].gl_Position;
+  #  ifdef USE_WORLD_CLIP_PLANES
   gl_ClipDistance[0] = gl_in[2].gl_ClipDistance[0];
+  #  endif
   EmitVertex();
 
   EndPrimitive();

@@ -3510,6 +3510,21 @@ static void ui_textedit_begin(bContext *C, uiBut *but, uiHandleButtonData *data)
     ui_textedit_ime_begin(win, but);
   }
 #endif
+    int ptype=0;
+    if(but->type==eButType::UI_BTYPE_NUM){
+        ptype=3;
+    }else if(but->type==eButType::UI_BTYPE_NUM_SLIDER){
+        ptype=3;
+    }else if(but->type==eButType::UI_BTYPE_SEARCH_MENU){
+        return;
+    }
+    std::string  strInfo(but->editstr);
+    GHOST_showKeyboard(static_cast<GHOST_WindowHandle>(win->ghostwin),
+                       (char*)strInfo.c_str(),
+                       ptype,
+                       1000,
+                       but->selsta,
+                       but->selend);
 }
 
 static void ui_textedit_end(bContext *C, uiBut *but, uiHandleButtonData *data)
@@ -3576,6 +3591,10 @@ static void ui_textedit_end(bContext *C, uiBut *but, uiHandleButtonData *data)
     ui_textedit_ime_end(win, but);
   }
 #endif
+    if(but->type==eButType::UI_BTYPE_SEARCH_MENU){
+        return;
+    }
+    GHOST_hidenKeyboard(static_cast<GHOST_WindowHandle>(win->ghostwin));
 }
 
 static void ui_textedit_next_but(uiBlock *block, uiBut *actbut, uiHandleButtonData *data)

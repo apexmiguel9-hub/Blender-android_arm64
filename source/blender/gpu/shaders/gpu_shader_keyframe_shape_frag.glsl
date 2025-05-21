@@ -39,13 +39,13 @@ void main()
     outline_dist = max(outline_dist, absPos.x - radii[2]);
   }
 
-  float alpha = 1 - smoothstep(thresholds[0], thresholds[1], abs(outline_dist));
+  float alpha = 1.0 - smoothstep(thresholds[0], thresholds[1], abs(outline_dist));
 
   /* Inside the outline. */
-  if (outline_dist < 0) {
+  if (outline_dist < 0.0) {
     /* Middle dot */
     if (test(GPU_KEYFRAME_SHAPE_INNER_DOT)) {
-      alpha = max(alpha, 1 - smoothstep(thresholds[2], thresholds[3], length(absPos)));
+      alpha = max(alpha, 1.0 - smoothstep(thresholds[2], thresholds[3], length(absPos)));
     }
 
     /* Up and down arrow-like shading. */

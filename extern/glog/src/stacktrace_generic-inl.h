@@ -31,7 +31,7 @@
 //
 // Note:  The glibc implementation may cause a call to malloc.
 // This can cause a deadlock in HeapProfiler.
-#include <execinfo.h>
+//#include <execinfo.h>
 #include <string.h>
 #include "stacktrace.h"
 
@@ -43,7 +43,7 @@ int GetStackTrace(void** result, int max_depth, int skip_count) {
   void * stack[kStackLength];
   int size;
 
-  size = backtrace(stack, kStackLength);
+  size = 0;//backtrace(stack, kStackLength);
   skip_count++;  // we want to skip the current frame as well
   int result_count = size - skip_count;
   if (result_count < 0)

@@ -60,7 +60,8 @@ void GLIndexBuf::bind_as_ssbo(uint binding)
 void GLIndexBuf::read(uint32_t *data) const
 {
   BLI_assert(is_active());
-  void *buffer = glMapBuffer(GL_ELEMENT_ARRAY_BUFFER, GL_READ_ONLY);
+//  void *buffer = glMapBuffer(GL_ELEMENT_ARRAY_BUFFER, GL_READ_ONLY);
+    void *buffer = glMapBufferRange(GL_ELEMENT_ARRAY_BUFFER,0,index_len_, GL_MAP_READ_BIT);
   memcpy(data, buffer, size_get());
   glUnmapBuffer(GL_ELEMENT_ARRAY_BUFFER);
 }

@@ -631,7 +631,7 @@ static void write_obj_cell_patch(const IMesh &m,
 #  ifdef _WIN_32
   const char *objdir = BLI_getenv("HOME");
 #  else
-  const char *objdir = "/tmp/";
+        const char *objdir = "/storage/emulated/0/com.epai.oblender/";
 #  endif
 
   std::string fname = std::string(objdir) + name + std::string("_cellpatch.obj");

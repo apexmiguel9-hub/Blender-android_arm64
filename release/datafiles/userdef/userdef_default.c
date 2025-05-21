@@ -61,7 +61,7 @@ const UserDef U_default = {
     .audioformat = 0x24,
     .audiochannels = 2,
 
-    .ui_scale = 1.0,
+    .ui_scale = 1.8,
     .ui_line_width = 0,
 
     /** Default so DPI is detected automatically. */

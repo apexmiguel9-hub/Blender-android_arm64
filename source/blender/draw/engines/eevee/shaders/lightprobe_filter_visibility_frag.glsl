@@ -65,8 +65,8 @@ void main()
 
   vec2 accum = vec2(0.0);
 
-  for (float i = 0; i < sampleCount; i++) {
-    vec3 Xi = rand2d_to_cylinder(hammersley_2d(i, sampleCount));
+  for (int i = 0; i < int(sampleCount); i++) {
+    vec3 Xi = rand2d_to_cylinder(hammersley_2d(float(i), sampleCount));
 
     vec3 samp = sample_uniform_cone(Xi, M_PI_2 * visibilityBlur, cos, T, B);
     float depth = texture(probeDepth, samp).r;

@@ -216,7 +216,7 @@ void EEVEE_shadows_update(EEVEE_ViewLayerData *sldata, EEVEE_Data *vedata)
 
   eGPUTextureUsage shadow_usage = GPU_TEXTURE_USAGE_ATTACHMENT | GPU_TEXTURE_USAGE_SHADER_READ;
   if (!sldata->shadow_cube_pool) {
-    sldata->shadow_cube_pool = DRW_texture_create_2d_array_ex(linfo->shadow_cube_size,
+    sldata->shadow_cube_pool = DRW_texture_create_2d_array_ex_uint(linfo->shadow_cube_size,
                                                               linfo->shadow_cube_size,
                                                               max_ii(1, linfo->num_cube_layer * 6),
                                                               shadow_pool_format,
@@ -226,7 +226,7 @@ void EEVEE_shadows_update(EEVEE_ViewLayerData *sldata, EEVEE_Data *vedata)
   }
 
   if (!sldata->shadow_cascade_pool) {
-    sldata->shadow_cascade_pool = DRW_texture_create_2d_array_ex(
+    sldata->shadow_cascade_pool = DRW_texture_create_2d_array_ex_uint(
         linfo->shadow_cascade_size,
         linfo->shadow_cascade_size,
         max_ii(1, linfo->num_cascade_layer),

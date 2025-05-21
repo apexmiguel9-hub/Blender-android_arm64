@@ -6,6 +6,7 @@
 #include <pxr/base/plug/registry.h>
 
 #include "BKE_appdir.h"
+#  define SEP_STR "/"
 
 namespace blender::io::usd {
 

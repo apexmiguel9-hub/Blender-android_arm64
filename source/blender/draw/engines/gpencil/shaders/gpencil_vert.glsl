@@ -96,7 +96,7 @@ void main()
 
     /* Decode fill opacity. */
     vec4 fcol_decode = vec4(fcol1.rgb, floor(fcol1.a / 10.0));
-    float fill_opacity = fcol1.a - (fcol_decode.a * 10);
+    float fill_opacity = fcol1.a - (fcol_decode.a * 10.0);
     fcol_decode.a /= 10000.0;
 
     /* Special case: We don't use vertex color if material Holdout. */

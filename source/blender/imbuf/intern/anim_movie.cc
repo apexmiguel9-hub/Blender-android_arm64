@@ -951,7 +951,7 @@ static AVFrame *ffmpeg_frame_by_pts_get(struct anim *anim, int64_t pts_to_search
 
   const bool backup_frame_ready = anim->pFrame_backup_complete;
   const int64_t recent_start = av_get_pts_from_frame(anim->pFrame);
-  const int64_t recent_end = recent_start + anim->pFrame->pkt_duration;
+  const int64_t recent_end = recent_start + anim->pFrame->duration;
   const int64_t backup_start = backup_frame_ready ? av_get_pts_from_frame(anim->pFrame_backup) : 0;
 
   AVFrame *best_frame = nullptr;
@@ -1160,7 +1160,7 @@ static bool ffmpeg_is_first_frame_decode(struct anim *anim)
 static void ffmpeg_scan_log(struct anim *anim, int64_t pts_to_search)
 {
   int64_t frame_pts_start = av_get_pts_from_frame(anim->pFrame);
-  int64_t frame_pts_end = frame_pts_start + anim->pFrame->pkt_duration;
+  int64_t frame_pts_end = frame_pts_start + anim->pFrame->duration;
   av_log(anim->pFormatCtx,
          AV_LOG_DEBUG,
          "  SCAN WHILE: PTS range %" PRId64 " - %" PRId64 " in search of %" PRId64 "\n",
@@ -1351,16 +1351,16 @@ static int ffmpeg_seek_to_key_frame(struct anim *anim,
 
     AVFormatContext *format_ctx = anim->pFormatCtx;
 
-    if (format_ctx->iformat->read_seek2 || format_ctx->iformat->read_seek) {
+//    if (format_ctx->iformat->read_seek2 || format_ctx->iformat->read_seek) {
       ret = av_seek_frame(anim->pFormatCtx, anim->videoStream, seek_pos, AVSEEK_FLAG_BACKWARD);
-    }
-    else {
-      ret = ffmpeg_generic_seek_workaround(anim, &seek_pos, pts_to_search);
-      av_log(anim->pFormatCtx,
-             AV_LOG_DEBUG,
-             "Adjusted final seek seek_pos = %" PRId64 "\n",
-             seek_pos);
-    }
+//    }
+//    else {
+//      ret = ffmpeg_generic_seek_workaround(anim, &seek_pos, pts_to_search);
+//      av_log(anim->pFormatCtx,
+//             AV_LOG_DEBUG,
+//             "Adjusted final seek seek_pos = %" PRId64 "\n",
+//             seek_pos);
+//    }
 
     if (ret <= 0 && !ffmpeg_seek_buffers_need_flushing(anim, position, seek_pos)) {
       return 0;

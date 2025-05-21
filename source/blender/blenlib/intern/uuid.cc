@@ -37,7 +37,8 @@ bUUID BLI_uuid_generate_random()
      * function `timespec_get()` as well. */
     clock_gettime(CLOCK_REALTIME, &ts);
 #else
-    timespec_get(&ts, TIME_UTC);
+//    timespec_get(&ts, TIME_UTC);
+      clock_gettime(CLOCK_REALTIME,&ts);
 #endif
     /* XOR the nanosecond and second fields, just in case the clock only has seconds resolution. */
     uint64_t seed = ts.tv_nsec;

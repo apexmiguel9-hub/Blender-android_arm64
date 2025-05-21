@@ -63,7 +63,7 @@ void main()
   for (int ring = 0; ring < ring_count && ring < DOF_DILATE_RING_COUNT; ring++) {
     float ring_distance = float(ring + 1);
 
-    ring_distance = (ring_distance * ring_width_multiplier - 1) * tile_to_fullres_factor;
+    ring_distance = (ring_distance * float(ring_width_multiplier) - 1.0) * tile_to_fullres_factor;
 
     if (DILATE_MODE_MIN_MAX) {
       /* NOTE(fclem): Unsure if both sides of the inequalities have the same unit. */

@@ -2,7 +2,7 @@
  * Copyright 2011-2022 Blender Foundation */
 
 #pragma once
-
+#define EMBREE_MAJOR_VERSION 4
 #if (!defined(__KERNEL_GPU__) || (defined(__KERNEL_ONEAPI__) && defined(WITH_EMBREE_GPU))) && \
     defined(WITH_EMBREE)
 #  if EMBREE_MAJOR_VERSION == 4

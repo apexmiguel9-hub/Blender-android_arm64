@@ -163,6 +163,10 @@ struct GPUTexture *DRW_texture_create_1d(int w,
                                          const float *fpixels);
 struct GPUTexture *DRW_texture_create_2d(
     int w, int h, eGPUTextureFormat format, DRWTextureFlag flags, const float *fpixels);
+struct GPUTexture *DRW_texture_create_2d_ubyte(
+        int w, int h, eGPUTextureFormat format, DRWTextureFlag flags, const uint8_t *fpixels);
+struct GPUTexture *DRW_texture_create_2d_uint(
+        int w, int h, eGPUTextureFormat format, DRWTextureFlag flags, const uint *fpixels);
 struct GPUTexture *DRW_texture_create_2d_array(
     int w, int h, int d, eGPUTextureFormat format, DRWTextureFlag flags, const float *fpixels);
 struct GPUTexture *DRW_texture_create_3d(
@@ -198,7 +202,26 @@ struct GPUTexture *DRW_texture_create_2d_ex(int w,
                                             eGPUTextureUsage usage_flags,
                                             DRWTextureFlag flags,
                                             const float *fpixels);
+struct GPUTexture *DRW_texture_create_2d_ex_ubyte(int w,
+                                            int h,
+                                            eGPUTextureFormat format,
+                                            eGPUTextureUsage usage_flags,
+                                            DRWTextureFlag flags,
+                                            const uint8_t *fpixels);
+struct GPUTexture *DRW_texture_create_2d_ex_uint(int w,
+                                                  int h,
+                                                  eGPUTextureFormat format,
+                                                  eGPUTextureUsage usage_flags,
+                                                  DRWTextureFlag flags,
+                                                  const uint *fpixels);
 struct GPUTexture *DRW_texture_create_2d_array_ex(int w,
+                                                  int h,
+                                                  int d,
+                                                  eGPUTextureFormat format,
+                                                  eGPUTextureUsage usage_flags,
+                                                  DRWTextureFlag flags,
+                                                  const float *fpixels);
+struct GPUTexture *DRW_texture_create_2d_array_ex_uint(int w,
                                                   int h,
                                                   int d,
                                                   eGPUTextureFormat format,
@@ -212,12 +235,31 @@ struct GPUTexture *DRW_texture_create_3d_ex(int w,
                                             eGPUTextureUsage usage_flags,
                                             DRWTextureFlag flags,
                                             const float *fpixels);
+struct GPUTexture *DRW_texture_create_3d_ex_ubyte(int w,
+                                            int h,
+                                            int d,
+                                            eGPUTextureFormat format,
+                                            eGPUTextureUsage usage_flags,
+                                            DRWTextureFlag flags,
+                                            const uint8_t *fpixels);
 struct GPUTexture *DRW_texture_create_cube_ex(int w,
                                               eGPUTextureFormat format,
                                               eGPUTextureUsage usage_flags,
                                               DRWTextureFlag flags,
                                               const float *fpixels);
+struct GPUTexture *DRW_texture_create_cube_ex_uint(int w,
+                                              eGPUTextureFormat format,
+                                              eGPUTextureUsage usage_flags,
+                                              DRWTextureFlag flags,
+                                              const float *fpixels);
 struct GPUTexture *DRW_texture_create_cube_array_ex(int w,
+                                                    int d,
+                                                    eGPUTextureFormat format,
+                                                    eGPUTextureUsage usage_flags,
+                                                    DRWTextureFlag flags,
+                                                    const float *fpixels);
+struct GPUTexture *DRW_texture_create_cube_array_ex_name(char*name,
+                                                    int w,
                                                     int d,
                                                     eGPUTextureFormat format,
                                                     eGPUTextureUsage usage_flags,
@@ -229,6 +271,12 @@ void DRW_texture_ensure_fullscreen_2d_ex(struct GPUTexture **tex,
                                          eGPUTextureUsage usage,
                                          DRWTextureFlag flags);
 void DRW_texture_ensure_2d_ex(struct GPUTexture **tex,
+                              int w,
+                              int h,
+                              eGPUTextureFormat format,
+                              eGPUTextureUsage usage,
+                              DRWTextureFlag flags);
+void DRW_texture_ensure_2d_ex_uint(struct GPUTexture **tex,
                               int w,
                               int h,
                               eGPUTextureFormat format,

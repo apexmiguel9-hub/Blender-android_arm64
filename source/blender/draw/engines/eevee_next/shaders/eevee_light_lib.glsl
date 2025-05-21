@@ -184,7 +184,7 @@ float light_ltc(sampler2DArray utility_tx,
   }
 }
 
-vec3 light_translucent(sampler1D transmittance_tx,
+vec3 light_translucent(sampler2D transmittance_tx,
                        const bool is_directional,
                        LightData ld,
                        vec3 N,
@@ -204,9 +204,9 @@ vec3 light_translucent(sampler1D transmittance_tx,
   vec3 channels_co = saturate(delta / sss_radius) * SSS_TRANSMIT_LUT_SCALE + SSS_TRANSMIT_LUT_BIAS;
 
   vec3 translucency;
-  translucency.x = (sss_radius.x > 0.0) ? texture(transmittance_tx, channels_co.x).r : 0.0;
-  translucency.y = (sss_radius.y > 0.0) ? texture(transmittance_tx, channels_co.y).r : 0.0;
-  translucency.z = (sss_radius.z > 0.0) ? texture(transmittance_tx, channels_co.z).r : 0.0;
+  translucency.x = (sss_radius.x > 0.0) ? texture(transmittance_tx, vec2(channels_co.x,0.0)).r : 0.0;
+  translucency.y = (sss_radius.y > 0.0) ? texture(transmittance_tx, vec2(channels_co.y,0.0)).r : 0.0;
+  translucency.z = (sss_radius.z > 0.0) ? texture(transmittance_tx, vec2(channels_co.z,0.0)).r : 0.0;
   return translucency * power;
 }
 

@@ -188,14 +188,17 @@ static bool detect_mip_render_workaround()
   glGenFramebuffers(1, &fb);
   glBindFramebuffer(GL_FRAMEBUFFER, fb);
   glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, tex, 1);
-  glDrawBuffer(GL_COLOR_ATTACHMENT0);
+    //  glDrawBuffer(GL_COLOR_ATTACHMENT0);
+    const GLenum buffers[]{ GL_COLOR_ATTACHMENT0 };
+    glDrawBuffers( 1, buffers );
   glClearColor(UNPACK4(clear_color));
   glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
   glClear(GL_COLOR_BUFFER_BIT);
+    glReadPixels(0,0,2,2,GL_RGBA,GL_FLOAT,source_pix);
   glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
   /* Read mip 1. If color is not the same as the clear_color, the rendering failed. */
-  glGetTexImage(GL_TEXTURE_CUBE_MAP_POSITIVE_X, 1, GL_RGBA, GL_FLOAT, source_pix);
+//  glGetTexImage(GL_TEXTURE_CUBE_MAP_POSITIVE_X, 1, GL_RGBA, GL_FLOAT, source_pix);
   bool enable_workaround = !equals_v4v4(clear_color, source_pix);
   MEM_freeN(source_pix);
 
@@ -250,6 +253,7 @@ static void detect_workarounds()
     GLContext::texture_gather_support = false;
     GLContext::texture_storage_support = false;
     GLContext::vertex_attrib_binding_support = false;
+      GLContext::clip_cull_distance_support=false;
     return;
   }
 
@@ -493,6 +497,7 @@ bool GLContext::texture_filter_anisotropic_support = false;
 bool GLContext::texture_gather_support = false;
 bool GLContext::texture_storage_support = false;
 bool GLContext::vertex_attrib_binding_support = false;
+bool GLContext::clip_cull_distance_support = false;
 
 /** Workarounds. */
 
@@ -531,9 +536,10 @@ void GLBackend::capabilities_init()
   GCaps.max_samplers = GCaps.max_textures;
   GCaps.mem_stats_support = epoxy_has_gl_extension("GL_NVX_gpu_memory_info") ||
                             epoxy_has_gl_extension("GL_ATI_meminfo");
-  GCaps.shader_image_load_store_support = epoxy_has_gl_extension("GL_ARB_shader_image_load_store");
+  GCaps.shader_image_load_store_support = true;//epoxy_has_gl_extension("GL_ARB_shader_image_load_store");
   GCaps.shader_draw_parameters_support = epoxy_has_gl_extension("GL_ARB_shader_draw_parameters");
-  GCaps.compute_shader_support = epoxy_has_gl_extension("GL_ARB_compute_shader") &&
+//  GCaps.compute_shader_support = epoxy_has_gl_extension("GL_ARB_compute_shader") &&
+    GCaps.compute_shader_support = true &&
                                  epoxy_gl_version() >= 43;
   GCaps.geometry_shader_support = true;
   GCaps.max_samplers = GCaps.max_textures;
@@ -549,8 +555,7 @@ void GLBackend::capabilities_init()
                   &GCaps.max_shader_storage_buffer_bindings);
     glGetIntegerv(GL_MAX_COMPUTE_SHADER_STORAGE_BLOCKS, &GCaps.max_compute_shader_storage_blocks);
   }
-  GCaps.shader_storage_buffer_objects_support = epoxy_has_gl_extension(
-      "GL_ARB_shader_storage_buffer_object");
+  GCaps.shader_storage_buffer_objects_support = true;//epoxy_has_gl_extension("GL_ARB_shader_storage_buffer_object");
   GCaps.transform_feedback_support = true;
 
   /* GL specific capabilities. */
@@ -592,13 +597,14 @@ void GLBackend::capabilities_init()
       "GL_ARB_shader_draw_parameters");
   GLContext::stencil_texturing_support = epoxy_gl_version() >= 43;
   GLContext::texture_cube_map_array_support = epoxy_has_gl_extension(
-      "GL_ARB_texture_cube_map_array");
+      "GL_EXT_texture_cube_map_array");
   GLContext::texture_filter_anisotropic_support = epoxy_has_gl_extension(
       "GL_EXT_texture_filter_anisotropic");
   GLContext::texture_gather_support = epoxy_has_gl_extension("GL_ARB_texture_gather");
-  GLContext::texture_storage_support = epoxy_gl_version() >= 43;
+  GLContext::texture_storage_support = true;//epoxy_gl_version() >= 43;
   GLContext::vertex_attrib_binding_support = epoxy_has_gl_extension(
       "GL_ARB_vertex_attrib_binding");
+    GLContext::clip_cull_distance_support = false;//epoxy_has_gl_extension("GL_EXT_clip_cull_distance");
 
   detect_workarounds();
 

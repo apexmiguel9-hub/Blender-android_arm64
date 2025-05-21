@@ -7,7 +7,7 @@
 vec3 sss_profile(float s)
 {
   s /= radii_max_radius.w * avg_inv_radius;
-  return texture(sssTexProfile, saturate(s) * SSS_LUT_SCALE + SSS_LUT_BIAS).rgb;
+  return texture(sssTexProfile, vec2(saturate(s) * SSS_LUT_SCALE + SSS_LUT_BIAS,0.0)).rgb;
 }
 
 float light_translucent_power_with_falloff(LightData ld, vec3 N, vec4 l_vector)

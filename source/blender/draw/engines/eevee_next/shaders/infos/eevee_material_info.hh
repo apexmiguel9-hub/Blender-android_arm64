@@ -107,7 +107,7 @@ GPU_SHADER_CREATE_INFO(eevee_surf_deferred)
     .fragment_out(0, Type::VEC4, "out_transmittance", DualBlend::SRC_1)
     /* Everything is stored inside a two layered target, one for each format. This is to fit the
      * limitation of the number of images we can bind on a single shader. */
-    .image_array_out(GBUF_CLOSURE_SLOT, Qualifier::WRITE, GPU_RGBA16, "out_gbuff_closure_img")
+    .image_array_out(GBUF_CLOSURE_SLOT, Qualifier::WRITE, GPU_RGBA16F, "out_gbuff_closure_img")
     .image_array_out(GBUF_COLOR_SLOT, Qualifier::WRITE, GPU_RGB10_A2, "out_gbuff_color_img")
     /* Render-passes need to be declared manually to avoid overlap with the G-buffer which reuse
      * some of binding points. */

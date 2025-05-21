@@ -134,7 +134,7 @@ class GHOST_SystemHeadless : public GHOST_System {
     GHOST_TSuccess success = GHOST_System::init();
 
     if (success) {
-      m_displayManager = new GHOST_DisplayManagerNULL();
+      m_displayManager = new GHOST_DisplayManager();
 
       if (m_displayManager) {
         return GHOST_kSuccess;
@@ -151,6 +151,7 @@ class GHOST_SystemHeadless : public GHOST_System {
                               uint32_t height,
                               GHOST_TWindowState state,
                               GHOST_GLSettings glSettings,
+                              int type,
                               const bool /*exclusive*/,
                               const bool /*is_dialog*/,
                               const GHOST_IWindow *parentWindow) override

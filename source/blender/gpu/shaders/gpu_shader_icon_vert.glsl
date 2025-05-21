@@ -30,7 +30,7 @@ void main()
   }
 
   /* Put origin in lower right corner. */
-  mask_coord_interp.x -= 1;
+  mask_coord_interp.x -= 1.0;
 
   gl_Position = ModelViewProjectionMatrix * vec4(co, 0.0f, 1.0f);
   texCoord_interp = uv;

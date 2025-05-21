@@ -978,9 +978,12 @@ inline eGPUDataFormat to_data_format(eGPUTextureFormat tex_format)
 
     /* Depth Formats. */
     case GPU_DEPTH_COMPONENT32F:
+        return GPU_DATA_FLOAT;
+        //  修改 DEPTH_COMPONENT
     case GPU_DEPTH_COMPONENT24:
+        return GPU_DATA_UINT;
     case GPU_DEPTH_COMPONENT16:
-      return GPU_DATA_FLOAT;
+      return GPU_DATA_UINT;
   }
   BLI_assert_unreachable();
   return GPU_DATA_FLOAT;

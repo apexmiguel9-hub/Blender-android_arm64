@@ -52,7 +52,7 @@ void workbench_engine_init(void *ved)
 
   if (txl->dummy_image_tx == NULL) {
     const float fpixel[4] = {1.0f, 0.0f, 1.0f, 1.0f};
-    txl->dummy_image_tx = DRW_texture_create_2d(1, 1, GPU_RGBA8, 0, fpixel);
+    txl->dummy_image_tx = DRW_texture_create_2d(1, 1, GPU_RGBA16F, 0, fpixel);
   }
   wpd->dummy_image_tx = txl->dummy_image_tx;
 

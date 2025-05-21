@@ -162,3 +162,12 @@ GHOST_IWindow *GHOST_WindowManager::getWindowAssociatedWithOSWindow(void *osWind
   }
   return nullptr;
 }
+GHOST_IWindow *GHOST_WindowManager::getWindowAssociatedWithEglWindow(void *eglWindow) {
+    std::vector<GHOST_IWindow *>::iterator iter;
+    for (iter = m_windows.begin(); iter != m_windows.end(); ++iter) {
+        if ((*iter)->getEGLWindow() == eglWindow) {
+            return *iter;
+        }
+    }
+    return nullptr;
+}

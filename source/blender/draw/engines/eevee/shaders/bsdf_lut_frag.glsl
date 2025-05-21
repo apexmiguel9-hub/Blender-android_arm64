@@ -4,8 +4,8 @@
 void main()
 {
   /* Make sure coordinates are covering the whole [0..1] range at texel center. */
-  float y = floor(gl_FragCoord.y) / (LUT_SIZE - 1);
-  float x = floor(gl_FragCoord.x) / (LUT_SIZE - 1);
+  float y = floor(gl_FragCoord.y) / (float(LUT_SIZE - 1));
+  float x = floor(gl_FragCoord.x) / (float(LUT_SIZE - 1));
 
   float NV = clamp(1.0 - y * y, 1e-4, 0.9999);
   float a = x * x;

@@ -87,6 +87,7 @@
 #include "RE_engine.h"
 
 #include "image_intern.h"
+#include "../../../../intern/ghost/GHOST_C-api.h"
 
 /* -------------------------------------------------------------------- */
 /** \name View Navigation Utilities
@@ -2654,6 +2655,31 @@ static void image_new_draw(bContext *UNUSED(C), wmOperator *op)
 #endif
 }
 
+static int image_close_exec(bContext *C, wmOperator *op)
+{
+    GHOST_CloseWindow();
+    return OPERATOR_FINISHED;
+}
+static int image_close_invoke(bContext *C, wmOperator *op, const wmEvent * event)
+{
+    return OPERATOR_INTERFACE;
+}
+static void image_close_draw(bContext * C, wmOperator *op) {
+}
+static void image_close_cancel(bContext * C, wmOperator *op)
+{
+    image_new_free(op);
+}
+void IMAGE_OT_close(struct wmOperatorType *ot){
+    ot->name = "Close Image";
+    ot->description = "Close image";
+    ot->idname = "IMAGE_OT_close";
+    ot->exec = image_close_exec;
+    ot->invoke = 0;//image_close_invoke;
+    ot->cancel = image_close_cancel;
+    ot->ui = image_close_draw;
+    ot->flag = OPTYPE_REGISTER | OPTYPE_UNDO;
+}
 static void image_new_cancel(bContext *UNUSED(C), wmOperator *op)
 {
   image_new_free(op);

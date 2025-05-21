@@ -69,25 +69,25 @@ vec3 downsample_filter(sampler2D tex, vec2 uv, vec2 texelSize)
   s += textureLod(tex, uv + d.xw, 0.0).rgb;
   s += textureLod(tex, uv + d.zw, 0.0).rgb;
 
-  return s * (1.0 / 4);
+  return s * (1.0 / 4.0);
 }
 
 vec3 upsample_filter_high(sampler2D tex, vec2 uv, vec2 texelSize)
 {
   /* 9-tap bilinear upsampler (tent filter) */
-  vec4 d = texelSize.xyxy * vec4(1, 1, -1, 0) * sampleScale;
+  vec4 d = texelSize.xyxy * vec4(1.0, 1.0, -1.0, 0.0) * sampleScale;
 
   vec3 s;
   s = textureLod(tex, uv - d.xy, 0.0).rgb;
-  s += textureLod(tex, uv - d.wy, 0.0).rgb * 2;
+  s += textureLod(tex, uv - d.wy, 0.0).rgb * 2.0;
   s += textureLod(tex, uv - d.zy, 0.0).rgb;
 
-  s += textureLod(tex, uv + d.zw, 0.0).rgb * 2;
-  s += textureLod(tex, uv, 0.0).rgb * 4;
-  s += textureLod(tex, uv + d.xw, 0.0).rgb * 2;
+  s += textureLod(tex, uv + d.zw, 0.0).rgb * 2.0;
+  s += textureLod(tex, uv, 0.0).rgb * 4.0;
+  s += textureLod(tex, uv + d.xw, 0.0).rgb * 2.0;
 
   s += textureLod(tex, uv + d.zy, 0.0).rgb;
-  s += textureLod(tex, uv + d.wy, 0.0).rgb * 2;
+  s += textureLod(tex, uv + d.wy, 0.0).rgb * 2.0;
   s += textureLod(tex, uv + d.xy, 0.0).rgb;
 
   return s * (1.0 / 16.0);
@@ -96,7 +96,7 @@ vec3 upsample_filter_high(sampler2D tex, vec2 uv, vec2 texelSize)
 vec3 upsample_filter(sampler2D tex, vec2 uv, vec2 texelSize)
 {
   /* 4-tap bilinear upsampler */
-  vec4 d = texelSize.xyxy * vec4(-1, -1, +1, +1) * (sampleScale * 0.5);
+  vec4 d = texelSize.xyxy * vec4(-1.0, -1.0, +1.0, +1.0) * (sampleScale * 0.5);
 
   vec3 s;
   s = textureLod(tex, uv + d.xy, 0.0).rgb;
@@ -114,7 +114,7 @@ vec4 step_blit(void)
   vec2 uv = uvcoordsvar.xy + sourceBufferTexelSize.xy * 0.5;
 
 #ifdef HIGH_QUALITY /* Anti flicker */
-  vec3 d = sourceBufferTexelSize.xyx * vec3(1, 1, 0);
+  vec3 d = sourceBufferTexelSize.xyx * vec3(1.0, 1.0, 0.0);
   vec3 s0 = safe_color(textureLod(sourceBuffer, uvcoordsvar.xy, 0.0).rgb);
   vec3 s1 = safe_color(textureLod(sourceBuffer, uvcoordsvar.xy - d.xz, 0.0).rgb);
   vec3 s2 = safe_color(textureLod(sourceBuffer, uvcoordsvar.xy + d.xz, 0.0).rgb);

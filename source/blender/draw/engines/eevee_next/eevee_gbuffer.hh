@@ -74,7 +74,7 @@ struct GBuffer {
   {
     const bool use_sss = (closure_bits_ & CLOSURE_SSS) != 0;
     eGPUTextureUsage usage = GPU_TEXTURE_USAGE_SHADER_READ | GPU_TEXTURE_USAGE_SHADER_WRITE;
-    closure_tx.ensure_2d_array(GPU_RGBA16, extent, use_sss ? 3 : 2, usage);
+    closure_tx.ensure_2d_array(GPU_RGBA16F, extent, use_sss ? 3 : 2, usage);
     color_tx.ensure_2d_array(GPU_RGB10_A2, extent, 2, usage);
   }
 

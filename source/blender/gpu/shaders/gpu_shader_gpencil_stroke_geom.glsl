@@ -91,11 +91,11 @@ void main(void)
   /* determine the length of the miter by projecting it onto normal and then inverse it */
   float an1 = dot(miter_a, n1);
   float bn1 = dot(miter_b, n2);
-  if (an1 == 0) {
-    an1 = 1;
+  if (an1 == 0.0) {
+    an1 = 1.0;
   }
-  if (bn1 == 0) {
-    bn1 = 1;
+  if (bn1 == 0.0) {
+    bn1 = 1.0;
   }
   float length_a = geometry_in[1].finalThickness / an1;
   float length_b = geometry_in[2].finalThickness / bn1;

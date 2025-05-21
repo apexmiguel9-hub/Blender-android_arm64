@@ -36,8 +36,8 @@ void emit_line(uint line_offset, uint quad_index, uint start_loop_index, uint co
                                                                        coarse_poly_count);
 
   if (use_hide && is_face_hidden(coarse_quad_index) || (input_edge_draw_flag[vertex_index] == 0)) {
-    output_lines[line_offset + 0] = 0xffffffff;
-    output_lines[line_offset + 1] = 0xffffffff;
+    output_lines[line_offset + 0] = 0xffffffffu;
+    output_lines[line_offset + 1] = 0xffffffffu;
   }
   else {
     /* Mod 4 so we loop back at the first vertex on the last loop index (3). */
@@ -61,25 +61,25 @@ void main()
   uint line_offset = edge_loose_offset + index * 2;
   uint loop_index = num_subdiv_loops + index * 2;
 
-  if (lines_loose_flags[index] != 0) {
+  if (lines_loose_flags[index] != 0u) {
     /* Line is hidden. */
-    output_lines[line_offset] = 0xffffffff;
-    output_lines[line_offset + 1] = 0xffffffff;
+    output_lines[line_offset] = 0xffffffffu;
+    output_lines[line_offset + 1u] = 0xffffffffu;
   }
   else {
     output_lines[line_offset] = loop_index;
-    output_lines[line_offset + 1] = loop_index + 1;
+    output_lines[line_offset + 1u] = loop_index + 1u;
   }
 
 #else
   /* We execute for each quad, so the start index of the loop is quad_index * 4. */
-  uint start_loop_index = index * 4;
+  uint start_loop_index = index * 4u;
   /* We execute for each quad, so the start index of the line is quad_index * 8 (with 2 vertices
    * per line). */
-  uint start_line_index = index * 8;
+  uint start_line_index = index * 8u;
 
   for (int i = 0; i < 4; i++) {
-    emit_line(start_line_index + i * 2, index, start_loop_index, i);
+    emit_line(start_line_index + uint(i) * 2u, index, start_loop_index, i);
   }
 #endif
 }

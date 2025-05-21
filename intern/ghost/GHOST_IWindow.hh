@@ -49,6 +49,7 @@ class GHOST_IWindow {
    */
   virtual void *getOSWindow() const = 0;
 
+  virtual void *getEGLWindow() const =0;
   /**
    * Returns the type of drawing context used in this window.
    * \return The current type of drawing context.

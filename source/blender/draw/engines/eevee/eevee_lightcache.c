@@ -681,7 +681,7 @@ static void eevee_lightbake_create_render_target(EEVEE_LightBake *lbake, int rt_
 {
   eGPUTextureUsage usage = GPU_TEXTURE_USAGE_SHADER_READ | GPU_TEXTURE_USAGE_ATTACHMENT |
                            GPU_TEXTURE_USAGE_MIP_SWIZZLE_VIEW;
-  lbake->rt_depth = DRW_texture_create_cube_ex(rt_res, GPU_DEPTH_COMPONENT24, usage, 0, NULL);
+  lbake->rt_depth = DRW_texture_create_cube_ex_uint(rt_res, GPU_DEPTH_COMPONENT24, usage, 0, NULL);
   lbake->rt_color = DRW_texture_create_cube_ex(
       rt_res, GPU_RGBA16F, usage, DRW_TEX_FILTER | DRW_TEX_MIPMAP, NULL);
 

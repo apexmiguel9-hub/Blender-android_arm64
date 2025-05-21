@@ -62,7 +62,7 @@ void main()
   }
   else if (postProcessType == PASS_POST_AO) {
     float ao_accum = texelFetch(inputBuffer, texel, 0).r;
-    color.rgb = vec3(min(1.0, ao_accum / currentSample));
+    color.rgb = vec3(min(1.0, ao_accum / float(currentSample)));
   }
   else if (postProcessType == PASS_POST_NORMAL) {
     float depth = texelFetch(depthBuffer, texel, 0).r;
@@ -80,20 +80,20 @@ void main()
   }
   else if (postProcessType == PASS_POST_ACCUMULATED_VALUE) {
     float accumulated_value = texelFetch(inputBuffer, texel, 0).r;
-    color.rgb = vec3(accumulated_value / currentSample);
+    color.rgb = vec3(accumulated_value / float(currentSample));
   }
   else if (postProcessType == PASS_POST_ACCUMULATED_COLOR) {
     vec3 accumulated_color = texelFetch(inputBuffer, texel, 0).rgb;
-    color.rgb = (accumulated_color / currentSample);
+    color.rgb = (accumulated_color / float(currentSample));
   }
   else if (postProcessType == PASS_POST_ACCUMULATED_COLOR_ALPHA) {
     vec4 accumulated_color = texelFetch(inputBuffer, texel, 0);
-    color = (accumulated_color / currentSample);
+    color = (accumulated_color / float(currentSample));
   }
   else if (postProcessType == PASS_POST_ACCUMULATED_TRANSMITTANCE_COLOR) {
     vec3 accumulated_color = texelFetch(inputBuffer, texel, 0).rgb;
     vec3 transmittance = texelFetch(inputTransmittanceBuffer, texel, 0).rgb;
-    color.rgb = (accumulated_color / currentSample) * (transmittance / currentSample);
+    color.rgb = (accumulated_color / float(currentSample)) * (transmittance / float(currentSample));
   }
   else if (postProcessType == PASS_POST_ACCUMULATED_LIGHT) {
     vec3 accumulated_light = texelFetch(inputBuffer, texel, 0).rgb;

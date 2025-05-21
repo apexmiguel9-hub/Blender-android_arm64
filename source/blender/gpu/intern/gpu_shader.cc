@@ -23,6 +23,7 @@
 #include "gpu_shader_private.hh"
 
 #include <string>
+#include <opengl/gl_context.hh>
 
 extern "C" char datatoc_gpu_shader_colorspace_lib_glsl[];
 
@@ -32,6 +33,9 @@ std::string Shader::defines_declare(const shader::ShaderCreateInfo &info) const
 {
   std::string defines;
   for (const auto &def : info.defines_) {
+      if (def[0]=="USE_WORLD_CLIP_PLANES"){
+          continue;
+      }
     defines += "#define ";
     defines += def[0];
     defines += " ";

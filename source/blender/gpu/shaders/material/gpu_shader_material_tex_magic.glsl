@@ -7,37 +7,37 @@ void node_tex_magic(
   float y = cos((-p.x + p.y - p.z) * 5.0);
   float z = -cos((-p.x - p.y + p.z) * 5.0);
 
-  if (depth > 0) {
+  if (depth > 0.0) {
     x *= distortion;
     y *= distortion;
     z *= distortion;
     y = -cos(x - y + z);
     y *= distortion;
-    if (depth > 1) {
+    if (depth > 1.0) {
       x = cos(x - y - z);
       x *= distortion;
-      if (depth > 2) {
+      if (depth > 2.0) {
         z = sin(-x - y - z);
         z *= distortion;
-        if (depth > 3) {
+        if (depth > 3.0) {
           x = -cos(-x + y - z);
           x *= distortion;
-          if (depth > 4) {
+          if (depth > 4.0) {
             y = -sin(-x + y + z);
             y *= distortion;
-            if (depth > 5) {
+            if (depth > 5.0) {
               y = -cos(-x + y + z);
               y *= distortion;
-              if (depth > 6) {
+              if (depth > 6.0) {
                 x = cos(x + y + z);
                 x *= distortion;
-                if (depth > 7) {
+                if (depth > 7.0) {
                   z = sin(x + y - z);
                   z *= distortion;
-                  if (depth > 8) {
+                  if (depth > 8.0) {
                     x = -cos(-x - y + z);
                     x *= distortion;
-                    if (depth > 9) {
+                    if (depth > 9.0) {
                       y = -sin(x - y + z);
                       y *= distortion;
                     }

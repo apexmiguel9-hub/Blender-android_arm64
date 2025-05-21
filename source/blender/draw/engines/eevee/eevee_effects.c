@@ -120,7 +120,7 @@ void EEVEE_effects_init(EEVEE_ViewLayerData *sldata,
   else {
     eGPUTextureUsage usage = GPU_TEXTURE_USAGE_ATTACHMENT | GPU_TEXTURE_USAGE_SHADER_READ |
                              GPU_TEXTURE_USAGE_MIP_SWIZZLE_VIEW;
-    DRW_texture_ensure_2d_ex(&txl->maxzbuffer,
+      DRW_texture_ensure_2d_ex_uint(&txl->maxzbuffer,
                              UNPACK2(effects->hiz_size),
                              GPU_DEPTH_COMPONENT24,
                              usage,
@@ -176,7 +176,7 @@ void EEVEE_effects_init(EEVEE_ViewLayerData *sldata,
   if ((effects->enabled_effects & EFFECT_NORMAL_BUFFER) != 0) {
     eGPUTextureUsage usage = GPU_TEXTURE_USAGE_SHADER_READ | GPU_TEXTURE_USAGE_ATTACHMENT;
     effects->ssr_normal_input = DRW_texture_pool_query_2d_ex(
-        size_fs[0], size_fs[1], GPU_RG16, usage, &draw_engine_eevee_type);
+        size_fs[0], size_fs[1], GPU_RG16F, usage, &draw_engine_eevee_type);
 
     GPU_framebuffer_texture_attach(fbl->main_fb, effects->ssr_normal_input, 1, 0);
   }
@@ -190,7 +190,7 @@ void EEVEE_effects_init(EEVEE_ViewLayerData *sldata,
   if ((effects->enabled_effects & EFFECT_VELOCITY_BUFFER) != 0) {
     eGPUTextureUsage usage = GPU_TEXTURE_USAGE_SHADER_READ | GPU_TEXTURE_USAGE_ATTACHMENT;
     effects->velocity_tx = DRW_texture_pool_query_2d_ex(
-        size_fs[0], size_fs[1], GPU_RGBA16, usage, &draw_engine_eevee_type);
+        size_fs[0], size_fs[1], GPU_RGBA16F, usage, &draw_engine_eevee_type);
 
     GPU_framebuffer_ensure_config(&fbl->velocity_fb,
                                   {
@@ -268,7 +268,7 @@ void EEVEE_effects_cache_init(EEVEE_ViewLayerData *sldata, EEVEE_Data *vedata)
     DRW_shgroup_uniform_texture_ref(grp, "source", &e_data.color_src);
     DRW_shgroup_uniform_float(grp, "texelSize", e_data.texel_size, 1);
     DRW_shgroup_uniform_int_copy(grp, "Layer", 0);
-    DRW_shgroup_call_instances(grp, NULL, quad, 6);
+    DRW_shgroup_call_instances(grp, NULL, DRW_cache_quad_get(), 6);
   }
 
   {
@@ -358,10 +358,12 @@ static void max_downsample_cb(void *vedata, int level)
 
 static void simple_downsample_cube_cb(void *vedata, int level)
 {
+    for(int i=0;i<2;i++){
   EEVEE_PassList *psl = ((EEVEE_Data *)vedata)->psl;
   e_data.texel_size[0] = (float)(1 << level) / (float)GPU_texture_width(e_data.color_src);
   e_data.texel_size[1] = e_data.texel_size[0];
   DRW_draw_pass(psl->color_downsample_cube_ps);
+    }
 }
 
 void EEVEE_create_minmax_buffer(EEVEE_Data *vedata, GPUTexture *depth_src, int layer)

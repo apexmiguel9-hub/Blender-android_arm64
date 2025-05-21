@@ -6,7 +6,7 @@
 
 void node_composite_hue_correct(float factor,
                                 vec4 color,
-                                sampler1DArray curve_map,
+                                sampler2DArray curve_map,
                                 const float layer,
                                 vec3 minimums,
                                 vec3 range_dividers,

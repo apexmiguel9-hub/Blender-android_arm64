@@ -19,6 +19,9 @@
 #include "gl_shader.hh"
 #include "gl_shader_interface.hh"
 
+#include "BLI_string_utils.h"
+#include <CLG_log.h>
+static CLG_LogRef LOG = {"gl.shader"};
 using namespace blender;
 using namespace blender::gpu;
 using namespace blender::gpu::shader;
@@ -68,7 +71,11 @@ static const char *to_string(const Interpolation &interp)
     case Interpolation::FLAT:
       return "flat";
     case Interpolation::NO_PERSPECTIVE:
+        if (GLContext::clip_cull_distance_support){
       return "noperspective";
+        }else{
+            return "";
+        }
     default:
       return "unknown";
   }
@@ -355,7 +362,11 @@ static std::ostream &print_qualifier(std::ostream &os, const Qualifier &qualifie
     os << "writeonly ";
   }
   if (bool(qualifiers & Qualifier::WRITE) == false) {
+      if (GLContext::clip_cull_distance_support){
     os << "readonly ";
+      }else{
+          os << " ";
+      }
   }
   return os;
 }
@@ -487,7 +498,11 @@ std::string GLShader::resources_declare(const ShaderCreateInfo &info) const
   }
   ss << "\n/* Push Constants. */\n";
   for (const ShaderCreateInfo::PushConst &uniform : info.push_constants_) {
+      if (uniform.type!=Type::BOOL){
+          ss << "uniform highp " << to_string(uniform.type) << " " << uniform.name;
+      }else{
     ss << "uniform " << to_string(uniform.type) << " " << uniform.name;
+      }
     if (uniform.array_size > 0) {
       ss << "[" << uniform.array_size << "]";
     }
@@ -587,7 +602,11 @@ std::string GLShader::fragment_interface_declare(const ShaderCreateInfo &info) c
     if (!GLContext::native_barycentric_support) {
       ss << "flat in vec4 gpu_pos[3];\n";
       ss << "smooth in vec3 gpu_BaryCoord;\n";
+        if (GLContext::clip_cull_distance_support){
       ss << "noperspective in vec3 gpu_BaryCoordNoPersp;\n";
+        }else{
+            ss << "in vec3 gpu_BaryCoordNoPersp;\n";
+        }
       ss << "#define gpu_position_at_vertex(v) gpu_pos[v]\n";
     }
     else if (epoxy_has_gl_extension("GL_AMD_shader_explicit_vertex_parameter")) {
@@ -629,10 +648,10 @@ std::string GLShader::fragment_interface_declare(const ShaderCreateInfo &info) c
     ss << "layout(location = " << output.index;
     switch (output.blend) {
       case DualBlend::SRC_0:
-        ss << ", index = 0";
+        ss << ", location = 0";
         break;
       case DualBlend::SRC_1:
-        ss << ", index = 1";
+        ss << ", location = 1";
         break;
       default:
         break;
@@ -754,7 +773,11 @@ std::string GLShader::workaround_geometry_shader_source_create(
   if (do_barycentric_workaround) {
     ss << "flat out vec4 gpu_pos[3];\n";
     ss << "smooth out vec3 gpu_BaryCoord;\n";
+      if (GLContext::clip_cull_distance_support){
     ss << "noperspective out vec3 gpu_BaryCoordNoPersp;\n";
+      }else{
+          ss << "out vec3 gpu_BaryCoordNoPersp;\n";
+      }
   }
   ss << "\n";
 
@@ -804,21 +827,29 @@ bool GLShader::do_geometry_shader_injection(const shader::ShaderCreateInfo *info
 /** \name Shader stage creation
  * \{ */
 
-static char *glsl_patch_default_get()
+static char *glsl_patch_default_get(bool hasLayoutIndex)
 {
   /** Used for shader patching. Init once. */
-  static char patch[2048] = "\0";
-  if (patch[0] != '\0') {
-    return patch;
+    static char patch1[2048] = "\0";
+    static char patch2[2048] = "\0";
+    if(hasLayoutIndex){
+        if (patch2[0] != '\0') {
+            return patch2;
   }
+    }else{
+        if (patch1[0] != '\0') {
+            return patch1;
+        }
+    }
 
+    char patch[2048] = "\0";
   size_t slen = 0;
   /* Version need to go first. */
   if (epoxy_gl_version() >= 43) {
-    STR_CONCAT(patch, slen, "#version 430\n");
+    STR_CONCAT(patch, slen, "#version 320 es\n");
   }
   else {
-    STR_CONCAT(patch, slen, "#version 330\n");
+    STR_CONCAT(patch, slen, "#version 320 es\n");
   }
 
   /* Enable extensions for features that are not part of our base GLSL version
@@ -841,15 +872,15 @@ static char *glsl_patch_default_get()
     STR_CONCAT(patch, slen, "#define GPU_ARB_gpu_shader5\n");
   }
   if (GLContext::texture_cube_map_array_support) {
-    STR_CONCAT(patch, slen, "#extension GL_ARB_texture_cube_map_array : enable\n");
+    STR_CONCAT(patch, slen, "#extension GL_EXT_texture_cube_map_array : enable\n");
     STR_CONCAT(patch, slen, "#define GPU_ARB_texture_cube_map_array\n");
   }
   if (epoxy_has_gl_extension("GL_ARB_conservative_depth")) {
     STR_CONCAT(patch, slen, "#extension GL_ARB_conservative_depth : enable\n");
   }
   if (GPU_shader_image_load_store_support()) {
-    STR_CONCAT(patch, slen, "#extension GL_ARB_shader_image_load_store: enable\n");
-    STR_CONCAT(patch, slen, "#extension GL_ARB_shading_language_420pack: enable\n");
+//    STR_CONCAT(patch, slen, "#extension GL_ARB_shader_image_load_store: enable\n");
+//    STR_CONCAT(patch, slen, "#extension GL_ARB_shading_language_420pack: enable\n");
   }
   if (GLContext::layered_rendering_support) {
     STR_CONCAT(patch, slen, "#extension GL_AMD_vertex_shader_layer: enable\n");
@@ -858,6 +889,24 @@ static char *glsl_patch_default_get()
   if (GLContext::native_barycentric_support) {
     STR_CONCAT(patch, slen, "#extension GL_AMD_shader_explicit_vertex_parameter: enable\n");
   }
+    STR_CONCAT(patch, slen, "#extension GL_EXT_shader_io_blocks :enable\n");
+    STR_CONCAT(patch, slen, "#extension GL_EXT_texture_buffer :enable\n");
+    STR_CONCAT(patch, slen, "#extension GL_EXT_geometry_shader :enable\n");
+	        if (hasLayoutIndex){
+              STR_CONCAT(patch,slen,"#extension GL_EXT_blend_func_extended : enable\n");
+      }
+    if (GLContext::clip_cull_distance_support){
+        STR_CONCAT(patch, slen, "#extension GL_EXT_clip_cull_distance : enable\n");
+    }
+    STR_CONCAT(patch,slen,"precision highp int;\n");
+    STR_CONCAT(patch,slen,"precision highp float;\n");
+    STR_CONCAT(patch,slen,"precision highp sampler2DArray;\n");
+    STR_CONCAT(patch,slen,"precision highp samplerBuffer;\n");
+    STR_CONCAT(patch,slen,"precision highp sampler2DArrayShadow;\n");
+    STR_CONCAT(patch,slen,"precision highp sampler3D;\n");
+    STR_CONCAT(patch,slen,"precision highp usampler2D;\n");
+    STR_CONCAT(patch,slen,"precision highp samplerCubeArray;\n");
+    STR_CONCAT(patch,slen,"precision highp usamplerBuffer;\n");
 
   /* Fallbacks. */
   if (!GLContext::shader_draw_parameters_support) {
@@ -878,7 +927,16 @@ static char *glsl_patch_default_get()
   STR_CONCAT(patch, slen, datatoc_glsl_shader_defines_glsl);
 
   BLI_assert(slen < sizeof(patch));
-  return patch;
+    if(hasLayoutIndex){
+        ::memcpy(patch2,patch,2048);
+    }else{
+        ::memcpy(patch1,patch,2048);
+    }
+    if(hasLayoutIndex){
+        return patch2;
+    }else{
+        return patch1;
+    }
 }
 
 static char *glsl_patch_compute_get()
@@ -891,8 +949,23 @@ static char *glsl_patch_compute_get()
 
   size_t slen = 0;
   /* Version need to go first. */
-  STR_CONCAT(patch, slen, "#version 430\n");
+  STR_CONCAT(patch, slen, "#version 320 es\n");
+    STR_CONCAT(patch, slen, "#extension GL_EXT_shader_io_blocks :enable\n");
+    STR_CONCAT(patch, slen, "#extension GL_EXT_texture_buffer :enable\n");
+    STR_CONCAT(patch, slen, "#extension GL_EXT_geometry_shader :enable\n");
   STR_CONCAT(patch, slen, "#extension GL_ARB_compute_shader :enable\n");
+    if (GLContext::clip_cull_distance_support){
+        STR_CONCAT(patch, slen, "#extension GL_EXT_clip_cull_distance : enable\n");
+    }
+    STR_CONCAT(patch,slen,"precision highp int;\n");
+    STR_CONCAT(patch,slen,"precision highp float;\n");
+    STR_CONCAT(patch,slen,"precision highp sampler2DArray;\n");
+    STR_CONCAT(patch,slen,"precision highp samplerBuffer;\n");
+    STR_CONCAT(patch,slen,"precision highp sampler2DArrayShadow;\n");
+    STR_CONCAT(patch,slen,"precision highp sampler3D;\n");
+    STR_CONCAT(patch,slen,"precision highp usampler2D;\n");
+    STR_CONCAT(patch,slen,"precision highp samplerCubeArray;\n");
+    STR_CONCAT(patch,slen,"precision highp usamplerBuffer;\n");
 
   /* Array compat. */
   STR_CONCAT(patch, slen, "#define gpu_Array(_type) _type[]\n");
@@ -903,12 +976,12 @@ static char *glsl_patch_compute_get()
   return patch;
 }
 
-char *GLShader::glsl_patch_get(GLenum gl_stage)
+char *GLShader::glsl_patch_get(GLenum gl_stage,bool hasLayoutIndex )
 {
   if (gl_stage == GL_COMPUTE_SHADER) {
     return glsl_patch_compute_get();
   }
-  return glsl_patch_default_get();
+  return glsl_patch_default_get(hasLayoutIndex);
 }
 
 GLuint GLShader::create_shader_stage(GLenum gl_stage, MutableSpan<const char *> sources)
@@ -918,10 +991,22 @@ GLuint GLShader::create_shader_stage(GLenum gl_stage, MutableSpan<const char *> 
     fprintf(stderr, "GLShader: Error: Could not create shader object.\n");
     return 0;
   }
+    bool hasLayoutIndex=false;
+    {
+        using namespace std::literals;
+        char *sources_combined = BLI_string_join_arrayN((const char **)sources.data(), sources.size());
+        std::string_view stringView(sources_combined);
+        if (stringView.find(", index = "sv)!=std::string_view::npos){
+            hasLayoutIndex=true;
+        }
+        MEM_freeN(sources_combined);
+    }
 
   /* Patch the shader code using the first source slot. */
-  sources[0] = glsl_patch_get(gl_stage);
+  sources[0] = glsl_patch_get(gl_stage,hasLayoutIndex);
 
+    for(int index=0;index<sources.size();index++){
+    }
   glShaderSource(shader, sources.size(), sources.data(), nullptr);
   glCompileShader(shader);
 
@@ -930,6 +1015,7 @@ GLuint GLShader::create_shader_stage(GLenum gl_stage, MutableSpan<const char *> 
   if (!status || (G.debug & G_DEBUG_GPU)) {
     char log[5000] = "";
     glGetShaderInfoLog(shader, sizeof(log), nullptr, log);
+      CLOG_ERROR(&LOG,"opengl着色器编译错误 %s",log);
     if (log[0] != '\0') {
       GLLogParser parser;
       switch (gl_stage) {
@@ -1001,6 +1087,7 @@ bool GLShader::finalize(const shader::ShaderCreateInfo *info)
   if (!status) {
     char log[5000];
     glGetProgramInfoLog(shader_program_, sizeof(log), nullptr, log);
+      CLOG_ERROR(&LOG,"opengl着色器链接错误 %s",log);
     Span<const char *> sources;
     GLLogParser parser;
     this->print_log(sources, log, "Linking", true, &parser);

@@ -8,7 +8,7 @@
 
 float read_curve_mapping(int table, int index)
 {
-  return texelFetch(curve_mapping_texture, index, 0)[table];
+  return texelFetch(curve_mapping_texture, ivec2(index,0), 0)[table];
 }
 
 float curvemap_calc_extend(int table, float x, vec2 first, vec2 last)

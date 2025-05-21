@@ -325,7 +325,20 @@ GLShaderInterface::GLShaderInterface(GLuint program)
     GLsizei remaining_buffer = name_buffer_len - name_buffer_offset;
     GLsizei name_len = 0;
 
-    glGetActiveUniformName(program, i, remaining_buffer, &name_len, name);
+//    glGetActiveUniformName(program, i, remaining_buffer, &name_len, name);
+      GLint   uniformSize;     
+      GLenum  uniformType;     
+      GLint maxUniformNameLength;
+      glGetProgramiv(program, GL_ACTIVE_UNIFORM_MAX_LENGTH, &maxUniformNameLength);
+      glGetActiveUniform(
+              program,          
+              i,              
+              maxUniformNameLength, 
+              &name_len,        
+              &uniformSize,       
+              &uniformType,      
+              name         
+      );
 
     ShaderInput *input = &inputs_[attr_len_ + ubo_len_ + uniform_len_++];
     input->location = glGetUniformLocation(program, name);
@@ -426,7 +439,7 @@ GLShaderInterface::GLShaderInterface(GLuint program, const shader::ShaderCreateI
   };
 
   if (!GLContext::shader_draw_parameters_support) {
-    check_enabled_uniform("gpu_BaseInstance");
+//    check_enabled_uniform("gpu_BaseInstance");
   }
 
   BLI_assert_msg(ubo_len_ <= 16, "enabled_ubo_mask_ is uint16_t");

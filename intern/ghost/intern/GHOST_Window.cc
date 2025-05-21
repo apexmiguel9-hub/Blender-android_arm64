@@ -42,6 +42,8 @@ GHOST_Window::GHOST_Window(uint32_t width,
     m_fullScreenWidth = width;
     m_fullScreenHeight = height;
   }
+    m_fullScreenWidth = width;
+    m_fullScreenHeight = height;
 }
 
 GHOST_Window::~GHOST_Window()
@@ -53,7 +55,10 @@ void *GHOST_Window::getOSWindow() const
 {
   return nullptr;
 }
-
+void *GHOST_Window::getEGLWindow() const
+{
+  return nullptr;
+}
 GHOST_TSuccess GHOST_Window::setDrawingContextType(GHOST_TDrawingContextType type)
 {
   if (type != m_drawingContextType) {

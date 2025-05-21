@@ -77,11 +77,12 @@ void GLUniformBuf::clear_to_zero()
   else {
     /* WATCH(@fclem): This should be ok since we only use clear outside of drawing functions. */
     glBindBuffer(GL_UNIFORM_BUFFER, ubo_id_);
-    glClearBufferData(GL_UNIFORM_BUFFER,
-                      to_gl_internal_format(internal_format),
-                      to_gl_data_format(internal_format),
-                      to_gl(data_format),
-                      &data);
+      glClearBufferuiv(GL_UNIFORM_BUFFER,ubo_id_,&data);
+//    glClearBufferData(GL_UNIFORM_BUFFER,
+//                      to_gl_internal_format(internal_format),
+//                      to_gl_data_format(internal_format),
+//                      to_gl(data_format),
+//                      &data);
     glBindBuffer(GL_UNIFORM_BUFFER, 0);
   }
 }

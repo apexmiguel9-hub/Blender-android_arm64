@@ -22,14 +22,55 @@
 #include "intern/GHOST_CallbackEventConsumer.hh"
 #include "intern/GHOST_XrException.hh"
 
-GHOST_SystemHandle GHOST_CreateSystem(void)
+void* g_NativeWindow=nullptr;
+void setNativeWindow(void*nativeWindow){
+    g_NativeWindow= nativeWindow;
+}
+void blenderWMInitReinit(){
+}
+void blenderInputKey(int p_physical_keycode,
+                            int p_unicode, int p_key_label, bool p_pressed,
+                            bool p_echo){
+    GHOST_ISystem *system = GHOST_ISystem::getSystem();
+    system->inputKey(p_physical_keycode,
+            p_unicode, p_key_label, p_pressed,
+            p_echo);
+}
+void blenderSetValue(int values[],int num){
+    GHOST_ISystem *system = GHOST_ISystem::getSystem();
+    system->setValue(values,num);
+}
+void blenderSetValueOn(int values[],int num){
+    GHOST_ISystem *system = GHOST_ISystem::getSystem();
+    system->setValueOn(values,num);
+}
+void blenderSetValueOff(int values[],int num){
+    GHOST_ISystem *system = GHOST_ISystem::getSystem();
+    system->setValueOff(values,num);
+}
+void GHOST_showKeyboard(GHOST_WindowHandle windowhandle,char* p_existing_text,
+                        int p_type,
+                        int p_max_input_length,
+                        int p_cursor_start,
+                        int p_cursor_end){
+    GHOST_ISystem *system = GHOST_ISystem::getSystem();
+    system->showKeyboard(p_existing_text,p_type,p_max_input_length,p_cursor_start,p_cursor_end);
+}
+void GHOST_hidenKeyboard(GHOST_WindowHandle windowhandle){
+    GHOST_ISystem *system = GHOST_ISystem::getSystem();
+    system->hidenKeyboard();
+}
+GHOST_SystemHandle GHOST_CreateSystem()
 {
-  GHOST_ISystem::createSystem(true, false);
+  GHOST_ISystem::createSystem(true, false,g_NativeWindow);
   GHOST_ISystem *system = GHOST_ISystem::getSystem();
 
   return (GHOST_SystemHandle)system;
 }
-
+void GHOST_CloseWindow(){
+    GHOST_ISystem *system = GHOST_ISystem::getSystem();
+    return system->closeWindow();
+}
 GHOST_SystemHandle GHOST_CreateSystemBackground(void)
 {
   GHOST_ISystem::createSystemBackground();
@@ -161,7 +202,8 @@ GHOST_WindowHandle GHOST_CreateWindow(GHOST_SystemHandle systemhandle,
                                       uint32_t height,
                                       GHOST_TWindowState state,
                                       bool is_dialog,
-                                      GHOST_GLSettings glSettings)
+                                      GHOST_GLSettings glSettings,
+                                      int shapeType)
 {
   GHOST_ISystem *system = (GHOST_ISystem *)systemhandle;
 
@@ -172,6 +214,7 @@ GHOST_WindowHandle GHOST_CreateWindow(GHOST_SystemHandle systemhandle,
                                                   height,
                                                   state,
                                                   glSettings,
+                                                  shapeType,
                                                   false,
                                                   is_dialog,
                                                   (GHOST_IWindow *)parent_windowhandle);

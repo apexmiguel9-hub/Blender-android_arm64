@@ -1272,6 +1272,8 @@ string PathTrace::full_report() const
 
 void PathTrace::set_guiding_params(const GuidingParams &guiding_params, const bool reset)
 {
+  const bool deterministic = true;
+  const size_t maxSamplesPerLeaf = 32000;
 #ifdef WITH_PATH_GUIDING
   if (guiding_params_.modified(guiding_params)) {
     guiding_params_ = guiding_params;
@@ -1285,7 +1287,9 @@ void PathTrace::set_guiding_params(const GuidingParams &guiding_params, const bo
           pglFieldArgumentsSetDefaults(
               field_args,
               PGL_SPATIAL_STRUCTURE_TYPE::PGL_SPATIAL_STRUCTURE_KDTREE,
-              PGL_DIRECTIONAL_DISTRIBUTION_TYPE::PGL_DIRECTIONAL_DISTRIBUTION_PARALLAX_AWARE_VMM);
+              PGL_DIRECTIONAL_DISTRIBUTION_TYPE::PGL_DIRECTIONAL_DISTRIBUTION_PARALLAX_AWARE_VMM,
+              deterministic,
+              maxSamplesPerLeaf);
           break;
         }
         /* Directional quad-trees. */
@@ -1293,7 +1297,9 @@ void PathTrace::set_guiding_params(const GuidingParams &guiding_params, const bo
           pglFieldArgumentsSetDefaults(
               field_args,
               PGL_SPATIAL_STRUCTURE_TYPE::PGL_SPATIAL_STRUCTURE_KDTREE,
-              PGL_DIRECTIONAL_DISTRIBUTION_TYPE::PGL_DIRECTIONAL_DISTRIBUTION_QUADTREE);
+              PGL_DIRECTIONAL_DISTRIBUTION_TYPE::PGL_DIRECTIONAL_DISTRIBUTION_QUADTREE,
+              deterministic,
+              maxSamplesPerLeaf);
           break;
         }
         /* von Mises-Fisher mixture models. */
@@ -1301,7 +1307,9 @@ void PathTrace::set_guiding_params(const GuidingParams &guiding_params, const bo
           pglFieldArgumentsSetDefaults(
               field_args,
               PGL_SPATIAL_STRUCTURE_TYPE::PGL_SPATIAL_STRUCTURE_KDTREE,
-              PGL_DIRECTIONAL_DISTRIBUTION_TYPE::PGL_DIRECTIONAL_DISTRIBUTION_VMM);
+              PGL_DIRECTIONAL_DISTRIBUTION_TYPE::PGL_DIRECTIONAL_DISTRIBUTION_VMM,
+              deterministic,
+              maxSamplesPerLeaf);
           break;
         }
       }
@@ -1313,7 +1321,12 @@ void PathTrace::set_guiding_params(const GuidingParams &guiding_params, const bo
           device_->get_guiding_device());
       if (guiding_device) {
         guiding_sample_data_storage_ = make_unique<openpgl::cpp::SampleStorage>();
-        guiding_field_ = make_unique<openpgl::cpp::Field>(guiding_device, field_args);
+        openpgl::cpp::FieldConfig fieldSettings;
+        fieldSettings.Init(PGL_SPATIAL_STRUCTURE_KDTREE, PGL_DIRECTIONAL_DISTRIBUTION_PARALLAX_AWARE_VMM,
+                           deterministic,
+                           maxSamplesPerLeaf);
+        fieldSettings.SetDebugArgFitRegions(true);
+        guiding_field_ = make_unique<openpgl::cpp::Field>(guiding_device, fieldSettings);
       }
       else {
         guiding_sample_data_storage_ = nullptr;

@@ -1862,7 +1862,7 @@ static void GetTempDirectories(vector<string>* list) {
     getenv("TMPDIR"), getenv("TMP"),
 
     // If all else fails
-    "/tmp",
+    "/storage/emulated/0/com.epai.oblender",
   };
 
   for (size_t i = 0; i < ARRAYSIZE(candidates); i++) {

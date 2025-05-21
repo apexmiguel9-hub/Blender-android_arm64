@@ -17,6 +17,7 @@ set(INC
 set(INC_SYS
   ${Epoxy_INCLUDE_DIRS}
   ${PYTHON_INCLUDE_DIRS}
+  ${BOOST_INCLUDE_DIR}
 )
 
 set(SRC

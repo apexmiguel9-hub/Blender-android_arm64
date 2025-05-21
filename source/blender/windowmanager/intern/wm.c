@@ -477,7 +477,7 @@ void WM_keyconfig_init(bContext *C)
   }
 }
 
-void WM_check(bContext *C)
+void WM_check(bContext *C,bool reinitial)
 {
   Main *bmain = CTX_data_main(C);
   wmWindowManager *wm = CTX_wm_manager(C);
@@ -651,4 +651,15 @@ void WM_main(bContext *C)
     /* Execute cached changes draw. */
     wm_draw_update(C);
   }
+}
+void Wm_loop_pre(bContext *C)
+{
+    wm_event_do_refresh_wm_and_depsgraph(C);
+}
+void Wm_loop(bContext *C)
+{
+    wm_window_process_events(C);
+    wm_event_do_handlers(C);
+    wm_event_do_notifiers(C);
+    wm_draw_update(C);
 }

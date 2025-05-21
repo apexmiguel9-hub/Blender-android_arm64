@@ -305,7 +305,7 @@ GPU_SHADER_CREATE_INFO(overlay_gpencil_canvas_clipped)
 GPU_SHADER_INTERFACE_INFO(overlay_particle_iface, "").flat(Type::VEC4, "finalColor");
 
 GPU_SHADER_CREATE_INFO(overlay_particle)
-    .sampler(0, ImageType::FLOAT_1D, "weightTex")
+    .sampler(0, ImageType::FLOAT_2D, "weightTex")
     .push_constant(Type::VEC4, "ucolor") /* Draw-size packed in alpha. */
     .vertex_in(0, Type::VEC3, "part_pos")
     .vertex_in(1, Type::VEC4, "part_rot")

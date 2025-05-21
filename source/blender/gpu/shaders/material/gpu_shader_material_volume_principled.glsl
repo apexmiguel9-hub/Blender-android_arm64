@@ -13,7 +13,7 @@ void node_volume_principled(vec4 color,
                             vec4 density_attribute,
                             vec4 color_attribute,
                             vec4 temperature_attribute,
-                            sampler1DArray spectrummap,
+                            sampler2DArray spectrummap,
                             float layer,
                             out Closure result)
 {

@@ -18,14 +18,14 @@ float acos_fast(float v)
 {
   float res = -0.156583 * abs(v) + M_PI_2;
   res *= sqrt_fast(1.0 - abs(v));
-  return (v >= 0) ? res : M_PI - res;
+  return (v >= 0.0) ? res : M_PI - res;
 }
 vec2 acos_fast(vec2 v)
 {
   vec2 res = -0.156583 * abs(v) + M_PI_2;
   res *= sqrt_fast(1.0 - abs(v));
-  v.x = (v.x >= 0) ? res.x : M_PI - res.x;
-  v.y = (v.y >= 0) ? res.y : M_PI - res.y;
+  v.x = (v.x >= 0.0) ? res.x : M_PI - res.x;
+  v.y = (v.y >= 0.0) ? res.y : M_PI - res.y;
   return v;
 }
 

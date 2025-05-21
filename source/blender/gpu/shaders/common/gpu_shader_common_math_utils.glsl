@@ -15,7 +15,7 @@ float compatible_fmod(float a, float b)
 {
   if (b != 0.0) {
     int N = int(a / b);
-    return a - N * b;
+    return a - float(N) * b;
   }
   return 0.0;
 }
@@ -81,7 +81,7 @@ int floor_to_int(float x)
 
 int quick_floor(float x)
 {
-  return int(x) - ((x < 0) ? 1 : 0);
+  return int(x) - ((x < 0.0) ? 1 : 0);
 }
 
 /* Vector Math */

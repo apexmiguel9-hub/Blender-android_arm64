@@ -22,16 +22,19 @@ void valtorgb_opti_ease(
   outalpha = outcol.a;
 }
 
-void valtorgb(float fac, sampler1DArray colormap, float layer, out vec4 outcol, out float outalpha)
+void valtorgb(float fac, sampler2DArray colormap, float layer, out vec4 outcol, out float outalpha)
 {
-  outcol = texture(colormap, vec2(fac, layer));
+  outcol = texture(colormap, vec3(fac,0.0, layer));
   outalpha = outcol.a;
 }
 
 void valtorgb_nearest(
-    float fac, sampler1DArray colormap, float layer, out vec4 outcol, out float outalpha)
+    float fac, sampler2DArray colormap, float layer, out vec4 outcol, out float outalpha)
 {
   fac = clamp(fac, 0.0, 1.0);
-  outcol = texelFetch(colormap, ivec2(fac * (textureSize(colormap, 0).x - 1), layer), 0);
+  int posx=int(float(fac)*float(textureSize(colormap, 0).x - 1));
+  int posy=int(float(fac)*float(textureSize(colormap, 0).y - 1));
+  ivec3 pos=ivec3(posx,posy,layer);
+  outcol = texelFetch(colormap, pos, 0);
   outalpha = outcol.a;
 }

@@ -114,15 +114,15 @@ static void planar_pool_ensure_alloc(EEVEE_Data *vedata, int num_planar_ref)
                                                         planar_usage,
                                                         DRW_TEX_FILTER | DRW_TEX_MIPMAP,
                                                         NULL);
-      txl->planar_depth = DRW_texture_create_2d_array_ex(
+      txl->planar_depth = DRW_texture_create_2d_array_ex_uint(
           width, height, num_planar_ref, GPU_DEPTH_COMPONENT24, planar_usage_depth, 0, NULL);
     }
     else if (num_planar_ref == 0) {
       /* Makes Opengl Happy : Create a placeholder texture that will never be sampled but still
        * bound to shader. */
       txl->planar_pool = DRW_texture_create_2d_array_ex(
-          1, 1, 1, GPU_RGBA8, planar_usage, DRW_TEX_FILTER | DRW_TEX_MIPMAP, NULL);
-      txl->planar_depth = DRW_texture_create_2d_array_ex(
+                1, 1, 1, GPU_RGBA8, planar_usage, DRW_TEX_FILTER, NULL);
+      txl->planar_depth = DRW_texture_create_2d_array_ex_uint(
           1, 1, 1, GPU_DEPTH_COMPONENT24, planar_usage_depth, 0, NULL);
     }
   }
@@ -225,7 +225,7 @@ void EEVEE_lightbake_cache_init(EEVEE_ViewLayerData *sldata,
     DRW_shgroup_uniform_block(grp, "common_block", sldata->common_ubo);
     DRW_shgroup_uniform_block(grp, "renderpass_block", sldata->renderpass_ubo.combined);
 
-    struct GPUBatch *geom = DRW_cache_fullscreen_quad_get();
+    struct GPUBatch *geom = DRW_cache_quad_get();
     DRW_shgroup_call_instances(grp, NULL, geom, 6);
   }
 
@@ -823,14 +823,25 @@ static void render_reflections(void (*callback)(int face, EEVEE_BakeRenderData *
 
 static void lightbake_render_world_face(int face, EEVEE_BakeRenderData *user_data)
 {
+    for (int i = 0; i < (face==0?2:1); i++) {
   EEVEE_PassList *psl = user_data->vedata->psl;
   struct GPUFrameBuffer **face_fb = user_data->face_fb;
 
   /* For world probe, we don't need to clear the color buffer
    * since we render the background directly. */
   GPU_framebuffer_bind(face_fb[face]);
+        GLboolean depthTestValue = GL_FALSE;
+        glGetBooleanv(GL_DEPTH_TEST, &depthTestValue);
+        if (depthTestValue != GL_FALSE)
+        {
+            glDisable(GL_DEPTH_TEST);
+        }
   GPU_framebuffer_clear_depth(face_fb[face], 1.0f);
   DRW_draw_pass(psl->probe_background);
+        if (depthTestValue != GL_FALSE) {
+            glEnable(GL_DEPTH_TEST);
+        }
+    }
 }
 
 void EEVEE_lightbake_render_world(EEVEE_ViewLayerData *UNUSED(sldata),

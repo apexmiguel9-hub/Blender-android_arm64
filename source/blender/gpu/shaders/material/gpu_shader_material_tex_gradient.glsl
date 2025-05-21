@@ -20,7 +20,7 @@ float calc_gradient(vec3 p, int gradient_type)
     return (x + y) * 0.5;
   }
   else if (gradient_type == 4) { /* radial */
-    return atan(y, x) / (M_PI * 2) + 0.5;
+    return atan(y, x) / (M_PI * 2.0) + 0.5;
   }
   else {
     /* Bias a little bit for the case where p is a unit length vector,

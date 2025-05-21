@@ -16,7 +16,7 @@
  */
 
 #ifdef WITH_EMBREE
-
+#define EMBREE_MAJOR_VERSION 4
 #  if EMBREE_MAJOR_VERSION >= 4
 #    include <embree4/rtcore_geometry.h>
 #  else

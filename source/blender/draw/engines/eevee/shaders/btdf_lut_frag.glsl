@@ -3,8 +3,8 @@
 
 void main()
 {
-  float x = floor(gl_FragCoord.x) / (LUT_SIZE - 1.0);
-  float y = floor(gl_FragCoord.y) / (LUT_SIZE - 1.0);
+  float x = floor(gl_FragCoord.x) / (float(LUT_SIZE) - 1.0);
+  float y = floor(gl_FragCoord.y) / (float(LUT_SIZE) - 1.0);
 
   float ior = clamp(sqrt(x), 0.05, 0.999);
   /* ior is sin of critical angle. */

@@ -128,7 +128,8 @@ void GLVertBuf::bind_as_texture(uint binding)
 void GLVertBuf::read(void *data) const
 {
   BLI_assert(is_active());
-  void *result = glMapBuffer(GL_ARRAY_BUFFER, GL_READ_ONLY);
+//  void *result = glMapBuffer(GL_ARRAY_BUFFER, GL_READ_ONLY);
+    void *result = glMapBufferRange(GL_ARRAY_BUFFER,0,vbo_size_ , GL_MAP_READ_BIT);
   memcpy(data, result, size_used_get());
   glUnmapBuffer(GL_ARRAY_BUFFER);
 }

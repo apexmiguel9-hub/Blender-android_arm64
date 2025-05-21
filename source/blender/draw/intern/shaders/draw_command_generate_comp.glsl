@@ -11,11 +11,11 @@
 void write_draw_call(DrawGroup group, uint group_id)
 {
   DrawCommand cmd;
-  cmd.vertex_len = group.vertex_len;
-  cmd.vertex_first = group.vertex_first;
+  cmd.vertex_len = uint(group.vertex_len);
+  cmd.vertex_first = uint(group.vertex_first);
   bool indexed_draw = group.base_index != -1;
   if (indexed_draw) {
-    cmd.base_index = group.base_index;
+    cmd.base_index = uint(group.base_index);
     cmd.instance_first_indexed = group.start;
   }
   else {
@@ -23,7 +23,7 @@ void write_draw_call(DrawGroup group, uint group_id)
   }
   /* Back-facing command. */
   cmd.instance_len = group_buf[group_id].back_facing_counter;
-  command_buf[group_id * 2 + 0] = cmd;
+  command_buf[group_id * 2u + 0u] = cmd;
 
   /* Front-facing command. */
   uint front_facing_start = group.start + (group.len - group.front_facing_len);
@@ -34,7 +34,7 @@ void write_draw_call(DrawGroup group, uint group_id)
     cmd._instance_first_array = front_facing_start;
   }
   cmd.instance_len = group_buf[group_id].front_facing_counter;
-  command_buf[group_id * 2 + 1] = cmd;
+  command_buf[group_id * 2u + 1u] = cmd;
 
   /* Reset the counters for a next command gen dispatch. Avoids resending the whole data just
    * for this purpose. Only the last thread will execute this so it is thread-safe. */
@@ -45,32 +45,32 @@ void write_draw_call(DrawGroup group, uint group_id)
 
 void main()
 {
-  uint proto_id = gl_GlobalInvocationID.x;
+  int proto_id = int(gl_GlobalInvocationID.x);
   if (proto_id >= prototype_len) {
     return;
   }
 
   DrawPrototype proto = prototype_buf[proto_id];
   uint group_id = proto.group_id;
-  bool is_inverted = (proto.resource_handle & 0x80000000u) != 0;
+  bool is_inverted = (proto.resource_handle & 0x80000000u) != 0u;
   uint resource_index = (proto.resource_handle & 0x7FFFFFFFu);
 
   /* Visibility test result. */
-  uint visible_instance_len = 0;
+  uint visible_instance_len = 0u;
   if (visibility_word_per_draw > 0) {
-    uint visibility_word = resource_index * visibility_word_per_draw;
-    for (uint i = 0; i < visibility_word_per_draw; i++, visibility_word++) {
+    uint visibility_word = resource_index * uint(visibility_word_per_draw);
+    for (int i = 0; i < visibility_word_per_draw; i++, visibility_word++) {
       /* NOTE: This assumes `proto.instance_len` is 1. */
       /* TODO: Assert. */
-      visible_instance_len += bitCount(visibility_buf[visibility_word]);
+      visible_instance_len += uint(bitCount(visibility_buf[visibility_word]));
     }
   }
   else {
-    if ((visibility_buf[resource_index / 32u] & (1u << (resource_index % 32u))) != 0) {
+    if ((visibility_buf[resource_index / 32u] & (1u << (resource_index % 32u))) != 0u) {
       visible_instance_len = proto.instance_len;
     }
   }
-  bool is_visible = visible_instance_len > 0;
+  bool is_visible = visible_instance_len > 0u;
 
   DrawGroup group = group_buf[group_id];
 
@@ -102,15 +102,15 @@ void main()
 
   /* Fill resource_id buffer for each instance of this draw. */
   if (visibility_word_per_draw > 0) {
-    uint visibility_word = resource_index * visibility_word_per_draw;
-    for (uint i = 0; i < visibility_word_per_draw; i++, visibility_word++) {
+    uint visibility_word = resource_index * uint(visibility_word_per_draw);
+    for (int i = 0; i < visibility_word_per_draw; i++, visibility_word++) {
       uint word = visibility_buf[visibility_word];
-      uint view_index = i * 32u;
+      uint view_index = uint(i) * 32u;
       while (word != 0u) {
         if ((word & 1u) != 0u) {
           if (use_custom_ids) {
-            resource_id_buf[dst_index * 2] = view_index | (resource_index << view_shift);
-            resource_id_buf[dst_index * 2 + 1] = proto.custom_id;
+            resource_id_buf[dst_index * 2u] = view_index | (resource_index << view_shift);
+            resource_id_buf[dst_index * 2u + 1u] = proto.custom_id;
           }
           else {
             resource_id_buf[dst_index] = view_index | (resource_index << view_shift);
@@ -125,8 +125,8 @@ void main()
   else {
     for (uint i = dst_index; i < dst_index + visible_instance_len; i++) {
       if (use_custom_ids) {
-        resource_id_buf[i * 2] = resource_index;
-        resource_id_buf[i * 2 + 1] = proto.custom_id;
+        resource_id_buf[i * 2u] = resource_index;
+        resource_id_buf[i * 2u + 1u] = proto.custom_id;
       }
       else {
         resource_id_buf[i] = resource_index;

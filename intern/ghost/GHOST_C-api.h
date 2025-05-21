@@ -20,8 +20,16 @@ extern "C" {
  * \param event: The event received.
  * \param userdata: The callback's user data, supplied to #GHOST_CreateSystem.
  */
+ extern void*g_NativeWindow;
 typedef bool (*GHOST_EventCallbackProcPtr)(GHOST_EventHandle event, GHOST_TUserDataPtr userdata);
-
+extern void setNativeWindow(void*nativeWindow);
+extern void blenderSetValue(int values[],int num);
+extern void blenderSetValueOn(int values[],int num);
+extern void blenderSetValueOff(int values[],int num);
+extern void blenderWMInitReinit();
+extern void blenderInputKey(int p_physical_keycode,
+                     int p_unicode, int p_key_label, bool p_pressed,
+                     bool p_echo);
 /**
  * Creates the one and only system.
  * \return a handle to the system.
@@ -174,8 +182,10 @@ extern GHOST_WindowHandle GHOST_CreateWindow(GHOST_SystemHandle systemhandle,
                                              uint32_t height,
                                              GHOST_TWindowState state,
                                              bool is_dialog,
-                                             GHOST_GLSettings glSettings);
+                                             GHOST_GLSettings glSettings,
+                                             int shapeType);
 
+extern void GHOST_CloseWindow();
 /**
  * Create a new off-screen context.
  * Never explicitly delete the context, use #disposeContext() instead.
@@ -973,6 +983,12 @@ extern float GHOST_GetNativePixelSize(GHOST_WindowHandle windowhandle);
  * Returns the suggested DPI for this window.
  */
 extern uint16_t GHOST_GetDPIHint(GHOST_WindowHandle windowhandle);
+extern void GHOST_showKeyboard(GHOST_WindowHandle windowhandle,char* p_existing_text,
+                               int p_type,
+                               int p_max_input_length,
+                               int p_cursor_start,
+                               int p_cursor_end);
+extern void GHOST_hidenKeyboard(GHOST_WindowHandle windowhandle);
 
 /**
  * Enable IME attached to the given window, i.e. allows user-input

@@ -10,7 +10,7 @@ void node_tex_checker(
   int yi = int(abs(floor(p.y)));
   int zi = int(abs(floor(p.z)));
 
-  bool check = ((mod(xi, 2) == mod(yi, 2)) == bool(mod(zi, 2)));
+  bool check = ((mod(float(xi), 2.0) == mod(float(yi), 2.0)) == bool(mod(float(zi), 2.0)));
 
   color = check ? color1 : color2;
   fac = check ? 1.0 : 0.0;

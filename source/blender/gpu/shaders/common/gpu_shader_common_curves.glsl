@@ -54,7 +54,7 @@ void curves_combined_rgb(float factor,
                          vec4 color,
                          vec4 black_level,
                          vec4 white_level,
-                         sampler1DArray curve_map,
+                         sampler2DArray curve_map,
                          const float layer,
                          vec4 range_minimums,
                          vec4 range_dividers,
@@ -67,18 +67,18 @@ void curves_combined_rgb(float factor,
   /* First, evaluate alpha curve map at all channels. The alpha curve is the Combined curve in the
    * UI. */
   vec3 parameters = normalize_parameters(balanced.rgb, range_minimums.aaa, range_dividers.aaa);
-  result.r = texture(curve_map, vec2(parameters.x, layer)).a;
-  result.g = texture(curve_map, vec2(parameters.y, layer)).a;
-  result.b = texture(curve_map, vec2(parameters.z, layer)).a;
+  result.r = texture(curve_map, vec3(parameters.x,0.0, layer)).a;
+  result.g = texture(curve_map, vec3(parameters.y,0.0, layer)).a;
+  result.b = texture(curve_map, vec3(parameters.z,0.0, layer)).a;
 
   /* Then, extrapolate if needed. */
   result.rgb = extrapolate_if_needed(parameters, result.rgb, start_slopes.aaa, end_slopes.aaa);
 
   /* Then, evaluate each channel on its curve map. */
   parameters = normalize_parameters(result.rgb, range_minimums.rgb, range_dividers.rgb);
-  result.r = texture(curve_map, vec2(parameters.r, layer)).r;
-  result.g = texture(curve_map, vec2(parameters.g, layer)).g;
-  result.b = texture(curve_map, vec2(parameters.b, layer)).b;
+  result.r = texture(curve_map, vec3(parameters.r,0.0, layer)).r;
+  result.g = texture(curve_map, vec3(parameters.g,0.0, layer)).g;
+  result.b = texture(curve_map, vec3(parameters.b,0.0, layer)).b;
 
   /* Then, extrapolate again if needed. */
   result.rgb = extrapolate_if_needed(parameters, result.rgb, start_slopes.rgb, end_slopes.rgb);
@@ -92,7 +92,7 @@ void curves_combined_only(float factor,
                           vec4 color,
                           vec4 black_level,
                           vec4 white_level,
-                          sampler1DArray curve_map,
+                          sampler2DArray curve_map,
                           const float layer,
                           float range_minimum,
                           float range_divider,
@@ -105,9 +105,9 @@ void curves_combined_only(float factor,
   /* Evaluate alpha curve map at all channels. The alpha curve is the Combined curve in the
    * UI. */
   vec3 parameters = normalize_parameters(balanced.rgb, vec3(range_minimum), vec3(range_divider));
-  result.r = texture(curve_map, vec2(parameters.x, layer)).a;
-  result.g = texture(curve_map, vec2(parameters.y, layer)).a;
-  result.b = texture(curve_map, vec2(parameters.z, layer)).a;
+  result.r = texture(curve_map, vec3(parameters.x,0.0, layer)).a;
+  result.g = texture(curve_map, vec3(parameters.y,0.0, layer)).a;
+  result.b = texture(curve_map, vec3(parameters.z,0.0, layer)).a;
 
   /* Then, extrapolate if needed. */
   result.rgb = extrapolate_if_needed(parameters, result.rgb, vec3(start_slope), vec3(end_slope));
@@ -152,7 +152,7 @@ void curves_film_like(float factor,
                       vec4 color,
                       vec4 black_level,
                       vec4 white_level,
-                      sampler1DArray curve_map,
+                      sampler2DArray curve_map,
                       const float layer,
                       float range_minimum,
                       float range_divider,
@@ -171,8 +171,8 @@ void curves_film_like(float factor,
    * curve in the UI. */
   float min_parameter = normalize_parameter(minimum, range_minimum, range_divider);
   float max_parameter = normalize_parameter(maximum, range_minimum, range_divider);
-  float new_min = texture(curve_map, vec2(min_parameter, layer)).a;
-  float new_max = texture(curve_map, vec2(max_parameter, layer)).a;
+  float new_min = texture(curve_map, vec3(min_parameter,0.0, layer)).a;
+  float new_max = texture(curve_map, vec3(max_parameter,0.0, layer)).a;
 
   /* Then, extrapolate if needed. */
   new_min = extrapolate_if_needed(min_parameter, new_min, start_slope, end_slope);
@@ -194,7 +194,7 @@ void curves_film_like(float factor,
 }
 
 void curves_vector(vec3 vector,
-                   sampler1DArray curve_map,
+                   sampler2DArray curve_map,
                    const float layer,
                    vec3 range_minimums,
                    vec3 range_dividers,
@@ -204,9 +204,9 @@ void curves_vector(vec3 vector,
 {
   /* Evaluate each component on its curve map. */
   vec3 parameters = normalize_parameters(vector, range_minimums, range_dividers);
-  result.x = texture(curve_map, vec2(parameters.x, layer)).x;
-  result.y = texture(curve_map, vec2(parameters.y, layer)).y;
-  result.z = texture(curve_map, vec2(parameters.z, layer)).z;
+  result.x = texture(curve_map, vec3(parameters.x,0.0, layer)).x;
+  result.y = texture(curve_map, vec3(parameters.y,0.0, layer)).y;
+  result.z = texture(curve_map, vec3(parameters.z,0.0, layer)).z;
 
   /* Then, extrapolate if needed. */
   result = extrapolate_if_needed(parameters, result, start_slopes, end_slopes);
@@ -214,7 +214,7 @@ void curves_vector(vec3 vector,
 
 void curves_vector_mixed(float factor,
                          vec3 vector,
-                         sampler1DArray curve_map,
+                         sampler2DArray curve_map,
                          const float layer,
                          vec3 range_minimums,
                          vec3 range_dividers,
@@ -228,7 +228,7 @@ void curves_vector_mixed(float factor,
 }
 
 void curves_float(float value,
-                  sampler1DArray curve_map,
+                  sampler2DArray curve_map,
                   const float layer,
                   float range_minimum,
                   float range_divider,
@@ -238,7 +238,7 @@ void curves_float(float value,
 {
   /* Evaluate the normalized value on the first curve map. */
   float parameter = normalize_parameter(value, range_minimum, range_divider);
-  result = texture(curve_map, vec2(parameter, layer)).x;
+  result = texture(curve_map, vec3(parameter,0.0, layer)).x;
 
   /* Then, extrapolate if needed. */
   result = extrapolate_if_needed(parameter, result, start_slope, end_slope);
@@ -246,7 +246,7 @@ void curves_float(float value,
 
 void curves_float_mixed(float factor,
                         float value,
-                        sampler1DArray curve_map,
+                        sampler2DArray curve_map,
                         const float layer,
                         float range_minimum,
                         float range_divider,

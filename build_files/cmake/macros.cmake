@@ -610,11 +610,12 @@ endmacro()
 
 macro(TEST_NEON_SUPPORT)
   if(NOT DEFINED SUPPORT_NEON_BUILD)
-    include(CheckCXXSourceCompiles)
-    check_cxx_source_compiles(
-      "#include <arm_neon.h>
-       int main() {return vaddvq_s32(vdupq_n_s32(1));}"
-      SUPPORT_NEON_BUILD)
+#    include(CheckCXXSourceCompiles)
+#    check_cxx_source_compiles(
+#      "#include <arm_neon.h>
+#       int main() {return vaddvq_s32(vdupq_n_s32(1));}"
+#      SUPPORT_NEON_BUILD)
+    SET(SUPPORT_NEON_BUILD ON)
   endif()
 endmacro()
 
@@ -1091,8 +1092,8 @@ function(msgfmt_simple
   add_custom_command(
     OUTPUT  ${_file_to}
     COMMAND ${CMAKE_COMMAND} -E make_directory ${_file_to_path}
-    COMMAND ${CMAKE_COMMAND} -E env ${PLATFORM_ENV_BUILD} "$<TARGET_FILE:msgfmt>" ${_file_from} ${_file_to}
-    DEPENDS msgfmt ${_file_from})
+    COMMAND ${CMAKE_COMMAND} -E env ${PLATFORM_ENV_BUILD} msgfmt.exe ${_file_from} ${_file_to}
+    DEPENDS msgfmt.exe ${_file_from})
 
   set_source_files_properties(${_file_to} PROPERTIES GENERATED TRUE)
 endfunction()

@@ -106,8 +106,8 @@ static GPUTexture *create_transfer_function(int type, const struct ColorBand *co
       break;
   }
 
-  GPUTexture *tex = GPU_texture_create_1d(
-      "transf_func", TFUNC_WIDTH, 1, GPU_SRGB8_A8, GPU_TEXTURE_USAGE_SHADER_READ, data);
+  GPUTexture *tex = GPU_texture_create_2d(
+      "transf_func", TFUNC_WIDTH,1, 1, GPU_RGBA32F, GPU_TEXTURE_USAGE_SHADER_READ, data);
 
   MEM_freeN(data);
 

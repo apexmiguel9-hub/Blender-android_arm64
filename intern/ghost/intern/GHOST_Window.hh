@@ -83,6 +83,7 @@ class GHOST_Window : public GHOST_IWindow {
    */
   virtual void *getOSWindow() const override;
 
+    virtual void*getEGLWindow()const override ;
   /**
    * Returns the current cursor shape.
    * \return The current cursor shape.

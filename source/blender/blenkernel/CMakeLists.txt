@@ -49,6 +49,7 @@ set(INC_SYS
 
   # For `vfontdata_freetype.c`.
   ${FREETYPE_INCLUDE_DIRS}
+  ${BOOST_INCLUDE_DIR}
 )
 
 set(SRC

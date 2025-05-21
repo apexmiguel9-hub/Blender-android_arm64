@@ -20,7 +20,7 @@ void main()
   gl_Position.z -= 1e-4;
 
   if (gl_VertexID % stepSize == 0) {
-    gl_PointSize = float(pointSize) + 4;
+    gl_PointSize = float(pointSize) + 4.0;
   }
 
   if (showKeyFrames) {

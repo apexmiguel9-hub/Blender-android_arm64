@@ -213,7 +213,7 @@ ifeq (, $(wildcard $(LIBDIR)/python/bin/python$(PY_LIB_VERSION)))
 			ifeq (, $(wildcard $(LIBDIR)/python/bin/python$(PY_LIB_VERSION)))
 				PY_LIB_VERSION:=3.11
 				ifeq (, $(wildcard $(LIBDIR)/python/bin/python$(PY_LIB_VERSION)))
-					PY_LIB_VERSION:=3.10
+					PY_LIB_VERSION:=3.11
 				endif
 			endif
 		endif

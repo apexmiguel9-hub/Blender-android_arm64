@@ -35,6 +35,7 @@ set(INC
 
   # dna_type_offsets.h
   ${CMAKE_CURRENT_BINARY_DIR}/../makesdna/intern
+  ${Epoxy_INCLUDE_DIRS}
 )
 
 set(SRC

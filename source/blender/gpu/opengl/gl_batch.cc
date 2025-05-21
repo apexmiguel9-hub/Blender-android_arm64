@@ -272,11 +272,12 @@ void GLBatch::bind(int i_first)
 
 #if GPU_TRACK_INDEX_RANGE
   /* Can be removed if GL 4.3 is required. */
-  if (!GLContext::fixed_restart_index_support) {
-    glPrimitiveRestartIndex((elem != nullptr) ? this->elem_()->restart_index() : 0xFFFFFFFFu);
+  if (GLContext::fixed_restart_index_support) {
+//    glPrimitiveRestartIndex((elem != nullptr) ? this->elem_()->restart_index() : 0xFFFFFFFFu);
   }
 #endif
 
+    glEnable(GL_PRIMITIVE_RESTART_FIXED_INDEX);
   /* Can be removed if GL 4.2 is required. */
   if (!GLContext::base_instance_support && (i_first > 0)) {
     glBindVertexArray(vao_cache_.base_instance_vao_get(this, i_first));

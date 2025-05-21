@@ -234,9 +234,9 @@ class GPUShaderCreator : public OCIO::GpuShaderCreator {
 #  else
     if (height == 1) {
 #  endif
-      texture = GPU_texture_create_1d(
-          texture_name, width, 1, texture_format, GPU_TEXTURE_USAGE_SHADER_READ, values);
-      shader_create_info_.sampler(textures_.size() + 1, ImageType::FLOAT_1D, resource_name);
+      texture = GPU_texture_create_2d(
+          texture_name, width,height, 1, texture_format, GPU_TEXTURE_USAGE_SHADER_READ, values);
+      shader_create_info_.sampler(textures_.size() + 1, ImageType::FLOAT_2D, resource_name);
     }
     else {
       texture = GPU_texture_create_2d(

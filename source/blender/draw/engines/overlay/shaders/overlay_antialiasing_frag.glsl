@@ -56,7 +56,7 @@ float neighbor_dist(vec3 line_dir_and_dist, vec2 ofs)
 
   bool is_line = line_dir_and_dist.z != 0.0;
   bool dir_horiz = abs(dir.x) > abs(dir.y);
-  bool ofs_horiz = (ofs.x != 0);
+  bool ofs_horiz = (ofs.x != 0.0);
 
   if (!is_line || (ofs_horiz != dir_horiz)) {
     dist += 1e10; /* No line. */

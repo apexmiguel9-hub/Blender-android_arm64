@@ -108,6 +108,7 @@ class GHOST_WindowManager {
    * \return The associated window, null if none corresponds.
    */
   GHOST_IWindow *getWindowAssociatedWithOSWindow(void *osWindow);
+  GHOST_IWindow* getWindowAssociatedWithEglWindow(void *eglWindow);
 
  protected:
   /** The list of windows managed */

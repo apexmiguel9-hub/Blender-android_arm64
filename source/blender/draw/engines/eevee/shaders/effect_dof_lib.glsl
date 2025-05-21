@@ -2,10 +2,10 @@
 #pragma BLENDER_REQUIRE(common_view_lib.glsl)
 #pragma BLENDER_REQUIRE(common_math_lib.glsl)
 
-#define cocMul cocParams[0]  /* distance * aperturesize * invsensorsize */
-#define cocBias cocParams[1] /* aperturesize * invsensorsize */
-#define cocNear cocParams[2] /* Near view depths value. */
-#define cocFar cocParams[3]  /* Far view depths value. */
+#define cocMul cocParams[0]
+#define cocBias cocParams[1]
+#define cocNear cocParams[2]
+#define cocFar cocParams[3]
 
 /* -------------- Debug Defines ------------- */
 

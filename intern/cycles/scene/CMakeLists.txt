@@ -4,6 +4,7 @@
 set(INC
   ..
   ../../sky/include
+  ${BOOST_INCLUDE_DIR}
 )
 
 set(SRC

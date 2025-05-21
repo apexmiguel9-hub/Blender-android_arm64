@@ -263,7 +263,9 @@ void GLFrameBuffer::bind(bool enabled_srgb)
     glBindFramebuffer(GL_FRAMEBUFFER, fbo_id_);
     /* Internal frame-buffers have only one color output and needs to be set every time. */
     if (immutable_ && fbo_id_ == 0) {
-      glDrawBuffer(gl_attachments_[0]);
+//      glDrawBuffer(gl_attachments_[0]);
+        const GLenum buffers[]{gl_attachments_[0]};
+        glDrawBuffers(1, buffers);
     }
   }
 
@@ -316,7 +318,7 @@ void GLFrameBuffer::clear(eGPUFrameBufferBits buffers,
   }
   if (buffers & GPU_DEPTH_BIT) {
     GPU_depth_mask(true);
-    glClearDepth(clear_depth);
+      glClearDepthf(clear_depth);
   }
   if (buffers & GPU_STENCIL_BIT) {
     GPU_stencil_write_mask_set(0xFFu);
@@ -468,7 +470,9 @@ void GLFrameBuffer::blit_to(
     BLI_assert(src->gl_attachments_[src_slot] != GL_NONE);
     BLI_assert(dst->gl_attachments_[dst_slot] != GL_NONE);
     glReadBuffer(src->gl_attachments_[src_slot]);
-    glDrawBuffer(dst->gl_attachments_[dst_slot]);
+//    glDrawBuffer(dst->gl_attachments_[dst_slot]);
+      const GLenum buffers[]{dst->gl_attachments_[dst_slot]};
+      glDrawBuffers(1, buffers);
   }
 
   context_->state_manager->apply_state();

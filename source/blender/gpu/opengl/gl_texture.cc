@@ -88,7 +88,7 @@ bool GLTexture::init_internal()
     default:
     case 1:
       if (GLContext::texture_storage_support) {
-        glTexStorage1D(target_, mipmaps_, internal_format, w_);
+          glTexStorage2D(target_, mipmaps_, internal_format, w_, 1);
       }
       else {
         for (int i = 0, w = w_; i < mipmaps_; i++) {
@@ -292,11 +292,21 @@ void GLTexture::update_sub(
   else {
     switch (dimensions) {
       default:
-      case 1:
-        glTexSubImage1D(target_, mip, offset[0], extent[0], gl_format, gl_type, data);
+      case 1:{
+          int offset_[3];
+          int extent_[3];
+          offset_[0]=offset[0];
+          offset_[1]=1;
+          extent_[0]=extent[0];
+          extent_[1]=1;
+          glTexSubImage2D(target_, mip, UNPACK2(offset_), UNPACK2(extent_), gl_format, gl_type, data);
+//          glTexSubImage1D(target_, mip, offset[0], extent[0], gl_format, gl_type, data);
+      }
         break;
-      case 2:
-        glTexSubImage2D(target_, mip, UNPACK2(offset), UNPACK2(extent), gl_format, gl_type, data);
+      case 2: {
+          glTexSubImage2D(target_, mip, UNPACK2(offset), UNPACK2(extent), gl_format, gl_type,
+                          data);
+      }
         break;
       case 3:
         glTexSubImage3D(target_, mip, UNPACK3(offset), UNPACK3(extent), gl_format, gl_type, data);
@@ -330,7 +340,16 @@ void GLTexture::update_sub(int offset[3],
   switch (dimensions) {
     default:
     case 1:
-      glTexSubImage1D(target_, 0, offset[0], extent[0], gl_format, gl_type, nullptr);
+    {
+        int offset_[3];
+        int extent_[3];
+        offset_[0]=offset[0];
+        offset_[1]=1;
+        extent_[0]=extent[0];
+        extent_[1]=1;
+        glTexSubImage2D(target_, 0, UNPACK2(offset_), UNPACK2(extent_), gl_format, gl_type, nullptr);
+//        glTexSubImage1D(target_, 0, offset[0], extent[0], gl_format, gl_type, nullptr);
+    }
       break;
     case 2:
       glTexSubImage2D(target_, 0, UNPACK2(offset), UNPACK2(extent), gl_format, gl_type, nullptr);
@@ -459,13 +478,30 @@ void *GLTexture::read(int mip, eGPUDataFormat type)
     GLContext::state_manager_active_get()->texture_bind_temp(this);
     if (type_ == GPU_TEXTURE_CUBE) {
       size_t cube_face_size = texture_size / 6;
-      char *face_data = (char *)data;
-      for (int i = 0; i < 6; i++, face_data += cube_face_size) {
-        glGetTexImage(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, mip, gl_format, gl_type, face_data);
+        char *pdata = (char *) data;
+        GLuint fbo = 0;
+        glGenFramebuffers(1, &fbo);
+        glBindFramebuffer(GL_FRAMEBUFFER, fbo);
+        for (int i = 0; i < 6; i++, pdata += cube_face_size) {
+//        glGetTexImage(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, mip, gl_format, gl_type, pdata);
+            {
+                glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
+                                       GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, tex_id_, 0);
+                glReadPixels(0, 0, extent[0], extent[1], gl_format, gl_type, pdata);
       }
+        }
+        glDeleteFramebuffers(1, &fbo);
     }
     else {
-      glGetTexImage(target_, mip, gl_format, gl_type, data);
+//      glGetTexImage(target_, mip, gl_format, gl_type, data);
+        {
+            GLuint fbo=0;
+            glGenFramebuffers(1, &fbo);
+            glBindFramebuffer(GL_FRAMEBUFFER, fbo);
+            glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, tex_id_, 0);
+            glReadPixels(0, 0, extent[0], extent[1], gl_format, gl_type, data);
+            glDeleteFramebuffers(1, &fbo);
+        }
     }
   }
   return data;
@@ -772,8 +808,12 @@ bool GLTexture::proxy_check(int mip)
   else {
     switch (dimensions) {
       default:
-      case 1:
-        glTexImage1D(gl_proxy, mip, internal_format, size[0], 0, gl_format, gl_type, nullptr);
+      case 1:{
+          int sizeTemp[2]={size[0],1};
+//        glTexImage1D(gl_proxy, mip, internal_format, size[0], 0, gl_format, gl_type, nullptr);
+          glTexImage2D(
+                  gl_proxy, mip, internal_format, UNPACK2(sizeTemp), 0, gl_format, gl_type, nullptr);
+      }
         break;
       case 2:
         glTexImage2D(
@@ -870,7 +910,8 @@ void *GLPixelBuffer::map()
   }
 
   glBindBuffer(GL_PIXEL_UNPACK_BUFFER, gl_id_);
-  void *ptr = glMapBuffer(GL_PIXEL_UNPACK_BUFFER, GL_WRITE_ONLY);
+//  void *ptr = glMapBuffer(GL_PIXEL_UNPACK_BUFFER, GL_WRITE_ONLY);
+    void *ptr = glMapBufferRange(GL_PIXEL_UNPACK_BUFFER,0,size_, GL_MAP_WRITE_BIT);
   BLI_assert(ptr);
   return ptr;
 }

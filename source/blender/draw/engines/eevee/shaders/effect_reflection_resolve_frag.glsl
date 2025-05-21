@@ -239,7 +239,44 @@ void raytrace_resolve(ClosureInputGlossy cl_in,
   cl_common.specular_accum -= ssr_accum.a;
 }
 
-CLOSURE_EVAL_FUNCTION_DECLARE_1(ssr_resolve, Glossy)
+void closure_ssr_resolve_eval(ClosureInputCommon in_common, inout ClosureInputGlossy in_Glossy_0,
+                              inout ClosureOutput in_Dummy_1, inout ClosureOutput in_Dummy_2,
+                              inout ClosureOutput in_Dummy_3, out ClosureOutputGlossy out_Glossy_0,
+                              out ClosureOutput out_Dummy_1, out ClosureOutput out_Dummy_2,
+                              out ClosureOutput out_Dummy_3) {
+    ClosureEvalCommon cl_common = closure_Common_eval_init(in_common);
+    ClosureEvalGlossy eval_Glossy_0 = closure_Glossy_eval_init(in_Glossy_0, cl_common,
+                                                               out_Glossy_0);
+    ClosureOutput eval_Dummy_1 = ClosureOutput(vec3(0));
+    ClosureOutput eval_Dummy_2 = ClosureOutput(vec3(0));
+    ClosureOutput eval_Dummy_3 = ClosureOutput(vec3(0));;
+    for (int i = 1; cl_common.specular_accum > 0.0 && i < prbNumRenderCube && i < MAX_PROBE; i++) {
+        ClosureCubemapData cube = closure_cubemap_eval_init(i, cl_common);
+        if (cube.attenuation > 1e-8) {
+            closure_Glossy_cubemap_eval(in_Glossy_0, eval_Glossy_0, cl_common, cube,
+                                        out_Glossy_0);;;;;
+        }
+    }
+    for (int i = 1; cl_common.diffuse_accum > 0.0 && i < prbNumRenderGrid && i < MAX_GRID; i++) {
+        ClosureGridData grid = closure_grid_eval_init(i, cl_common);
+        if (grid.attenuation > 1e-8) {
+            closure_Glossy_grid_eval(in_Glossy_0, eval_Glossy_0, cl_common, grid, out_Glossy_0);;;;;
+        }
+    }
+    closure_Glossy_indirect_end(in_Glossy_0, eval_Glossy_0, cl_common, out_Glossy_0);;;;;
+    ClosurePlanarData planar = closure_planar_eval_init(cl_common);
+    if (planar.attenuation > 1e-8) {
+        closure_Glossy_planar_eval(in_Glossy_0, eval_Glossy_0, cl_common, planar, out_Glossy_0);;;;;
+    }
+    for (int i = 0; i < laNumLight && i < MAX_LIGHT; i++) {
+        ClosureLightData light = closure_light_eval_init(cl_common, i);
+        if (light.vis > 1e-8) {
+            closure_Glossy_light_eval(in_Glossy_0, eval_Glossy_0, cl_common, light,
+                                      out_Glossy_0);;;;;
+        }
+    }
+    closure_Glossy_eval_end(in_Glossy_0, eval_Glossy_0, cl_common, out_Glossy_0);;;;;
+}
 
 void main()
 {
@@ -289,7 +326,15 @@ void main()
   viewNormal = normal_decode(normal_encoded, viewCameraVec(viewPosition));
   worldNormal = transform_direction(ViewMatrixInverse, viewNormal);
 
-  CLOSURE_VARS_DECLARE_1(Glossy);
+    ClosureInputCommon in_common = ClosureInputCommon(1.0);
+    ClosureInputGlossy in_Glossy_0 = CLOSURE_INPUT_Glossy_DEFAULT;
+    ClosureOutput in_Dummy_1 = ClosureOutput(vec3(0));
+    ClosureOutput in_Dummy_2 = ClosureOutput(vec3(0));
+    ClosureOutput in_Dummy_3 = ClosureOutput(vec3(0));
+    ClosureOutputGlossy out_Glossy_0;
+    ClosureOutput out_Dummy_1;
+    ClosureOutput out_Dummy_2;
+    ClosureOutput out_Dummy_3;
 
   in_Glossy_0.N = worldNormal;
   in_Glossy_0.roughness = roughness;
@@ -297,7 +342,8 @@ void main()
   /* Do a full deferred evaluation of the glossy BSDF. The only difference is that we inject the
    * SSR resolve before the cubemap iter. BRDF term is already computed during main pass and is
    * passed as specular color. */
-  CLOSURE_EVAL_FUNCTION_1(ssr_resolve, Glossy);
+    closure_ssr_resolve_eval(in_common, in_Glossy_0, in_Dummy_1, in_Dummy_2, in_Dummy_3, out_Glossy_0,
+                             out_Dummy_1, out_Dummy_2, out_Dummy_3);
 
   /* Default single pass resolve */
   fragColor = vec4(out_Glossy_0.radiance * brdf, 1.0);

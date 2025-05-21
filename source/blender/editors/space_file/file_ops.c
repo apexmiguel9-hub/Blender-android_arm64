@@ -47,6 +47,7 @@
 #include "file_intern.h"
 #include "filelist.h"
 #include "fsmenu.h"
+#include "../../../../intern/ghost/GHOST_C-api.h"
 
 #include <ctype.h>
 #include <errno.h>
@@ -1558,6 +1559,7 @@ static int file_cancel_exec(bContext *C, wmOperator *UNUSED(unused))
 
   WM_event_fileselect_event(wm, op, EVT_FILESELECT_CANCEL);
 
+    GHOST_CloseWindow();
   return OPERATOR_FINISHED;
 }
 
@@ -2111,6 +2113,7 @@ static int file_exec(bContext *C, wmOperator *UNUSED(op))
     return OPERATOR_CANCELLED;
   }
 
+    GHOST_CloseWindow();
   return OPERATOR_FINISHED;
 }
 
@@ -2165,6 +2168,7 @@ static int file_execute_mouse_invoke(bContext *C, wmOperator *UNUSED(op), const 
   if (!file_execute(C, sfile)) {
     return OPERATOR_CANCELLED;
   }
+    GHOST_CloseWindow();
 
   return OPERATOR_FINISHED;
 }

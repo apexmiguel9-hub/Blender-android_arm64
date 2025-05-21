@@ -39,7 +39,7 @@ vec2 lut_coords(float cos_theta, float roughness)
 {
   vec2 coords = vec2(roughness, sqrt(1.0 - cos_theta));
   /* scale and bias coordinates, for correct filtered lookup */
-  return coords * (LUT_SIZE - 1.0) / LUT_SIZE + 0.5 / LUT_SIZE;
+  return coords * (float(LUT_SIZE) - 1.0) / float(LUT_SIZE) + 0.5 / float(LUT_SIZE);
 }
 
 /* Returns the GGX split-sum precomputed in LUT. */
@@ -65,7 +65,7 @@ vec3 lut_coords_btdf(float cos_theta, float roughness, float ior)
   coords = saturate(coords);
 
   /* scale and bias coordinates, for correct filtered lookup */
-  coords.xy = coords.xy * (LUT_SIZE - 1.0) / LUT_SIZE + 0.5 / LUT_SIZE;
+  coords.xy = coords.xy * (float(LUT_SIZE) - 1.0) / float(LUT_SIZE) + 0.5 / float(LUT_SIZE);
 
   return coords;
 }

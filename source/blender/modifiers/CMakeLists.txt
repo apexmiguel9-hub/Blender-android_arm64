@@ -30,6 +30,7 @@ set(INC
 
 set(INC_SYS
   ${ZLIB_INCLUDE_DIRS}
+  ${BOOST_INCLUDE_DIR}
 )
 
 set(SRC

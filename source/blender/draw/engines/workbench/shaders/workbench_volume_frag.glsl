@@ -153,7 +153,7 @@ void volume_properties(vec3 ls_pos, out vec3 scattering, out float extinction)
 #else
 #  ifdef VOLUME_SMOKE
   float flame = sample_volume_texture(flameTexture, co).r;
-  vec4 emission = texture(flameColorTexture, flame);
+  vec4 emission = texture(flameColorTexture, vec2(flame,0.0));
 #  endif
   vec3 density = sample_volume_texture(densityTexture, co).rgb;
   float shadows = sample_volume_texture(shadowTexture, co).r;

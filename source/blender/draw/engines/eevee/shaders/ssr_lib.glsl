@@ -56,7 +56,7 @@ vec4 screen_space_refraction(vec3 vP, vec3 N, vec3 V, float ior, float roughness
     float hit_dist = distance(hit_pos, vP);
 
     float cone_cos = cone_cosine(roughnessSquared);
-    float cone_tan = sqrt(1 - cone_cos * cone_cos) / cone_cos;
+    float cone_tan = sqrt(1.0 - cone_cos * cone_cos) / cone_cos;
 
     /* Empirical fit for refraction. */
     /* TODO: find a better fit or precompute inside the LUT. */

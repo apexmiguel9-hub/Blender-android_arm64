@@ -25,8 +25,8 @@ vec2 calc_brick_texture(vec3 p,
 
   bricknum = floor_to_int((p.x + offset) / brick_width);
 
-  x = (p.x + offset) - brick_width * bricknum;
-  y = p.y - row_height * rownum;
+  x = (p.x + offset) - brick_width * float(bricknum);
+  y = p.y - row_height * float(rownum);
 
   float tint = clamp((integer_noise((rownum << 16) + (bricknum & 0xFFFF)) + bias), 0.0, 1.0);
 

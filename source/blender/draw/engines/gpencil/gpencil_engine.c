@@ -58,7 +58,7 @@ void GPENCIL_engine_init(void *ved)
 
   if (txl->dummy_texture == NULL) {
     const float pixels[1][4] = {{1.0f, 0.0f, 1.0f, 1.0f}};
-    txl->dummy_texture = DRW_texture_create_2d(1, 1, GPU_RGBA8, DRW_TEX_WRAP, (float *)pixels);
+    txl->dummy_texture = DRW_texture_create_2d(1, 1, GPU_RGBA16F, DRW_TEX_WRAP, (float *)pixels);
   }
 
   GPENCIL_ViewLayerData *vldata = GPENCIL_view_layer_data_ensure();

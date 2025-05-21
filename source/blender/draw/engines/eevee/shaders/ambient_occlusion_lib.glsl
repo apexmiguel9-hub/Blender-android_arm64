@@ -385,7 +385,7 @@ float spherical_cap_intersection(float radius1, float radius2, float dist)
   }
   else if (dist >= sum_radius) {
     /* No intersection exists */
-    area = 0;
+    area = 0.0;
   }
   else {
     float diff = max_radius - min_radius;
@@ -409,7 +409,7 @@ float specular_occlusion(
   specular_dir = normalize(mix(specular_dir, visibility_dir, roughness * (1.0 - visibility)));
 
   /* Visibility to cone angle (eq. 18). */
-  float vis_angle = fast_acos(sqrt(1 - visibility));
+  float vis_angle = fast_acos(sqrt(1.0 - visibility));
   /* Roughness to cone angle (eq. 26). */
   float spec_angle = max(0.00990998744964599609375, fast_acos(cone_cosine(roughness)));
   /* Angle between cone axes. */

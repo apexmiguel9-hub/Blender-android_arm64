@@ -8,7 +8,7 @@ GPU_SHADER_CREATE_INFO(compositor_symmetric_separable_blur)
     .push_constant(Type::BOOL, "gamma_correct_input")
     .push_constant(Type::BOOL, "gamma_uncorrect_output")
     .sampler(0, ImageType::FLOAT_2D, "input_tx")
-    .sampler(1, ImageType::FLOAT_1D, "weights_tx")
+    .sampler(1, ImageType::FLOAT_2D, "weights_tx")
     .image(0, GPU_RGBA16F, Qualifier::WRITE, ImageType::FLOAT_2D, "output_img")
     .compute_source("compositor_symmetric_separable_blur.glsl")
     .do_static_compilation(true);

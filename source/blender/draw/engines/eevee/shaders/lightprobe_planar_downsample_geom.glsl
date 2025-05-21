@@ -8,12 +8,15 @@ void main()
   lightprobe_geom_iface.layer = float(lightprobe_vert_iface[0].instance);
 
   gl_Position = vec4(lightprobe_vert_iface[0].vPos, 0.0, 1.0);
+  gl_Layer = lightprobe_vert_iface[0].instance;
   EmitVertex();
 
   gl_Position = vec4(lightprobe_vert_iface[1].vPos, 0.0, 1.0);
+  gl_Layer = lightprobe_vert_iface[1].instance;
   EmitVertex();
 
   gl_Position = vec4(lightprobe_vert_iface[2].vPos, 0.0, 1.0);
+  gl_Layer = lightprobe_vert_iface[2].instance;
   EmitVertex();
 
   EndPrimitive();

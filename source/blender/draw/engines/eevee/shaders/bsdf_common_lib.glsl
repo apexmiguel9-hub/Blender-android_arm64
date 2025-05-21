@@ -171,7 +171,7 @@ float cone_cosine(float r)
 {
   /* Using phong gloss
    * roughness = sqrt(2/(gloss+2)) */
-  float gloss = -2 + 2 / (r * r);
+  float gloss = -2.0 + 2.0 / (r * r);
   /* Drobot 2014 in GPUPro5 */
   // return cos(2.0 * sqrt(2.0 / (gloss + 2)));
   /* Uludag 2014 in GPUPro5 */

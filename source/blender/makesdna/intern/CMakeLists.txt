@@ -75,7 +75,9 @@ endif()
 
 add_cc_flags_custom_test(makesdna)
 
-add_executable(makesdna ${SRC} ${SRC_DNA_INC})
+#add_executable(makesdna ${SRC} ${SRC_DNA_INC})
+add_library(makesdna STATIC
+        ${SRC})
 setup_platform_linker_flags(makesdna)
 blender_target_include_dirs(makesdna ${INC})
 blender_target_include_dirs_sys(makesdna ${INC_SYS})

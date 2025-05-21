@@ -92,8 +92,14 @@ void GPENCIL_render_init(GPENCIL_Data *vedata,
     GPU_texture_update(txl->render_depth_tx, GPU_DATA_FLOAT, pix_z);
   }
   else {
-    txl->render_depth_tx = DRW_texture_create_2d(
-        size[0], size[1], GPU_DEPTH_COMPONENT24, 0, do_region ? NULL : pix_z);
+      int pix_num = rpass_z_src->rectx * rpass_z_src->recty;
+      uint*pixel= (uint*)MEM_malloc_arrayN(pix_num, sizeof(uint), "pixel");
+      for(int pixelIdx=0;pixelIdx!=pix_num;pixelIdx++){
+          pixel[pixelIdx]=pix_z[pixelIdx]*255;
+      }
+      txl->render_depth_tx = DRW_texture_create_2d_uint(
+              size[0], size[1], GPU_DEPTH_COMPONENT24, 0, do_region ? NULL : pixel);
+      MEM_freeN(pixel);
   }
   if (txl->render_color_tx && !do_clear_col) {
     GPU_texture_update(txl->render_color_tx, GPU_DATA_FLOAT, pix_col);

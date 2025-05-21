@@ -52,7 +52,7 @@ vec3 compute_masks(vec2 uv)
 vec4 do_checkerboard()
 {
   float size = checkerColorAndSize.z;
-  vec2 phase = mod(gl_FragCoord.xy, size * 2.0);
+  vec2 phase = mod(gl_FragCoord.xy, float(size) * 2.0);
 
   if ((phase.x > size && phase.y < size) || (phase.x < size && phase.y > size)) {
     return vec4(checkerColorAndSize.xxx, 1.0);

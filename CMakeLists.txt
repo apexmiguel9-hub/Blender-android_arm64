@@ -184,7 +184,7 @@ else()
   option(WITH_BLENDER_THUMBNAILER "\
 Build stand-alone \"blender-thumbnailer\" command-line thumbnail extraction utility, \
 intended for use by file-managers to extract PNG images from `.blend` files."
-    ${_option_default}
+    OFF
   )
   unset(_option_default)
 endif()
@@ -263,20 +263,20 @@ option(WITH_GHOST_SDL    "Enable building Blender against SDL for windowing rath
 mark_as_advanced(WITH_GHOST_SDL)
 
 if(UNIX AND NOT (APPLE OR HAIKU))
-  option(WITH_GHOST_X11 "Enable building Blender against X11 for windowing" ON)
+  option(WITH_GHOST_X11 "Enable building Blender against X11 for windowing" OFF)
   mark_as_advanced(WITH_GHOST_X11)
 
   option(WITH_GHOST_WAYLAND "Enable building Blender against Wayland for windowing" ON)
   mark_as_advanced(WITH_GHOST_WAYLAND)
 
   if(WITH_GHOST_WAYLAND)
-    option(WITH_GHOST_WAYLAND_LIBDECOR "Optionally build with LibDecor window decorations" ON)
+    option(WITH_GHOST_WAYLAND_LIBDECOR "Optionally build with LibDecor window decorations" OFF)
     mark_as_advanced(WITH_GHOST_WAYLAND_LIBDECOR)
 
     option(WITH_GHOST_WAYLAND_DBUS "Optionally build with DBUS support (used for Cursor themes). May hang on startup systems where DBUS is not used." OFF)
     mark_as_advanced(WITH_GHOST_WAYLAND_DBUS)
 
-    option(WITH_GHOST_WAYLAND_DYNLOAD  "Enable runtime dynamic WAYLAND libraries loading" ON)
+    option(WITH_GHOST_WAYLAND_DYNLOAD  "Enable runtime dynamic WAYLAND libraries loading" OFF)
     mark_as_advanced(WITH_GHOST_WAYLAND_DYNLOAD)
 
     set(WITH_GHOST_WAYLAND_APP_ID "" CACHE STRING "\
@@ -304,7 +304,7 @@ mark_as_advanced(WITH_SYSTEM_AUDASPACE)
 
 set_and_warn_dependency(WITH_AUDASPACE WITH_SYSTEM_AUDASPACE OFF)
 
-option(WITH_OPENMP        "Enable OpenMP (has to be supported by the compiler)" ON)
+option(WITH_OPENMP        "Enable OpenMP (has to be supported by the compiler)" OFF)
 if(UNIX AND NOT APPLE)
   option(WITH_OPENMP_STATIC "Link OpenMP statically (only used by the release environment)" OFF)
   mark_as_advanced(WITH_OPENMP_STATIC)
@@ -599,6 +599,11 @@ if((UNIX AND NOT APPLE) OR (CMAKE_GENERATOR MATCHES "^Visual Studio.+"))
 endif()
 
 option(WITH_BOOST "Enable features depending on boost" ON)
+SET(OPENAL_INCLUDE_DIR "F:/FreeProjects/android/OpenAL/app/src/main/cpp/openal-soft-master/include/AL/")
+SET(OPENAL_LIBRARY "F:/FreeProjects/android/OpenAL/app/build/intermediates/stripped_native_libs/debug/out/lib/arm64-v8a/libopenal.so" OpenSLES)
+SET(OPENAL_FOUND ON)
+SET(Boost_INCLUDE_DIR C:/local/boost_1_71_0/)
+SET(BOOST_INCLUDE_DIR C:/local/boost_1_71_0/)
 option(WITH_TBB   "Enable multithreading. TBB is also required for features such as Cycles, OpenVDB and USD" ON)
 
 # TBB malloc is only supported on for windows currently
@@ -1692,20 +1697,20 @@ if(WITH_PYTHON)
     # Always use numpy bundled in precompiled libs.
   elseif((WITH_PYTHON_INSTALL AND WITH_PYTHON_INSTALL_NUMPY) OR WITH_PYTHON_NUMPY)
     if(("${PYTHON_NUMPY_PATH}" STREQUAL "") OR (${PYTHON_NUMPY_PATH} MATCHES NOTFOUND))
-      find_python_package(numpy "core/include")
+#      find_python_package(numpy "core/include")
     endif()
   endif()
 
   if(WIN32 OR APPLE)
     # Always copy from precompiled libs.
   elseif(WITH_PYTHON_INSTALL_REQUESTS)
-    find_python_package(requests "")
+#    find_python_package(requests "")
   endif()
 
   if(WIN32 OR APPLE)
     # Always copy from precompiled libs.
   elseif(WITH_PYTHON_INSTALL_ZSTANDARD)
-    find_python_package(zstandard "")
+#    find_python_package(zstandard "")
   endif()
 endif()
 
@@ -1846,7 +1851,7 @@ endif()
 # -----------------------------------------------------------------------------
 # Add Testing Directory
 
-add_subdirectory(tests)
+#add_subdirectory(tests)
 
 
 # -----------------------------------------------------------------------------

@@ -7,15 +7,15 @@
 /** \name Common Math Utilities
  * \{ */
 
-#define M_PI 3.14159265358979323846      /* pi */
-#define M_2PI 6.28318530717958647692     /* 2*pi */
-#define M_PI_2 1.57079632679489661923    /* pi/2 */
-#define M_PI_4 0.78539816339744830962    /* pi/4 */
-#define M_1_PI 0.318309886183790671538   /* 1/pi */
-#define M_1_2PI 0.159154943091895335768  /* 1/(2*pi) */
-#define M_1_PI2 0.101321183642337771443  /* 1/(pi^2) */
-#define M_SQRT2 1.41421356237309504880   /* sqrt(2) */
-#define M_SQRT1_2 0.70710678118654752440 /* 1/sqrt(2) */
+#define M_PI 3.14159265358979323846
+#define M_2PI 6.28318530717958647692
+#define M_PI_2 1.57079632679489661923
+#define M_PI_4 0.78539816339744830962
+#define M_1_PI 0.318309886183790671538
+#define M_1_2PI 0.159154943091895335768
+#define M_1_PI2 0.101321183642337771443
+#define M_SQRT2 1.41421356237309504880
+#define M_SQRT1_2 0.70710678118654752440
 #ifndef FLT_MAX
 #  define FLT_MAX 3.402823e+38
 #  define FLT_MIN 1.175494e-38
@@ -271,15 +271,15 @@ float fast_acos(float v)
 {
   float res = -0.156583 * abs(v) + M_PI_2;
   res *= fast_sqrt(1.0 - abs(v));
-  return (v >= 0) ? res : M_PI - res;
+  return (v >= 0.0) ? res : M_PI - res;
 }
 
 vec2 fast_acos(vec2 v)
 {
   vec2 res = -0.156583 * abs(v) + M_PI_2;
   res *= fast_sqrt(1.0 - abs(v));
-  v.x = (v.x >= 0) ? res.x : M_PI - res.x;
-  v.y = (v.y >= 0) ? res.y : M_PI - res.y;
+  v.x = (v.x >= 0.0) ? res.x : M_PI - res.x;
+  v.y = (v.y >= 0.0) ? res.y : M_PI - res.y;
   return v;
 }
 

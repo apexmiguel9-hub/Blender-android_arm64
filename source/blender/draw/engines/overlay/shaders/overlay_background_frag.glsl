@@ -68,7 +68,7 @@ void main()
     case BG_CHECKER: {
       float size = sizeChecker * sizePixel;
       ivec2 p = ivec2(floor(gl_FragCoord.xy / size));
-      bool check = mod(p.x, 2) == mod(p.y, 2);
+      bool check = mod(float(p.x), 2.0) == mod(float(p.y), 2.0);
       bg_col = (check) ? colorCheckerPrimary.rgb : colorCheckerSecondary.rgb;
       break;
     }

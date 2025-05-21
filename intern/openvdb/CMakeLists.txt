@@ -4,6 +4,7 @@
 set(INC
   .
   ../guardedalloc
+  ${BOOST_INCLUDE_DIR}
 )
 
 set(INC_SYS

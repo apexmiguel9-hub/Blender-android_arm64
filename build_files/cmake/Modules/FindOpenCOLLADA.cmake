@@ -1,133 +1,158 @@
-# SPDX-License-Identifier: BSD-3-Clause
-# Copyright 2011 Blender Foundation.
-
-# - Find OpenCOLLADA library
-# Find the native OpenCOLLADA includes and library
-# This module defines
-#  OPENCOLLADA_INCLUDE_DIRS, where to find COLLADABaseUtils/ and
-#                 COLLADAFramework/, Set when OPENCOLLADA_INCLUDE_DIR is found.
-#  OPENCOLLADA_LIBRARIES, libraries to link against to use OpenCOLLADA.
-#  OPENCOLLADA_ROOT_DIR, The base directory to search for OpenCOLLADA.
-#                    This can also be an environment variable.
-#  OPENCOLLADA_FOUND, If false, do not try to use OpenCOLLADA.
-
-# note about include paths, there are 2 ways includes are set
+## SPDX-License-Identifier: BSD-3-Clause
+## Copyright 2011 Blender Foundation.
 #
-# Where '/usr/include/opencollada' is the root dir:
-#   /usr/include/opencollada/COLLADABaseUtils/COLLADABUPlatform.h
+## - Find OpenCOLLADA library
+## Find the native OpenCOLLADA includes and library
+## This module defines
+##  OPENCOLLADA_INCLUDE_DIRS, where to find COLLADABaseUtils/ and
+##                 COLLADAFramework/, Set when OPENCOLLADA_INCLUDE_DIR is found.
+##  OPENCOLLADA_LIBRARIES, libraries to link against to use OpenCOLLADA.
+##  OPENCOLLADA_ROOT_DIR, The base directory to search for OpenCOLLADA.
+##                    This can also be an environment variable.
+##  OPENCOLLADA_FOUND, If false, do not try to use OpenCOLLADA.
 #
-# Where '/opt/opencollada' is the base dir:
-# /opt/opencollada/COLLADABaseUtils/include/COLLADABUPlatform.h
-
-# If OPENCOLLADA_ROOT_DIR was defined in the environment, use it.
-IF(NOT OPENCOLLADA_ROOT_DIR AND NOT $ENV{OPENCOLLADA_ROOT_DIR} STREQUAL "")
-  SET(OPENCOLLADA_ROOT_DIR $ENV{OPENCOLLADA_ROOT_DIR})
-ENDIF()
-
-SET(_opencollada_FIND_INCLUDES
-  COLLADAStreamWriter
-  COLLADABaseUtils
-  COLLADAFramework
-  COLLADASaxFrameworkLoader
-  GeneratedSaxParser
-)
-
-SET(_opencollada_FIND_COMPONENTS
-  OpenCOLLADAStreamWriter
-  OpenCOLLADASaxFrameworkLoader
-  OpenCOLLADAFramework
-  OpenCOLLADABaseUtils
-  GeneratedSaxParser
-  MathMLSolver
-)
-
-# Fedora openCOLLADA package links these statically
-# note that order is important here or it won't link
-SET(_opencollada_FIND_STATIC_COMPONENTS
-  buffer
-  ftoa
-  UTF
-)
-
-SET(_opencollada_SEARCH_DIRS
-  ${OPENCOLLADA_ROOT_DIR}
-  /opt/lib/opencollada
-)
-
-SET(_opencollada_INCLUDES)
-FOREACH(COMPONENT ${_opencollada_FIND_INCLUDES})
-  STRING(TOUPPER ${COMPONENT} UPPERCOMPONENT)
-
-  # need to use this even thouh we are looking for a dir
-  FIND_FILE(OPENCOLLADA_${UPPERCOMPONENT}_INCLUDE_DIR
-    NAMES
-      ${COMPONENT}/include
-      ${COMPONENT}
-      # Ubuntu ppa needs this.
-      # Alternative would be to suffix all members of search path
-      # but this is less trouble, just looks strange.
-      include/opencollada/${COMPONENT}
-      include/${COMPONENT}/include
-      include/${COMPONENT}
-    HINTS
-      ${_opencollada_SEARCH_DIRS}
-    )
-  MARK_AS_ADVANCED(OPENCOLLADA_${UPPERCOMPONENT}_INCLUDE_DIR)
-  LIST(APPEND _opencollada_INCLUDES "${OPENCOLLADA_${UPPERCOMPONENT}_INCLUDE_DIR}")
-ENDFOREACH()
-
-
-SET(_opencollada_LIBRARIES)
-FOREACH(COMPONENT ${_opencollada_FIND_COMPONENTS})
-  STRING(TOUPPER ${COMPONENT} UPPERCOMPONENT)
-
-  FIND_LIBRARY(OPENCOLLADA_${UPPERCOMPONENT}_LIBRARY
-    NAMES
-      ${COMPONENT}
-    HINTS
-      ${_opencollada_SEARCH_DIRS}
-    PATH_SUFFIXES
-      lib64 lib
-      # Ubuntu ppa needs this.
-      lib64/opencollada lib/opencollada
-    )
-  MARK_AS_ADVANCED(OPENCOLLADA_${UPPERCOMPONENT}_LIBRARY)
-  LIST(APPEND _opencollada_LIBRARIES "${OPENCOLLADA_${UPPERCOMPONENT}_LIBRARY}")
-ENDFOREACH()
-
-FOREACH(COMPONENT ${_opencollada_FIND_STATIC_COMPONENTS})
-  STRING(TOUPPER ${COMPONENT} UPPERCOMPONENT)
-
-  FIND_LIBRARY(OPENCOLLADA_${UPPERCOMPONENT}_LIBRARY
-    NAMES
-      ${COMPONENT}
-    HINTS
-      ${_opencollada_SEARCH_DIRS}
-    PATH_SUFFIXES
-      lib64 lib
-      # Ubuntu ppa needs this.
-      lib64/opencollada lib/opencollada
-    )
-  MARK_AS_ADVANCED(OPENCOLLADA_${UPPERCOMPONENT}_LIBRARY)
-  IF(OPENCOLLADA_${UPPERCOMPONENT}_LIBRARY)
-    LIST(APPEND _opencollada_LIBRARIES "${OPENCOLLADA_${UPPERCOMPONENT}_LIBRARY}")
-  ENDIF()
-ENDFOREACH()
-
-
-# handle the QUIETLY and REQUIRED arguments and set OPENCOLLADA_FOUND to TRUE if
-# all listed variables are TRUE
-INCLUDE(FindPackageHandleStandardArgs)
-FIND_PACKAGE_HANDLE_STANDARD_ARGS(OpenCOLLADA  DEFAULT_MSG
-    _opencollada_LIBRARIES _opencollada_INCLUDES)
-
-
-IF(OPENCOLLADA_FOUND)
-  SET(OPENCOLLADA_LIBRARIES ${_opencollada_LIBRARIES})
-  SET(OPENCOLLADA_INCLUDE_DIRS ${_opencollada_INCLUDES})
-ENDIF()
-
-UNSET(COMPONENT)
-UNSET(UPPERCOMPONENT)
-UNSET(_opencollada_LIBRARIES)
-UNSET(_opencollada_INCLUDES)
+## note about include paths, there are 2 ways includes are set
+##
+## Where '/usr/include/opencollada' is the root dir:
+##   /usr/include/opencollada/COLLADABaseUtils/COLLADABUPlatform.h
+##
+## Where '/opt/opencollada' is the base dir:
+## /opt/opencollada/COLLADABaseUtils/include/COLLADABUPlatform.h
+#
+## If OPENCOLLADA_ROOT_DIR was defined in the environment, use it.
+#IF(NOT OPENCOLLADA_ROOT_DIR AND NOT $ENV{OPENCOLLADA_ROOT_DIR} STREQUAL "")
+#  SET(OPENCOLLADA_ROOT_DIR $ENV{OPENCOLLADA_ROOT_DIR})
+#ENDIF()
+#
+#SET(_opencollada_FIND_INCLUDES
+#  COLLADAStreamWriter
+#  COLLADABaseUtils
+#  COLLADAFramework
+#  COLLADASaxFrameworkLoader
+#  GeneratedSaxParser
+#)
+#
+#SET(_opencollada_FIND_COMPONENTS
+#  OpenCOLLADAStreamWriter
+#  OpenCOLLADASaxFrameworkLoader
+#  OpenCOLLADAFramework
+#  OpenCOLLADABaseUtils
+#  GeneratedSaxParser
+#  MathMLSolver
+#)
+#
+## Fedora openCOLLADA package links these statically
+## note that order is important here or it won't link
+#SET(_opencollada_FIND_STATIC_COMPONENTS
+#  buffer
+#  ftoa
+#  UTF
+#)
+#
+#SET(_opencollada_SEARCH_DIRS
+#  ${OPENCOLLADA_ROOT_DIR}
+#  /opt/lib/opencollada
+#)
+#
+#SET(_opencollada_INCLUDES)
+#FOREACH(COMPONENT ${_opencollada_FIND_INCLUDES})
+#  STRING(TOUPPER ${COMPONENT} UPPERCOMPONENT)
+#
+#  # need to use this even thouh we are looking for a dir
+#  FIND_FILE(OPENCOLLADA_${UPPERCOMPONENT}_INCLUDE_DIR
+#    NAMES
+#      ${COMPONENT}/include
+#      ${COMPONENT}
+#      # Ubuntu ppa needs this.
+#      # Alternative would be to suffix all members of search path
+#      # but this is less trouble, just looks strange.
+#      include/opencollada/${COMPONENT}
+#      include/${COMPONENT}/include
+#      include/${COMPONENT}
+#    HINTS
+#      ${_opencollada_SEARCH_DIRS}
+#    )
+#  MARK_AS_ADVANCED(OPENCOLLADA_${UPPERCOMPONENT}_INCLUDE_DIR)
+#  LIST(APPEND _opencollada_INCLUDES "${OPENCOLLADA_${UPPERCOMPONENT}_INCLUDE_DIR}")
+#ENDFOREACH()
+#
+#
+#SET(_opencollada_LIBRARIES)
+#FOREACH(COMPONENT ${_opencollada_FIND_COMPONENTS})
+#  STRING(TOUPPER ${COMPONENT} UPPERCOMPONENT)
+#
+#  FIND_LIBRARY(OPENCOLLADA_${UPPERCOMPONENT}_LIBRARY
+#    NAMES
+#      ${COMPONENT}
+#    HINTS
+#      ${_opencollada_SEARCH_DIRS}
+#    PATH_SUFFIXES
+#      lib64 lib
+#      # Ubuntu ppa needs this.
+#      lib64/opencollada lib/opencollada
+#    )
+#  MARK_AS_ADVANCED(OPENCOLLADA_${UPPERCOMPONENT}_LIBRARY)
+#  LIST(APPEND _opencollada_LIBRARIES "${OPENCOLLADA_${UPPERCOMPONENT}_LIBRARY}")
+#ENDFOREACH()
+#
+#FOREACH(COMPONENT ${_opencollada_FIND_STATIC_COMPONENTS})
+#  STRING(TOUPPER ${COMPONENT} UPPERCOMPONENT)
+#
+#  FIND_LIBRARY(OPENCOLLADA_${UPPERCOMPONENT}_LIBRARY
+#    NAMES
+#      ${COMPONENT}
+#    HINTS
+#      ${_opencollada_SEARCH_DIRS}
+#    PATH_SUFFIXES
+#      lib64 lib
+#      # Ubuntu ppa needs this.
+#      lib64/opencollada lib/opencollada
+#    )
+#  MARK_AS_ADVANCED(OPENCOLLADA_${UPPERCOMPONENT}_LIBRARY)
+#  IF(OPENCOLLADA_${UPPERCOMPONENT}_LIBRARY)
+#    LIST(APPEND _opencollada_LIBRARIES "${OPENCOLLADA_${UPPERCOMPONENT}_LIBRARY}")
+#  ENDIF()
+#ENDFOREACH()
+#
+#
+## handle the QUIETLY and REQUIRED arguments and set OPENCOLLADA_FOUND to TRUE if
+## all listed variables are TRUE
+#INCLUDE(FindPackageHandleStandardArgs)
+#FIND_PACKAGE_HANDLE_STANDARD_ARGS(OpenCOLLADA  DEFAULT_MSG
+#    _opencollada_LIBRARIES _opencollada_INCLUDES)
+#
+#
+#IF(OPENCOLLADA_FOUND)
+#  SET(OPENCOLLADA_LIBRARIES ${_opencollada_LIBRARIES})
+#  SET(OPENCOLLADA_INCLUDE_DIRS ${_opencollada_INCLUDES})
+#ENDIF()
+#
+#UNSET(COMPONENT)
+#UNSET(UPPERCOMPONENT)
+#UNSET(_opencollada_LIBRARIES)
+#UNSET(_opencollada_INCLUDES)
+SET(OPENCOLLADA_INCLUDE_DIRS
+        F:\\FreeProjects\\android\\OpenCOLLADA-main\\COLLADABaseUtils\\include\\
+        F:\\FreeProjects\\android\\OpenCOLLADA-main\\COLLADAFramework\\include\\
+        F:\\FreeProjects\\android\\OpenCOLLADA-main\\COLLADAMax\\include\\
+        F:\\FreeProjects\\android\\OpenCOLLADA-main\\COLLADAMaya\\include\\
+        F:\\FreeProjects\\android\\OpenCOLLADA-main\\COLLADASaxFrameworkLoader\\include\\
+        F:\\FreeProjects\\android\\OpenCOLLADA-main\\COLLADAStreamWriter\\include\\
+        F:\\FreeProjects\\android\\OpenCOLLADA-main\\COLLADAValidator\\include\\
+        F:\\FreeProjects\\android\\OpenCOLLADA-main\\GeneratedSaxParser\\include\\
+        F:\\FreeProjects\\android\\OpenCOLLADA-main\\G3DWarehouseBrowser\\include\\)
+SET(OPENCOLLADA_FOUND ON)
+SET(OPENCOLLADA_LIBRARIES
+        F:/FreeProjects/android/OpenCOLLADA/app/build/intermediates/stripped_native_libs/release/out/lib/arm64-v8a/libbuffer.so
+        F:/FreeProjects/android/OpenCOLLADA/app/build/intermediates/stripped_native_libs/release/out/lib/arm64-v8a/libftoa.so
+        F:/FreeProjects/android/OpenCOLLADA/app/build/intermediates/stripped_native_libs/release/out/lib/arm64-v8a/libGeneratedSaxParser.so
+        F:/FreeProjects/android/OpenCOLLADA/app/build/intermediates/stripped_native_libs/release/out/lib/arm64-v8a/libMathMLSolver.so
+        F:/FreeProjects/android/OpenCOLLADA/app/build/intermediates/stripped_native_libs/release/out/lib/arm64-v8a/libOpenCOLLADABaseUtils.so
+        F:/FreeProjects/android/OpenCOLLADA/app/build/intermediates/stripped_native_libs/release/out/lib/arm64-v8a/libOpenCOLLADAFramework.so
+        F:/FreeProjects/android/OpenCOLLADA/app/build/intermediates/stripped_native_libs/release/out/lib/arm64-v8a/libOpenCOLLADASaxFrameworkLoader.so
+        F:/FreeProjects/android/OpenCOLLADA/app/build/intermediates/stripped_native_libs/release/out/lib/arm64-v8a/libOpenCOLLADAStreamWriter.so
+        F:/FreeProjects/android/OpenCOLLADA/app/build/intermediates/stripped_native_libs/release/out/lib/arm64-v8a/libpcre.so
+        F:/FreeProjects/android/OpenCOLLADA/app/build/intermediates/stripped_native_libs/release/out/lib/arm64-v8a/libUTF.so
+        F:/FreeProjects/android/OpenCOLLADA/app/build/intermediates/stripped_native_libs/release/out/lib/arm64-v8a/libxml.so
+        F:/FreeProjects/android/OpenCOLLADA/app/build/intermediates/stripped_native_libs/release/out/lib/arm64-v8a/libzlib.so
+        )

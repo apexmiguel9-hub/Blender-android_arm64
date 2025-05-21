@@ -1,7 +1,7 @@
-void node_wavelength(float wavelength, sampler1DArray spectrummap, float layer, out vec4 color)
+void node_wavelength(float wavelength, sampler2DArray spectrummap, float layer, out vec4 color)
 {
   float t = (wavelength - 380.0) / (780.0 - 380.0);
-  vec3 rgb = texture(spectrummap, vec2(t, layer)).rgb;
+  vec3 rgb = texture(spectrummap, vec3(t,0, layer)).rgb;
   rgb *= 1.0 / 2.52; /* Empirical scale from lg to make all comps <= 1. */
   color = vec4(clamp(rgb, 0.0, 1.0), 1.0);
 }

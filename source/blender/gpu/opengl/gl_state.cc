@@ -27,9 +27,9 @@ namespace blender::gpu {
 GLStateManager::GLStateManager()
 {
   /* Set other states that never change. */
-  glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
-  glEnable(GL_MULTISAMPLE);
-  glEnable(GL_PRIMITIVE_RESTART);
+//  glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
+//  glEnable(GL_MULTISAMPLE);
+//  glEnable(GL_PRIMITIVE_RESTART);
 
   glDisable(GL_DITHER);
 
@@ -37,13 +37,14 @@ GLStateManager::GLStateManager()
   glPixelStorei(GL_PACK_ALIGNMENT, 1);
   glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
 
-  glPrimitiveRestartIndex((GLuint)0xFFFFFFFF);
+//  glPrimitiveRestartIndex((GLuint)0xFFFFFFFF);
   /* TODO: Should become default. But needs at least GL 4.3 */
   if (GLContext::fixed_restart_index_support) {
     /* Takes precedence over #GL_PRIMITIVE_RESTART. */
-    glEnable(GL_PRIMITIVE_RESTART_FIXED_INDEX);
+//    glEnable(GL_PRIMITIVE_RESTART_FIXED_INDEX);
   }
 
+        glEnable(GL_PRIMITIVE_RESTART_FIXED_INDEX);
   /* Limits. */
   glGetFloatv(GL_ALIASED_LINE_WIDTH_RANGE, line_width_range_);
 
@@ -116,18 +117,18 @@ void GLStateManager::set_state(const GPUState &state)
   /* TODO: remove. */
   if (changed.polygon_smooth) {
     if (state.polygon_smooth) {
-      glEnable(GL_POLYGON_SMOOTH);
+//      glEnable(GL_POLYGON_SMOOTH);
     }
     else {
-      glDisable(GL_POLYGON_SMOOTH);
+//      glDisable(GL_POLYGON_SMOOTH);
     }
   }
   if (changed.line_smooth) {
     if (state.line_smooth) {
-      glEnable(GL_LINE_SMOOTH);
+//      glEnable(GL_LINE_SMOOTH);
     }
     else {
-      glDisable(GL_LINE_SMOOTH);
+//      glDisable(GL_LINE_SMOOTH);
     }
   }
 
@@ -141,11 +142,11 @@ void GLStateManager::set_mutable_state(const GPUStateMutable &state)
   /* TODO: remove, should be uniform. */
   if (float_as_uint(changed.point_size) != 0) {
     if (state.point_size > 0.0f) {
-      glEnable(GL_PROGRAM_POINT_SIZE);
+//      glEnable(GL_PROGRAM_POINT_SIZE);
     }
     else {
-      glDisable(GL_PROGRAM_POINT_SIZE);
-      glPointSize(fabsf(state.point_size));
+//      glDisable(GL_PROGRAM_POINT_SIZE);
+//      glPointSize(fabsf(state.point_size));
     }
   }
 
@@ -156,7 +157,7 @@ void GLStateManager::set_mutable_state(const GPUStateMutable &state)
 
   if (float_as_uint(changed.depth_range[0]) != 0 || float_as_uint(changed.depth_range[1]) != 0) {
     /* TODO: remove, should modify the projection matrix instead. */
-    glDepthRange(UNPACK2(state.depth_range));
+      glDepthRangef(UNPACK2(state.depth_range));
   }
 
   if (changed.stencil_compare_mask != 0 || changed.stencil_reference != 0 ||
@@ -278,21 +279,21 @@ void GLStateManager::set_stencil_mask(const eGPUStencilTest test, const GPUState
 void GLStateManager::set_clip_distances(const int new_dist_len, const int old_dist_len)
 {
   for (int i = 0; i < new_dist_len; i++) {
-    glEnable(GL_CLIP_DISTANCE0 + i);
+//    glEnable(GL_CLIP_DISTANCE0 + i);
   }
   for (int i = new_dist_len; i < old_dist_len; i++) {
-    glDisable(GL_CLIP_DISTANCE0 + i);
+//    glDisable(GL_CLIP_DISTANCE0 + i);
   }
 }
 
 void GLStateManager::set_logic_op(const bool enable)
 {
   if (enable) {
-    glEnable(GL_COLOR_LOGIC_OP);
-    glLogicOp(GL_XOR);
+//    glEnable(GL_COLOR_LOGIC_OP);
+//    glLogicOp(GL_XOR);
   }
   else {
-    glDisable(GL_COLOR_LOGIC_OP);
+//    glDisable(GL_COLOR_LOGIC_OP);
   }
 }
 
@@ -316,20 +317,20 @@ void GLStateManager::set_provoking_vert(const eGPUProvokingVertex vert)
 {
   GLenum value = (vert == GPU_VERTEX_FIRST) ? GL_FIRST_VERTEX_CONVENTION :
                                               GL_LAST_VERTEX_CONVENTION;
-  glProvokingVertex(value);
+//  glProvokingVertex(value);
 }
 
 void GLStateManager::set_shadow_bias(const bool enable)
 {
   if (enable) {
     glEnable(GL_POLYGON_OFFSET_FILL);
-    glEnable(GL_POLYGON_OFFSET_LINE);
+//    glEnable(GL_POLYGON_OFFSET_LINE);
     /* 2.0 Seems to be the lowest possible slope bias that works in every case. */
     glPolygonOffset(2.0f, 1.0f);
   }
   else {
     glDisable(GL_POLYGON_OFFSET_FILL);
-    glDisable(GL_POLYGON_OFFSET_LINE);
+//    glDisable(GL_POLYGON_OFFSET_LINE);
   }
 }
 

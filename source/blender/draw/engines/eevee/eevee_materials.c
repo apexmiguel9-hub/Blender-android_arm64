@@ -31,6 +31,7 @@
 #include "eevee_engine.h"
 #include "eevee_lut.h"
 #include "eevee_private.h"
+#include <epoxy/egl_generated.h>
 
 /* *********** STATIC *********** */
 static struct {
@@ -1072,6 +1073,12 @@ static void material_renderpass_accumulate(EEVEE_EffectsInfo *effects,
   GPU_framebuffer_texture_attach(fbl->material_accum_fb, output_tx, 0, 0);
   GPU_framebuffer_bind(fbl->material_accum_fb);
 
+    GLboolean depthTestValue = GL_FALSE;
+    glGetBooleanv(GL_DEPTH_TEST, &depthTestValue);
+    if (depthTestValue != GL_FALSE)
+    {
+        glDisable(GL_DEPTH_TEST);
+    }
   if (effects->taa_current_sample == 1) {
     const float clear[4] = {0.0f, 0.0f, 0.0f, 0.0f};
     GPU_framebuffer_clear_color(fbl->material_accum_fb, clear);
@@ -1084,6 +1091,9 @@ static void material_renderpass_accumulate(EEVEE_EffectsInfo *effects,
   }
 
   GPU_framebuffer_texture_detach(fbl->material_accum_fb, output_tx);
+    if (depthTestValue != GL_FALSE) {
+        glEnable(GL_DEPTH_TEST);
+    }
 }
 
 void EEVEE_material_output_accumulate(EEVEE_ViewLayerData *sldata, EEVEE_Data *vedata)

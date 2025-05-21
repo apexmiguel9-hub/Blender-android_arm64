@@ -1371,7 +1371,8 @@ static void playanim_window_open(const char *title, int posx, int posy, int size
                                          /* Could optionally start full-screen. */
                                          GHOST_kWindowStateNormal,
                                          false,
-                                         glsettings);
+                                         glsettings,
+                                         1);
 }
 
 static void playanim_window_zoom(PlayState *ps, const float zoom_offset)

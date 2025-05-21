@@ -24,7 +24,7 @@ vec2 outOcclusion;
 #endif
 
 const float unit_ring_radius = 1.0 / float(gather_ring_count);
-const float unit_sample_radius = 1.0 / float(gather_ring_count + 0.5);
+const float unit_sample_radius = 1.0 / float(float(gather_ring_count) + 0.5);
 const float large_kernel_radius = 0.5 + float(gather_ring_count);
 const float smaller_kernel_radius = 0.5 + float(gather_ring_count - gather_density_change_ring);
 /* NOTE(@fclem): the bias is reducing issues with density change visible transition. */

@@ -195,9 +195,9 @@ void EEVEE_volumes_init(EEVEE_ViewLayerData *sldata, EEVEE_Data *vedata)
     const float transmit[4] = {1.0f, 1.0f, 1.0f, 1.0f};
     eGPUTextureUsage dummy_usage = GPU_TEXTURE_USAGE_ATTACHMENT | GPU_TEXTURE_USAGE_SHADER_READ;
     e_data.dummy_scatter = DRW_texture_create_3d_ex(
-        1, 1, 1, GPU_RGBA8, dummy_usage, DRW_TEX_WRAP, scatter);
+        1, 1, 1, GPU_RGBA32F, dummy_usage, DRW_TEX_WRAP, scatter);
     e_data.dummy_transmit = DRW_texture_create_3d_ex(
-        1, 1, 1, GPU_RGBA8, dummy_usage, DRW_TEX_WRAP, transmit);
+        1, 1, 1, GPU_RGBA32F, dummy_usage, DRW_TEX_WRAP, transmit);
   }
 }
 

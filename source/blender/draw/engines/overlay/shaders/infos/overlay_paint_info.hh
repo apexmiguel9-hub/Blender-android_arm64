@@ -124,7 +124,7 @@ GPU_SHADER_CREATE_INFO(overlay_paint_weight)
     .vertex_in(1, Type::VEC3, "pos")
     .vertex_in(2, Type::VEC3, "nor")
     .vertex_out(overlay_paint_weight_iface)
-    .sampler(0, ImageType::FLOAT_1D, "colorramp")
+    .sampler(0, ImageType::FLOAT_2D, "colorramp")
     .push_constant(Type::FLOAT, "opacity")     /* `1.0` by default. */
     .push_constant(Type::BOOL, "drawContours") /* `false` by default. */
     .fragment_out(0, Type::VEC4, "fragColor")

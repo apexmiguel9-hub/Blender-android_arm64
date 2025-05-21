@@ -122,7 +122,7 @@ class GHOST_ISystem {
    * \return An indication of success.
    */
 
-  static GHOST_TSuccess createSystem(bool verbose, bool background);
+  static GHOST_TSuccess createSystem(bool verbose, bool background,void*nativeWindow);
   static GHOST_TSuccess createSystemBackground();
 
   /**
@@ -243,10 +243,19 @@ class GHOST_ISystem {
                                       uint32_t height,
                                       GHOST_TWindowState state,
                                       GHOST_GLSettings glSettings,
+                                      int shape_type,
                                       const bool exclusive = false,
                                       const bool is_dialog = false,
                                       const GHOST_IWindow *parentWindow = NULL) = 0;
+    virtual void closeWindow(){}
 
+    virtual void setValue(int values[],int num){}
+    virtual void setValueOn(int values[],int num){}
+    virtual void setValueOff(int values[],int num){}
+    virtual void wmInitReInit(){}
+    virtual void inputKey(int p_physical_keycode,
+                                 int p_unicode, int p_key_label, bool p_pressed,
+                                 bool p_echo){}
   /**
    * Dispose a window.
    * \param window: Pointer to the window to be disposed.
@@ -528,6 +537,12 @@ class GHOST_ISystem {
    */
   virtual bool isDebugEnabled() = 0;
 
+  virtual void showKeyboard(std::string p_existing_text,
+                            int p_type,
+                            int p_max_input_length,
+                            int p_cursor_start,
+                            int p_cursor_end){}
+  virtual void hidenKeyboard(){}
  protected:
   /**
    * Initialize the system.

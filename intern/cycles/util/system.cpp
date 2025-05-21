@@ -224,7 +224,8 @@ bool system_cpu_support_sse2()
 
 bool system_cpu_support_sse41()
 {
-  return false;
+  return true;
+//  return false;
 }
 
 bool system_cpu_support_avx2()

@@ -73,6 +73,10 @@ class GHOST_WindowNULL : public GHOST_Window {
   {
     return "untitled";
   }
+  GHOST_TSuccess setPath(const char * /*filepath*/)
+  {
+    return GHOST_kFailure;
+  }
   void getWindowBounds(GHOST_Rect &bounds) const override
   {
     getClientBounds(bounds);

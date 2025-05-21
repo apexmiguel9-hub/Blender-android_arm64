@@ -12,7 +12,7 @@ vec3 workbench_normal_decode(vec4 enc)
   float g = sqrt(1.0 - f / 4.0);
   vec3 n;
   n.xy = fenc * g;
-  n.z = 1 - f / 2;
+  n.z = 1.0 - f * 0.5;
   return n;
 }
 

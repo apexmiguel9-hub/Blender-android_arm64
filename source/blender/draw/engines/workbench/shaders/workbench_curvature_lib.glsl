@@ -44,7 +44,7 @@ void curvature_compute(vec2 uv,
 
   float normal_diff = (normal_up - normal_down) + (normal_right - normal_left);
 
-  if (normal_diff < 0) {
+  if (normal_diff < 0.0) {
     curvature = -2.0 * curvature_soft_clamp(-normal_diff, world_data.curvature_valley);
   }
   else {

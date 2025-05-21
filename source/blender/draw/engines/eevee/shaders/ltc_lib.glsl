@@ -17,7 +17,7 @@ float diffuse_sphere_integral(float avg_dir_z, float form_factor)
 #if 1
   /* use tabulated horizon-clipped sphere */
   vec2 uv = vec2(avg_dir_z * 0.5 + 0.5, form_factor);
-  uv = uv * (LUT_SIZE - 1.0) / LUT_SIZE + 0.5 / LUT_SIZE;
+  uv = uv * (float(LUT_SIZE) - 1.0) / float(LUT_SIZE) + 0.5 / float(LUT_SIZE);
 
   return texture(utilTex, vec3(uv, 3.0)).x;
 #else

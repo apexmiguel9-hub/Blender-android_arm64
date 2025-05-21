@@ -1187,9 +1187,9 @@ static bool draw_widgetbase_batch_skip_draw_cache()
 {
   /* MacOS is known to have issues on Mac Mini and MacBook Pro with Intel Iris GPU.
    * For example, #78307. */
-  if (GPU_type_matches_ex(GPU_DEVICE_INTEL, GPU_OS_MAC, GPU_DRIVER_ANY, GPU_BACKEND_OPENGL)) {
+//  if (GPU_type_matches_ex(GPU_DEVICE_INTEL, GPU_OS_MAC, GPU_DRIVER_ANY, GPU_BACKEND_OPENGL)) {
     return true;
-  }
+//  }
 
   return false;
 }

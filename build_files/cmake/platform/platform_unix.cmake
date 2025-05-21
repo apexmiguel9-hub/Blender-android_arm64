@@ -103,11 +103,33 @@ if(DEFINED LIBDIR)
   without_system_libs_begin()
 endif()
 
-find_package_wrapper(JPEG REQUIRED)
-find_package_wrapper(PNG REQUIRED)
-find_package_wrapper(ZLIB REQUIRED)
-find_package_wrapper(Zstd REQUIRED)
-find_package_wrapper(Epoxy REQUIRED)
+#find_package_wrapper(JPEG REQUIRED)
+#find_package_wrapper(PNG REQUIRED)
+#find_package_wrapper(ZLIB REQUIRED)
+#find_package_wrapper(Zstd REQUIRED)
+#find_package_wrapper(Epoxy REQUIRED)
+SET(JPEG_LIBRARIES F:/FreeProjects/android/JPEG/app/build/intermediates/cmake/release/obj/arm64-v8a/libjpeg.a)
+SET(JPEG_LIBRARY F:/FreeProjects/android/JPEG/app/build/intermediates/cmake/release/obj/arm64-v8a/libjpeg.a)
+SET(JPEG_INCLUDE_DIR F:/FreeProjects/android/JPEG/app/src/main/cpp/Source/LibJPEG/)
+SET(ZLIB_LIBRARY F:/FreeProjects/android/OpenCOLLADA/app/build/intermediates/stripped_native_libs/release/out/lib/arm64-v8a/libzlib.so)
+set(PNG_PNG_INCLUDE_DIR F:/FreeProjects/android/Png/app/src/main/cpp/libpng-1.6.40/)
+set(PNG_LIBRARIES
+        F:/FreeProjects/android/Png/app/build/intermediates/stripped_native_libs/release/out/lib/arm64-v8a/libpng16.so
+        ${ZLIB_LIBRARY}
+        )
+set(PNG F:/FreeProjects/android/Png/app/src/main/cpp/libpng-1.6.40/)
+set(PNG_INCLUDE_DIRS F:/FreeProjects/android/Png/app/src/main/cpp/libpng-1.6.40/)
+set(PNG_LIBPATH F:/FreeProjects/android/Png/app/src/main/cpp/libpng-1.6.40/) # not cmake defined
+SET(ZSTD_INCLUDE_DIRS F:/FreeProjects/android/zstd/app/src/main/cpp/zstd/)
+SET(ZSTD_LIBRARIES F:/FreeProjects/android/zstd/app/build/intermediates/stripped_native_libs/release/out/lib/arm64-v8a/libzstd.so)
+SET(ZSTD_LIBRARY F:/FreeProjects/android/zstd/app/build/intermediates/stripped_native_libs/release/out/lib/arm64-v8a/libzstd.so)
+SET(ZSTD_ROOT_DIR F:/FreeProjects/android/zstd/app/src/main/cpp/zstd/)
+SET(ZSTD_FOUND ON)
+SET(LibEpoxy_INCLUDE_DIRS F:/FreeProjects/android/Epoxy/app/src/main/cpp/)
+SET(LibEpoxy_LIBRARY F:/FreeProjects/android/Epoxy/app/build/intermediates/cmake/release/obj/arm64-v8a/libepoxy.a)
+SET(LibEpoxy_LIBRARIES F:/FreeProjects/android/Epoxy/app/build/intermediates/cmake/release/obj/arm64-v8a/libepoxy.a)
+SET(LibEpoxy_ROOT_DIR F:/FreeProjects/android/Epoxy/app/src/main/cpp/)
+SET(LibEpoxy_FOUND ON)
 
 # XXX Linking errors with debian static tiff :/
 # find_package_wrapper(TIFF REQUIRED)
@@ -132,7 +154,17 @@ endfunction()
 
 if(NOT WITH_SYSTEM_FREETYPE)
   # FreeType compiled with Brotli compression for woff2.
-  find_package_wrapper(Freetype REQUIRED)
+#  find_package_wrapper(Freetype REQUIRED)
+  set(FREETYPE_INCLUDE_DIRS
+          F:/FreeProjects/android/freetype/app/src/main/cpp/freetype-2.13.0/include/
+          )
+  SET(FREETYPE_LIBRARIES
+          F:/FreeProjects/android/Brotli/app/build/intermediates/stripped_native_libs/release/out/lib/arm64-v8a/libbrotlicommon.so
+          F:/FreeProjects/android/Brotli/app/build/intermediates/stripped_native_libs/release/out/lib/arm64-v8a/libbrotlidec.so
+          F:/FreeProjects/android/Brotli/app/build/intermediates/stripped_native_libs/release/out/lib/arm64-v8a/libbrotlienc.so
+          F:/FreeProjects/android/freetype/app/build/intermediates/stripped_native_libs/release/out/lib/arm64-v8a/libfreetype.so
+          )
+  SET(FREETYPE_FOUND ON)
   if(DEFINED LIBDIR)
     find_package_wrapper(Brotli REQUIRED)
 
@@ -143,8 +175,11 @@ if(NOT WITH_SYSTEM_FREETYPE)
     # list(APPEND FREETYPE_LIBRARIES
     #   ${BROTLI_LIBRARIES}
     # )
+  else()
+    # Quiet warning as this variable will be used after `FREETYPE_LIBRARIES`.
+    set(BROTLI_LIBRARIES "")
   endif()
-  check_freetype_for_brotli()
+#  check_freetype_for_brotli()
 endif()
 
 if(WITH_PYTHON)
@@ -373,7 +408,13 @@ if(WITH_MATERIALX)
   set_and_warn_library_found("MaterialX" MaterialX_FOUND WITH_MATERIALX)
 endif()
 add_bundled_libraries(materialx/lib)
-
+SET(BOOST_INCLUDE_DIR C:/local/boost_1_71_0/)
+SET(Boost_INCLUDE_DIR C:/local/boost_1_71_0/)
+SET(BOOST_LIBRARIES
+        F:/FreeProjects/android/ICUC/app/build/intermediates/stripped_native_libs/release/out/lib/arm64-v8a/libicuc.so
+        F:/FreeProjects/android/BoostLocal/app/build/intermediates/stripped_native_libs/release/out/lib/arm64-v8a/libboostlocale.so
+        F:/FreeProjects/BoostPython/app/build/intermediates/stripped_native_libs/release/out/lib/arm64-v8a/libboostpython.so)
+SET(BOOST_FOUND ON)
 if(WITH_BOOST)
   # uses in build instructions to override include and library variables
   if(NOT BOOST_CUSTOM)
@@ -399,20 +440,27 @@ if(WITH_BOOST)
     endif()
     list(APPEND __boost_packages system)
     set(Boost_NO_WARN_NEW_VERSIONS ON)
-    find_package(Boost 1.48 COMPONENTS ${__boost_packages})
-    if(NOT Boost_FOUND)
-      # try to find non-multithreaded if -mt not found, this flag
-      # doesn't matter for us, it has nothing to do with thread
-      # safety, but keep it to not disturb build setups
-      set(Boost_USE_MULTITHREADED OFF)
-      find_package(Boost 1.48 COMPONENTS ${__boost_packages})
-    endif()
-    unset(__boost_packages)
-    if(Boost_USE_STATIC_LIBS AND WITH_BOOST_ICU)
-      find_package(IcuLinux)
-    endif()
-    mark_as_advanced(Boost_DIR)  # why doesn't boost do this?
-    mark_as_advanced(Boost_INCLUDE_DIR)  # why doesn't boost do this?
+    SET(BOOST_INCLUDE_DIR C:/local/boost_1_71_0/)
+    SET(Boost_INCLUDE_DIR C:/local/boost_1_71_0/)
+    SET(BOOST_LIBRARIES
+            F:/FreeProjects/android/ICUC/app/build/intermediates/stripped_native_libs/release/out/lib/arm64-v8a/libicuc.so
+            F:/FreeProjects/android/BoostLocal/app/build/intermediates/stripped_native_libs/release/out/lib/arm64-v8a/libboostlocale.so
+            F:/FreeProjects/BoostPython/app/build/intermediates/stripped_native_libs/release/out/lib/arm64-v8a/libboostpython.so)
+    SET(BOOST_FOUND ON)
+    #    find_package(Boost 1.71 COMPONENTS ${__boost_packages})
+#    if(NOT Boost_FOUND)
+#      # try to find non-multithreaded if -mt not found, this flag
+#      # doesn't matter for us, it has nothing to do with thread
+#      # safety, but keep it to not disturb build setups
+#      set(Boost_USE_MULTITHREADED OFF)
+#      find_package(Boost 1.48 COMPONENTS ${__boost_packages})
+#    endif()
+#    unset(__boost_packages)
+#    if(Boost_USE_STATIC_LIBS AND WITH_BOOST_ICU)
+#      find_package(IcuLinux)
+#    endif()
+#    mark_as_advanced(Boost_DIR)  # why doesn't boost do this?
+#    mark_as_advanced(Boost_INCLUDE_DIR)  # why doesn't boost do this?
   endif()
 
   # Boost Python is separate to avoid linking Python into tests that don't need it.
@@ -524,15 +572,18 @@ if(WITH_HARU)
 endif()
 
 if(WITH_CYCLES AND WITH_CYCLES_PATH_GUIDING)
-  find_package_wrapper(openpgl)
-  if(openpgl_FOUND)
-    get_target_property(OPENPGL_LIBRARIES openpgl::openpgl LOCATION)
-    get_target_property(OPENPGL_INCLUDE_DIR openpgl::openpgl INTERFACE_INCLUDE_DIRECTORIES)
-    message(STATUS "Found OpenPGL: ${OPENPGL_LIBRARIES}")
-  else()
-    set(WITH_CYCLES_PATH_GUIDING OFF)
-    message(STATUS "OpenPGL not found, disabling WITH_CYCLES_PATH_GUIDING")
-  endif()
+  SET(OPENPGL_LIBRARIES F:/FreeProjects/android/Openpgl/app/build/intermediates/stripped_native_libs/release/out/lib/arm64-v8a/libopenpgl.SO)
+  SET(OPENPGL_INCLUDE_DIR F:/FreeProjects/android/Openpgl/app/src/main/cpp/openpgl-0.7.0/openpgl/include/)
+  SET(OPENPGL_FOUND ON)
+#  find_package_wrapper(openpgl)
+#  if(openpgl_FOUND)
+#    get_target_property(OPENPGL_LIBRARIES openpgl::openpgl LOCATION)
+#    get_target_property(OPENPGL_INCLUDE_DIR openpgl::openpgl INTERFACE_INCLUDE_DIRECTORIES)
+#    message(STATUS "Found OpenPGL: ${OPENPGL_LIBRARIES}")
+#  else()
+#    set(WITH_CYCLES_PATH_GUIDING OFF)
+#    message(STATUS "OpenPGL not found, disabling WITH_CYCLES_PATH_GUIDING")
+#  endif()
 endif()
 
 if(DEFINED LIBDIR)
@@ -546,7 +597,7 @@ endif()
 if(HAIKU)
   list(APPEND PLATFORM_LINKLIBS -lnetwork)
 else()
-  list(APPEND PLATFORM_LINKLIBS -lutil -lc -lm)
+#  list(APPEND PLATFORM_LINKLIBS -lutil -lc -lm)
 endif()
 
 find_package(Threads REQUIRED)
@@ -685,12 +736,12 @@ if(WITH_GHOST_WAYLAND)
   endif()
   mark_as_advanced(WAYLAND_PROTOCOLS_DIR)
 
-  set_and_warn_library_found("wayland-client" wayland-client_FOUND WITH_GHOST_WAYLAND)
-  set_and_warn_library_found("wayland-egl" wayland-egl_FOUND WITH_GHOST_WAYLAND)
-  set_and_warn_library_found("wayland-scanner" wayland-scanner_FOUND WITH_GHOST_WAYLAND)
-  set_and_warn_library_found("wayland-cursor" wayland-cursor_FOUND WITH_GHOST_WAYLAND)
-  set_and_warn_library_found("wayland-protocols" wayland-protocols_FOUND WITH_GHOST_WAYLAND)
-  set_and_warn_library_found("xkbcommon" xkbcommon_FOUND WITH_GHOST_WAYLAND)
+#  set_and_warn_library_found("wayland-client" wayland-client_FOUND WITH_GHOST_WAYLAND)
+#  set_and_warn_library_found("wayland-egl" wayland-egl_FOUND WITH_GHOST_WAYLAND)
+#  set_and_warn_library_found("wayland-scanner" wayland-scanner_FOUND WITH_GHOST_WAYLAND)
+#  set_and_warn_library_found("wayland-cursor" wayland-cursor_FOUND WITH_GHOST_WAYLAND)
+#  set_and_warn_library_found("wayland-protocols" wayland-protocols_FOUND WITH_GHOST_WAYLAND)
+#  set_and_warn_library_found("xkbcommon" xkbcommon_FOUND WITH_GHOST_WAYLAND)
 
   if(WITH_GHOST_WAYLAND)
     if(WITH_GHOST_WAYLAND_DBUS)
@@ -951,9 +1002,9 @@ unset(_IS_LINKER_DEFAULT)
 # Avoid conflicts with Mesa llvmpipe, Luxrender, and other plug-ins that may
 # use the same libraries as Blender with a different version or build options.
 set(PLATFORM_SYMBOLS_MAP ${CMAKE_SOURCE_DIR}/source/creator/symbols_unix.map)
-set(PLATFORM_LINKFLAGS
-  "${PLATFORM_LINKFLAGS} -Wl,--version-script='${PLATFORM_SYMBOLS_MAP}'"
-)
+#set(PLATFORM_LINKFLAGS
+#  "${PLATFORM_LINKFLAGS} -Wl,--version-script='${PLATFORM_SYMBOLS_MAP}'"
+#)
 
 # Don't use position independent executable for portable install since file
 # browsers can't properly detect blender as an executable then. Still enabled

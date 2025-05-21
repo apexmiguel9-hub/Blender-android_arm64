@@ -201,7 +201,7 @@ static bool createGPUShader(OCIO_GPUShader &shader,
   if (use_curve_mapping) {
     info.define("USE_CURVE_MAPPING");
     info.uniform_buf(UNIFORMBUF_SLOT_CURVEMAP, "OCIO_GPUCurveMappingParameters", "curve_mapping");
-    info.sampler(TEXTURE_SLOT_CURVE_MAPPING, ImageType::FLOAT_1D, "curve_mapping_texture");
+    info.sampler(TEXTURE_SLOT_CURVE_MAPPING, ImageType::FLOAT_2D, "curve_mapping_texture");
   }
 
   /* Set LUT textures. */
@@ -344,10 +344,10 @@ static bool addGPULut1D2D(OCIO_GPUTextures &textures,
 #if OCIO_VERSION_HEX < 0x02030000
   /* There does not appear to be an explicit way to check if a texture is 1D or 2D.
    * It depends on more than height. So check instead by looking at the source. */
-  std::string sampler1D_name = std::string("sampler1D ") + sampler_name;
-  if (strstr(shader_desc->getShaderText(), sampler1D_name.c_str()) != nullptr) {
-    lut.texture = GPU_texture_create_1d(
-        texture_name, width, 1, format, GPU_TEXTURE_USAGE_SHADER_READ, values);
+  std::string sampler2D_name = std::string("sampler2D ") + sampler_name;
+  if (strstr(shader_desc->getShaderText(), sampler2D_name.c_str()) != nullptr) {
+    lut.texture = GPU_texture_create_2d(
+        texture_name, width, 1,1, format, GPU_TEXTURE_USAGE_SHADER_READ, values);
   }
   else
 #endif
@@ -461,8 +461,8 @@ static bool createGPUCurveMapping(OCIO_GPUCurveMappping &curvemap,
   if (curve_mapping_settings) {
     int lut_size = curve_mapping_settings->lut_size;
 
-    curvemap.texture = GPU_texture_create_1d(
-        "OCIOCurveMap", lut_size, 1, GPU_RGBA16F, GPU_TEXTURE_USAGE_SHADER_READ, nullptr);
+    curvemap.texture = GPU_texture_create_2d(
+        "OCIOCurveMap", lut_size,1, 1, GPU_RGBA16F, GPU_TEXTURE_USAGE_SHADER_READ, nullptr);
     GPU_texture_filter_mode(curvemap.texture, false);
     GPU_texture_extend_mode(curvemap.texture, GPU_SAMPLER_EXTEND_MODE_EXTEND);
 

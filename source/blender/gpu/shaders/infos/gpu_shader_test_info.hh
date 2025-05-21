@@ -20,7 +20,7 @@ GPU_SHADER_CREATE_INFO(gpu_math_test)
 
 GPU_SHADER_CREATE_INFO(gpu_compute_1d_test)
     .local_group_size(1)
-    .image(1, GPU_RGBA32F, Qualifier::WRITE, ImageType::FLOAT_1D, "img_output")
+    .image(1, GPU_RGBA32F, Qualifier::WRITE, ImageType::FLOAT_2D, "img_output")
     .compute_source("gpu_compute_1d_test.glsl")
     .do_static_compilation(true);
 

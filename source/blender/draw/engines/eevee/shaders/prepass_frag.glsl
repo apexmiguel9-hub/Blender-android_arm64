@@ -49,8 +49,8 @@ float hashed_alpha_threshold(vec3 co)
   /* Pass into CDF to compute uniformly distrib threshold. */
   float a = min(fac, 1.0 - fac);
   float one_a = 1.0 - a;
-  float denom = 1.0 / (2 * a * one_a);
-  float one_x = (1 - x);
+  float denom = 1.0 / (2.0 * a * one_a);
+  float one_x = (1.0 - x);
   vec3 cases = vec3((x * x) * denom, (x - 0.5 * a) / one_a, 1.0 - (one_x * one_x * denom));
 
   /* Find our final, uniformly distributed alpha threshold. */

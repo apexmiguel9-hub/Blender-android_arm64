@@ -31,7 +31,7 @@ void BLI_temp_directory_path_get(char *temp_directory, const size_t buffer_size)
   }
 
   if (temp_directory[0] == '\0') {
-    BLI_strncpy(temp_directory, "/tmp/", buffer_size);
+      BLI_strncpy(temp_directory, "/storage/emulated/0/com.epai.oblender/", buffer_size);
   }
   else {
     /* Add a trailing slash if needed. */

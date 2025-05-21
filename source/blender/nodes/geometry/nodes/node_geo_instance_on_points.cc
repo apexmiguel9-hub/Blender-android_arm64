@@ -176,9 +176,10 @@ static void add_instances_from_component(
       dst_attributes.add(id, ATTR_DOMAIN_INSTANCE, type, init);
     }
     else {
-      GSpanAttributeWriter dst = dst_attributes.lookup_or_add_for_write_only_span(
-          id, ATTR_DOMAIN_INSTANCE, type);
+      GSpanAttributeWriter dst = dst_attributes.lookup_or_add_for_write_only_span(id, ATTR_DOMAIN_INSTANCE, type);
+      if (dst.span.data()!=0){
       array_utils::gather(src.varray, selection, dst.span.slice(start_len, select_len));
+      }
       dst.finish();
     }
   }

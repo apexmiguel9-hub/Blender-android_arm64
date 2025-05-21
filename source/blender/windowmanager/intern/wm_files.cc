@@ -1052,7 +1052,7 @@ bool WM_file_read(bContext *C, const char *filepath, ReportList *reports)
 
       /* match the read WM with current WM */
       wm_window_match_do(C, &wmbase, &bmain->wm, &bmain->wm);
-      WM_check(C); /* opens window(s), checks keymaps */
+      WM_check(C,false); /* opens window(s), checks keymaps */
 
       if (do_history_file_update) {
         wm_history_file_update();
@@ -1450,7 +1450,7 @@ void wm_homefile_read_ex(bContext *C,
   }
 
   if (use_data) {
-    WM_check(C); /* opens window(s), checks keymaps */
+    WM_check(C,false); /* opens window(s), checks keymaps */
 
     bmain->filepath[0] = '\0';
   }
@@ -2312,6 +2312,7 @@ static int wm_userpref_write_exec(bContext *C, wmOperator *op)
 
   const bool success = BKE_blendfile_userdef_write_all(op->reports);
 
+    GHOST_CloseWindow();
   return success ? OPERATOR_FINISHED : OPERATOR_CANCELLED;
 }
 

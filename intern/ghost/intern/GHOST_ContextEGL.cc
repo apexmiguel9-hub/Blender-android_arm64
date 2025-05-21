@@ -7,6 +7,7 @@
  * Definition of GHOST_ContextEGL class.
  */
 
+#include <epoxy/egl.h>
 #include "GHOST_ContextEGL.hh"
 
 #include <set>
@@ -303,6 +304,7 @@ GHOST_TSuccess GHOST_ContextEGL::releaseDrawingContext()
 
 inline bool GHOST_ContextEGL::bindAPI(EGLenum api)
 {
+    return true;
   if (epoxy_egl_version(m_display) >= 12) {
     return (EGL_CHK(eglBindAPI(api)) == EGL_TRUE);
   }
@@ -358,7 +360,7 @@ GHOST_TSuccess GHOST_ContextEGL::initializeDrawingContext()
     }
 
     m_display = eglGetPlatformDisplayEXT(
-        EGL_PLATFORM_SURFACELESS_MESA, EGL_DEFAULT_DISPLAY, nullptr);
+        0, EGL_DEFAULT_DISPLAY, nullptr);
 
     if (!EGL_CHK(::eglInitialize(m_display, &egl_major, &egl_minor))) {
       goto error;
@@ -387,16 +389,16 @@ GHOST_TSuccess GHOST_ContextEGL::initializeDrawingContext()
      * but some implementations (ANGLE) do not seem to care. */
 
     if (m_contextMajorVersion == 1) {
-      attrib_list.push_back(EGL_RENDERABLE_TYPE);
-      attrib_list.push_back(EGL_OPENGL_ES_BIT);
+      attrib_list.push_back(EGL_SURFACE_TYPE);
+      attrib_list.push_back(EGL_WINDOW_BIT);
     }
     else if (m_contextMajorVersion == 2) {
-      attrib_list.push_back(EGL_RENDERABLE_TYPE);
-      attrib_list.push_back(EGL_OPENGL_ES2_BIT);
+      attrib_list.push_back(EGL_SURFACE_TYPE);
+      attrib_list.push_back(EGL_WINDOW_BIT);
     }
     else if (m_contextMajorVersion == 3) {
-      attrib_list.push_back(EGL_RENDERABLE_TYPE);
-      attrib_list.push_back(EGL_OPENGL_ES3_BIT_KHR);
+      attrib_list.push_back(EGL_SURFACE_TYPE);
+      attrib_list.push_back(EGL_WINDOW_BIT);
     }
     else {
       fprintf(stderr,
@@ -421,8 +423,8 @@ GHOST_TSuccess GHOST_ContextEGL::initializeDrawingContext()
     }
   }
   else {
-    attrib_list.push_back(EGL_RENDERABLE_TYPE);
-    attrib_list.push_back(EGL_OPENGL_BIT);
+    attrib_list.push_back(EGL_SURFACE_TYPE);
+    attrib_list.push_back(EGL_WINDOW_BIT);
   }
 
   attrib_list.push_back(EGL_RED_SIZE);
@@ -476,98 +478,104 @@ GHOST_TSuccess GHOST_ContextEGL::initializeDrawingContext()
   }
   attrib_list.clear();
 
-  if (epoxy_egl_version(m_display) >= 15 ||
-      epoxy_has_egl_extension(m_display, "KHR_create_context")) {
-    if (m_api == EGL_OPENGL_API || m_api == EGL_OPENGL_ES_API) {
-      if (m_contextMajorVersion != 0) {
-        attrib_list.push_back(EGL_CONTEXT_MAJOR_VERSION_KHR);
-        attrib_list.push_back(m_contextMajorVersion);
-      }
+//  if (epoxy_egl_version(m_display) >= 15 ||
+//      epoxy_has_egl_extension(m_display, "KHR_create_context")) {
+//    if (m_api == EGL_OPENGL_API || m_api == EGL_OPENGL_ES_API) {
+//      if (m_contextMajorVersion != 0) {
+//        attrib_list.push_back(EGL_CONTEXT_MAJOR_VERSION_KHR);
+//        attrib_list.push_back(m_contextMajorVersion);
+//      }
 
-      if (m_contextMinorVersion != 0) {
-        attrib_list.push_back(EGL_CONTEXT_MINOR_VERSION_KHR);
-        attrib_list.push_back(m_contextMinorVersion);
-      }
+//      if (m_contextMinorVersion != 0) {
+//        attrib_list.push_back(EGL_CONTEXT_MINOR_VERSION_KHR);
+//        attrib_list.push_back(m_contextMinorVersion);
+//      }
 
-      if (m_contextFlags != 0) {
-        attrib_list.push_back(EGL_CONTEXT_FLAGS_KHR);
-        attrib_list.push_back(m_contextFlags);
-      }
-    }
-    else {
-      if (m_contextMajorVersion != 0 || m_contextMinorVersion != 0) {
-        fprintf(stderr,
-                "Warning! Cannot request specific versions of %s contexts.",
-                api_string(m_api).c_str());
-      }
+//      if (m_contextFlags != 0) {
+//        attrib_list.push_back(EGL_CONTEXT_FLAGS_KHR);
+//        attrib_list.push_back(m_contextFlags);
+//      }
+//    }
+//    else {
+//      if (m_contextMajorVersion != 0 || m_contextMinorVersion != 0) {
+//        fprintf(stderr,
+//                "Warning! Cannot request specific versions of %s contexts.",
+//                api_string(m_api).c_str());
+//      }
 
-      if (m_contextFlags != 0) {
-        fprintf(stderr, "Warning! Flags cannot be set on %s contexts.", api_string(m_api).c_str());
-      }
-    }
+//      if (m_contextFlags != 0) {
+//        fprintf(stderr, "Warning! Flags cannot be set on %s contexts.", api_string(m_api).c_str());
+//      }
+//    }
 
-    if (m_api == EGL_OPENGL_API) {
-      if (m_contextProfileMask != 0) {
-        attrib_list.push_back(EGL_CONTEXT_OPENGL_PROFILE_MASK_KHR);
-        attrib_list.push_back(m_contextProfileMask);
-      }
-    }
-    else {
-      if (m_contextProfileMask != 0) {
-        fprintf(
-            stderr, "Warning! Cannot select profile for %s contexts.", api_string(m_api).c_str());
-      }
-    }
+//    if (m_api == EGL_OPENGL_API) {
+//      if (m_contextProfileMask != 0) {
+//        attrib_list.push_back(EGL_CONTEXT_OPENGL_PROFILE_MASK_KHR);
+//        attrib_list.push_back(m_contextProfileMask);
+//      }
+//    }
+//    else {
+//      if (m_contextProfileMask != 0) {
+//        fprintf(
+//            stderr, "Warning! Cannot select profile for %s contexts.", api_string(m_api).c_str());
+//      }
+//    }
 
-    if (m_api == EGL_OPENGL_API || epoxy_egl_version(m_display) >= 15) {
-      if (m_contextResetNotificationStrategy != 0) {
-        attrib_list.push_back(EGL_CONTEXT_OPENGL_RESET_NOTIFICATION_STRATEGY_KHR);
-        attrib_list.push_back(m_contextResetNotificationStrategy);
-      }
-    }
-    else {
-      if (m_contextResetNotificationStrategy != 0) {
-        fprintf(stderr,
-                "Warning! EGL %d.%d cannot set the reset notification strategy on %s contexts.",
-                egl_major,
-                egl_minor,
-                api_string(m_api).c_str());
-      }
-    }
-  }
-  else {
-    if (m_api == EGL_OPENGL_ES_API) {
-      if (m_contextMajorVersion != 0) {
-        attrib_list.push_back(EGL_CONTEXT_CLIENT_VERSION);
-        attrib_list.push_back(m_contextMajorVersion);
-      }
-    }
-    else {
-      if (m_contextMajorVersion != 0 || m_contextMinorVersion != 0) {
-        fprintf(stderr,
-                "Warning! EGL %d.%d is unable to select between versions of %s.",
-                egl_major,
-                egl_minor,
-                api_string(m_api).c_str());
-      }
-    }
+//    if (m_api == EGL_OPENGL_API || epoxy_egl_version(m_display) >= 15) {
+//      if (m_contextResetNotificationStrategy != 0) {
+//        attrib_list.push_back(EGL_CONTEXT_OPENGL_RESET_NOTIFICATION_STRATEGY_KHR);
+//        attrib_list.push_back(m_contextResetNotificationStrategy);
+//      }
+//    }
+//    else {
+//      if (m_contextResetNotificationStrategy != 0) {
+//        fprintf(stderr,
+//                "Warning! EGL %d.%d cannot set the reset notification strategy on %s contexts.",
+//                egl_major,
+//                egl_minor,
+//                api_string(m_api).c_str());
+//      }
+//    }
+//  }
+//  else {
+//    if (m_api == EGL_OPENGL_ES_API) {
+//      if (m_contextMajorVersion != 0) {
+//        attrib_list.push_back(EGL_CONTEXT_CLIENT_VERSION);
+//        attrib_list.push_back(m_contextMajorVersion);
+//      }
+//    }
+//    else {
+//      if (m_contextMajorVersion != 0 || m_contextMinorVersion != 0) {
+//        fprintf(stderr,
+//                "Warning! EGL %d.%d is unable to select between versions of %s.",
+//                egl_major,
+//                egl_minor,
+//                api_string(m_api).c_str());
+//      }
+//    }
 
-    if (m_contextFlags != 0) {
-      fprintf(stderr, "Warning! EGL %d.%d is unable to set context flags.", egl_major, egl_minor);
-    }
-    if (m_contextProfileMask != 0) {
-      fprintf(stderr,
-              "Warning! EGL %d.%d is unable to select between profiles.",
-              egl_major,
-              egl_minor);
-    }
-    if (m_contextResetNotificationStrategy != 0) {
-      fprintf(stderr,
-              "Warning! EGL %d.%d is unable to set the reset notification strategies.",
-              egl_major,
-              egl_minor);
-    }
-  }
+//    if (m_contextFlags != 0) {
+//      fprintf(stderr, "Warning! EGL %d.%d is unable to set context flags.", egl_major, egl_minor);
+//    }
+//    if (m_contextProfileMask != 0) {
+//      fprintf(stderr,
+//              "Warning! EGL %d.%d is unable to select between profiles.",
+//              egl_major,
+//              egl_minor);
+//    }
+//    if (m_contextResetNotificationStrategy != 0) {
+//      fprintf(stderr,
+//              "Warning! EGL %d.%d is unable to set the reset notification strategies.",
+//              egl_major,
+//              egl_minor);
+//    }
+//  }
+    attrib_list.push_back(EGL_CONTEXT_MAJOR_VERSION);
+    attrib_list.push_back(3);
+    attrib_list.push_back(EGL_CONTEXT_MINOR_VERSION);
+    attrib_list.push_back(2);
+    attrib_list.push_back(EGL_CONTEXT_CLIENT_VERSION);
+    attrib_list.push_back(3);
 
   attrib_list.push_back(EGL_NONE);
 

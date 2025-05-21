@@ -13,18 +13,21 @@ void main()
   pass_attr(0);
 #  endif
   gl_Position = volumetric_vert_iface[0].vPos.xyww;
+  gl_Layer = volumetric_geom_iface.slice = int(volumetric_vert_iface[0].vPos.z);
   EmitVertex();
 
 #  ifdef USE_ATTR
   pass_attr(1);
 #  endif
   gl_Position = volumetric_vert_iface[1].vPos.xyww;
+  gl_Layer = volumetric_geom_iface.slice = int(volumetric_vert_iface[1].vPos.z);
   EmitVertex();
 
 #  ifdef USE_ATTR
   pass_attr(2);
 #  endif
   gl_Position = volumetric_vert_iface[2].vPos.xyww;
+  gl_Layer = volumetric_geom_iface.slice = int(volumetric_vert_iface[2].vPos.z);
   EmitVertex();
 
   EndPrimitive();
@@ -45,18 +48,21 @@ void main()
   pass_attr(0);
 #  endif
   gl_Position = volumetric_vert_iface[0].vPos.xyww;
+  gl_Layer = volumetric_geom_iface.slice = int(volumetric_vert_iface[0].vPos.z);
   EmitVertex();
 
 #  ifdef USE_ATTR
   pass_attr(1);
 #  endif
   gl_Position = volumetric_vert_iface[1].vPos.xyww;
+  gl_Layer = volumetric_geom_iface.slice = int(volumetric_vert_iface[1].vPos.z);
   EmitVertex();
 
 #  ifdef USE_ATTR
   pass_attr(2);
 #  endif
   gl_Position = volumetric_vert_iface[2].vPos.xyww;
+  gl_Layer = volumetric_geom_iface.slice = int(volumetric_vert_iface[2].vPos.z);
   EmitVertex();
 
   EndPrimitive();

@@ -15,7 +15,7 @@ vec3 weight_to_rgb(float t)
     return vec3(1.0, 0.0, 1.0);
   }
   else {
-    return texture(weightTex, t).rgb;
+    return texture(weightTex, vec2(t,0.0)).rgb;
   }
 }
 

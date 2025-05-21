@@ -10,6 +10,7 @@
 #  include <OSL/oslexec.h>
 #endif
 
+#define EMBREE_MAJOR_VERSION 4
 #ifdef WITH_EMBREE
 #  if EMBREE_MAJOR_VERSION >= 4
 #    include <embree4/rtcore.h>

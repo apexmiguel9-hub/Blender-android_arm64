@@ -125,7 +125,8 @@ void WM_exit_ex(struct bContext *C, bool do_python, bool do_user_exit_actions);
 void WM_exit(struct bContext *C, int exit_code) ATTR_NORETURN;
 
 void WM_main(struct bContext *C) ATTR_NORETURN;
-
+void Wm_loop_pre(struct bContext *C) ;
+void Wm_loop(struct bContext *C) ;
 /**
  * Show the splash screen as needed on startup.
  *
@@ -166,7 +167,7 @@ typedef enum eWM_CapabilitiesFlag {
 
 eWM_CapabilitiesFlag WM_capabilities_flag(void);
 
-void WM_check(struct bContext *C);
+void WM_check(struct bContext *C,bool reinitial);
 void WM_reinit_gizmomap_all(struct Main *bmain);
 
 /**

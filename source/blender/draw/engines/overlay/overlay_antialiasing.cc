@@ -54,8 +54,8 @@ void OVERLAY_antialiasing_init(OVERLAY_Data *vedata)
 
   /* Small texture which will have very small impact on render-time. */
   if (txl->dummy_depth_tx == nullptr) {
-    const float pixel[1] = {1.0f};
-    txl->dummy_depth_tx = DRW_texture_create_2d(
+      const uint pixel[1] = {255};
+      txl->dummy_depth_tx = DRW_texture_create_2d_uint(
         1, 1, GPU_DEPTH_COMPONENT24, DRWTextureFlag(0), pixel);
   }
 

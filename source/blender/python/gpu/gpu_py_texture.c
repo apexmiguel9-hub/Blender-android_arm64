@@ -222,8 +222,8 @@ static PyObject *pygpu_texture__tp_new(PyTypeObject *UNUSED(self), PyObject *arg
             name, size[0], size[1], layers, 1, pygpu_textureformat.value_found, usage, data);
       }
       else {
-        tex = GPU_texture_create_1d_array(
-            name, size[0], layers, 1, pygpu_textureformat.value_found, usage, data);
+        tex = GPU_texture_create_2d_array(
+            name, size[0],1, layers, 1, pygpu_textureformat.value_found, usage, data);
       }
     }
     else if (len == 3) {
@@ -235,7 +235,7 @@ static PyObject *pygpu_texture__tp_new(PyTypeObject *UNUSED(self), PyObject *arg
           name, size[0], size[1], 1, pygpu_textureformat.value_found, usage, data);
     }
     else {
-      tex = GPU_texture_create_1d(name, size[0], 1, pygpu_textureformat.value_found, usage, data);
+      tex = GPU_texture_create_2d(name, size[0],1, 1, pygpu_textureformat.value_found, usage, data);
     }
   }
 
@@ -363,7 +363,11 @@ static PyObject *pygpu_texture_read(BPyGPUTexture *self)
   eGPUDataFormat best_data_format;
   switch (tex_format) {
     case GPU_DEPTH_COMPONENT24:
+        best_data_format=GPU_DATA_UINT;
+        break;
     case GPU_DEPTH_COMPONENT16:
+        best_data_format=GPU_DATA_UINT;
+          break;
     case GPU_DEPTH_COMPONENT32F:
       best_data_format = GPU_DATA_FLOAT;
       break;

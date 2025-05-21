@@ -100,7 +100,7 @@ void main()
     float grid_res = dot(dFdxPos, ViewMatrixInverse[0].xyz);
 
     /* The grid begins to appear when it comprises 4 pixels. */
-    grid_res *= 4;
+    grid_res *= 4.0;
 
     /* For UV/Image editor use grid_buf.zoom_factor. */
     if (flag_test(grid_flag, PLANE_IMAGE) &&

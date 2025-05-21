@@ -22,7 +22,7 @@ vec3 get_cubemap_vector(vec2 co, int face)
 
 float area_element(float x, float y)
 {
-  return atan(x * y, sqrt(x * x + y * y + 1));
+  return atan(x * y, sqrt(x * x + y * y + 1.0));
 }
 
 float texel_solid_angle(vec2 co, float halfpix)
@@ -51,7 +51,7 @@ vec3 octahedral_to_cubemap_proj(vec2 co)
 void main()
 {
 #if defined(IRRADIANCE_SH_L2)
-  float pixstep = 1.0 / probeSize;
+  float pixstep = 1.0 / float(probeSize);
   float halfpix = pixstep / 2.0;
 
   /* Downside: leaks negative values, very bandwidth consuming */
@@ -135,8 +135,8 @@ void main()
   /* Integrating Envmap */
   float weight = 0.0;
   vec3 out_radiance = vec3(0.0);
-  for (float i = 0; i < sampleCount; i++) {
-    vec3 Xi = rand2d_to_cylinder(hammersley_2d(i, sampleCount));
+  for (int i = 0; i < int(sampleCount); i++) {
+    vec3 Xi = rand2d_to_cylinder(hammersley_2d(float(i), sampleCount));
 
     float pdf;
     vec3 L = sample_uniform_hemisphere(Xi, N, T, B, pdf);

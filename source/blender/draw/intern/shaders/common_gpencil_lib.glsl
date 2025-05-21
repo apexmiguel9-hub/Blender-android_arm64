@@ -292,8 +292,8 @@ vec4 gpencil_vertex(vec4 viewport_size,
       out_thickness.y = (is_squares) ? 1e18 : (thickness / out_ndc.w);
     }
     else {
-      bool is_stroke_start = (ma.x == -1 && x == -1);
-      bool is_stroke_end = (ma3.x == -1 && x == 1);
+      bool is_stroke_start = (ma.x == -1 && x == -1.0);
+      bool is_stroke_end = (ma3.x == -1 && x == 1.0);
 
       /* Mitter tangent vector. */
       vec2 miter_tan = safe_normalize(line_adj + line);
