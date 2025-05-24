@@ -53,6 +53,7 @@ endif()
 set(INC_SYS
   ${Epoxy_INCLUDE_DIRS}
   ${IMATH_INCLUDE_DIR}
+  D:/FreeProjects/Blender/Blender/lib-android_arm64/Epoxy/include/
 )
 
 set(SRC
@@ -321,6 +322,7 @@ set(METAL_SRC
 
 set(LIB
   ${Epoxy_LIBRARIES}
+  D:/FreeProjects/Blender/Blender/lib-android_arm64/Epoxy/lib/libepoxy.a
 )
 
 # Select Backend source based on availability

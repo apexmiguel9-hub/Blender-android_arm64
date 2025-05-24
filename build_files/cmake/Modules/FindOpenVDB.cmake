@@ -61,9 +61,9 @@
 #UNSET(_openvdb_SEARCH_DIRS)
 SET(OPENVDB_FOUND TRUE)
 SET(OPENVDB_INCLUDE_DIRS
-        F:/FreeProjects/android/OpenVDB/app/src/main/cpp/openvdb-10.0.0/openvdb/)
+        D:/FreeProjects/Blender/Blender/lib-android_arm64/OpenVDB/include/)
 SET(OPENVDB_ROOT_DIR
-        F:/FreeProjects/android/OpenVDB/app/src/main/cpp/openvdb-10.0.0/openvdb/)
+        D:/FreeProjects/Blender/Blender/lib-android_arm64/OpenVDB/include/)
 SET(OPENVDB_LIBRARIES
-        F:/FreeProjects/android/OpenVDB/app/build/intermediates/stripped_native_libs/release/out/lib/arm64-v8a/libopenvdb.so
-        F:/FreeProjects/android/BoostIOStream/app/build/intermediates/stripped_native_libs/release/out/lib/arm64-v8a/libboostiostreams.so)
+        D:/FreeProjects/Blender/Blender/lib-android_arm64/OpenVDB/lib/libopenvdb.so
+        D:/FreeProjects/Blender/Blender/lib-android_arm64/BoostIOStream/lib/libboostiostreams.so)

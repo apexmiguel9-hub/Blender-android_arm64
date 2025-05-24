@@ -89,19 +89,19 @@ if(WIN32 AND NOT UNIX)
 endif()
 
 # Output dna.c
-add_custom_command(
-  OUTPUT
-    ${CMAKE_CURRENT_BINARY_DIR}/dna.c
-    ${CMAKE_CURRENT_BINARY_DIR}/dna_type_offsets.h
-    ${CMAKE_CURRENT_BINARY_DIR}/dna_verify.c
-  COMMAND
-    "$<TARGET_FILE:makesdna>"
-    ${CMAKE_CURRENT_BINARY_DIR}/dna.c
-    ${CMAKE_CURRENT_BINARY_DIR}/dna_type_offsets.h
-    ${CMAKE_CURRENT_BINARY_DIR}/dna_verify.c
-    ${CMAKE_SOURCE_DIR}/source/blender/makesdna/
-  DEPENDS makesdna
-)
+#add_custom_command(
+#  OUTPUT
+#    ${CMAKE_CURRENT_BINARY_DIR}/dna.c
+#    ${CMAKE_CURRENT_BINARY_DIR}/dna_type_offsets.h
+#    ${CMAKE_CURRENT_BINARY_DIR}/dna_verify.c
+#  COMMAND
+#    "$<TARGET_FILE:makesdna>"
+#    ${CMAKE_CURRENT_BINARY_DIR}/dna.c
+#    ${CMAKE_CURRENT_BINARY_DIR}/dna_type_offsets.h
+#    ${CMAKE_CURRENT_BINARY_DIR}/dna_verify.c
+#    ${CMAKE_SOURCE_DIR}/source/blender/makesdna/
+#  DEPENDS makesdna
+#)
 
 
 # -----------------------------------------------------------------------------

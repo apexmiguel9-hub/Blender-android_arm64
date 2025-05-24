@@ -404,11 +404,11 @@ endif()
 # Output `rna_*_gen.c`.
 # NOTE: (Linux only): with crashes try add this after COMMAND:
 # `valgrind --leak-check=full --track-origins=yes`
-add_custom_command(
-  OUTPUT ${GENSRC}
-  COMMAND "$<TARGET_FILE:makesrna>" ${CMAKE_CURRENT_BINARY_DIR}/ ${CMAKE_CURRENT_BINARY_DIR}/../
-  DEPENDS makesrna
-)
+#add_custom_command(
+#  OUTPUT ${GENSRC}
+#  COMMAND "$<TARGET_FILE:makesrna>" ${CMAKE_CURRENT_BINARY_DIR}/ ${CMAKE_CURRENT_BINARY_DIR}/../
+#  DEPENDS makesrna
+#)
 
 # Build bf_rna
 set(SRC

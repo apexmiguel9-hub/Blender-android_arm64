@@ -13,6 +13,7 @@ set(INC
   ../../../intern/guardedalloc
   ${CMAKE_BINARY_DIR}/source/blender/makesdna/intern
   ${BOOST_INCLUDE_DIR}
+  D:/FreeProjects/Blender/Blender/lib-android_arm64/boost/boost_1_71_0/
 )
 
 set(SRC

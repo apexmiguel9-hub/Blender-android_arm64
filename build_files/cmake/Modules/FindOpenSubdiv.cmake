@@ -77,13 +77,13 @@
 #  OPENSUBDIV_INCLUDE_DIR
 #
 set(OPENSUBDIV_FOUND ON)
-set(OPENSUBDIV_INCLUDE_DIRS "F:/FreeProjects/android/OpenSubdiv/app/src/main/cpp/OpenSubdiv-3_4_3/")
-set(OPENSUBDIV_INCLUDE_DIR "F:/FreeProjects/android/OpenSubdiv/app/src/main/cpp/OpenSubdiv-3_4_3/")
+set(OPENSUBDIV_INCLUDE_DIRS D:/FreeProjects/Blender/Blender/lib-android_arm64/OpenSubdiv/include/OpenSubdiv-3_4_3/)
+set(OPENSUBDIV_INCLUDE_DIR  D:/FreeProjects/Blender/Blender/lib-android_arm64/OpenSubdiv/include/OpenSubdiv-3_4_3/)
 set(OPENSUBDIV_LIBRARIES
-        F:/FreeProjects/android/OpenSubdiv/app/build/intermediates/stripped_native_libs/release/out/lib/arm64-v8a/libosdCPU.so
-        F:/FreeProjects/android/OpenSubdiv/app/build/intermediates/stripped_native_libs/release/out/lib/arm64-v8a/libosdGPU.so
+        D:/FreeProjects/Blender/Blender/lib-android_arm64/OpenSubdiv/lib/libosdCPU.so
+        D:/FreeProjects/Blender/Blender/lib-android_arm64/OpenSubdiv/lib/libosdGPU.so
         )
 SET(_opensubdiv_LIBRARIES
-        F:/FreeProjects/android/OpenSubdiv/app/build/intermediates/stripped_native_libs/release/out/lib/arm64-v8a/libosdCPU.so
-        F:/FreeProjects/android/OpenSubdiv/app/build/intermediates/stripped_native_libs/release/out/lib/arm64-v8a/libosdGPU.so
+        D:/FreeProjects/Blender/Blender/lib-android_arm64/OpenSubdiv/lib/libosdCPU.so
+        D:/FreeProjects/Blender/Blender/lib-android_arm64/OpenSubdiv/lib/libosdGPU.so
         )

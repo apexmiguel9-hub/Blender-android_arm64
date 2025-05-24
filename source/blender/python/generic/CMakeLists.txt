@@ -14,6 +14,7 @@ set(INC
 set(INC_SYS
   ${Epoxy_INCLUDE_DIRS}
   ${PYTHON_INCLUDE_DIRS}
+  D:/FreeProjects/Blender/Blender/lib-android_arm64/Epoxy/include/
 )
 
 set(SRC
@@ -44,6 +45,7 @@ set(LIB
   ${Epoxy_LIBRARIES}
   ${PYTHON_LINKFLAGS}
   ${PYTHON_LIBRARIES}
+  D:/FreeProjects/Blender/Blender/lib-android_arm64/Epoxy/lib/libepoxy.a
 )
 
 if(WITH_PYTHON_MODULE)

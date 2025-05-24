@@ -143,16 +143,16 @@ SET(OPENCOLLADA_INCLUDE_DIRS
         F:\\FreeProjects\\android\\OpenCOLLADA-main\\G3DWarehouseBrowser\\include\\)
 SET(OPENCOLLADA_FOUND ON)
 SET(OPENCOLLADA_LIBRARIES
-        F:/FreeProjects/android/OpenCOLLADA/app/build/intermediates/stripped_native_libs/release/out/lib/arm64-v8a/libbuffer.so
-        F:/FreeProjects/android/OpenCOLLADA/app/build/intermediates/stripped_native_libs/release/out/lib/arm64-v8a/libftoa.so
-        F:/FreeProjects/android/OpenCOLLADA/app/build/intermediates/stripped_native_libs/release/out/lib/arm64-v8a/libGeneratedSaxParser.so
-        F:/FreeProjects/android/OpenCOLLADA/app/build/intermediates/stripped_native_libs/release/out/lib/arm64-v8a/libMathMLSolver.so
-        F:/FreeProjects/android/OpenCOLLADA/app/build/intermediates/stripped_native_libs/release/out/lib/arm64-v8a/libOpenCOLLADABaseUtils.so
-        F:/FreeProjects/android/OpenCOLLADA/app/build/intermediates/stripped_native_libs/release/out/lib/arm64-v8a/libOpenCOLLADAFramework.so
-        F:/FreeProjects/android/OpenCOLLADA/app/build/intermediates/stripped_native_libs/release/out/lib/arm64-v8a/libOpenCOLLADASaxFrameworkLoader.so
-        F:/FreeProjects/android/OpenCOLLADA/app/build/intermediates/stripped_native_libs/release/out/lib/arm64-v8a/libOpenCOLLADAStreamWriter.so
-        F:/FreeProjects/android/OpenCOLLADA/app/build/intermediates/stripped_native_libs/release/out/lib/arm64-v8a/libpcre.so
-        F:/FreeProjects/android/OpenCOLLADA/app/build/intermediates/stripped_native_libs/release/out/lib/arm64-v8a/libUTF.so
-        F:/FreeProjects/android/OpenCOLLADA/app/build/intermediates/stripped_native_libs/release/out/lib/arm64-v8a/libxml.so
-        F:/FreeProjects/android/OpenCOLLADA/app/build/intermediates/stripped_native_libs/release/out/lib/arm64-v8a/libzlib.so
+        D:/FreeProjects/Blender/Blender/lib-android_arm64/OpenCOLLADA/lib/libbuffer.so
+        D:/FreeProjects/Blender/Blender/lib-android_arm64/OpenCOLLADA/lib/libftoa.so
+        D:/FreeProjects/Blender/Blender/lib-android_arm64/OpenCOLLADA/lib/libGeneratedSaxParser.so
+        D:/FreeProjects/Blender/Blender/lib-android_arm64/OpenCOLLADA/lib/libMathMLSolver.so
+        D:/FreeProjects/Blender/Blender/lib-android_arm64/OpenCOLLADA/lib/libOpenCOLLADABaseUtils.so
+        D:/FreeProjects/Blender/Blender/lib-android_arm64/OpenCOLLADA/lib/libOpenCOLLADAFramework.so
+        D:/FreeProjects/Blender/Blender/lib-android_arm64/OpenCOLLADA/lib/libOpenCOLLADASaxFrameworkLoader.so
+        D:/FreeProjects/Blender/Blender/lib-android_arm64/OpenCOLLADA/lib/libOpenCOLLADAStreamWriter.so
+        D:/FreeProjects/Blender/Blender/lib-android_arm64/OpenCOLLADA/lib/libpcre.so
+        D:/FreeProjects/Blender/Blender/lib-android_arm64/OpenCOLLADA/lib/libUTF.so
+        D:/FreeProjects/Blender/Blender/lib-android_arm64/OpenCOLLADA/lib/libxml.so
+        D:/FreeProjects/Blender/Blender/lib-android_arm64/OpenCOLLADA/lib/libzlib.so
         )

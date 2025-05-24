@@ -59,8 +59,8 @@
 #  BLOSC_INCLUDE_DIR
 #  BLOSC_LIBRARY
 #)
-SET(BLOSC_INCLUDE_DIRS F:/FreeProjects/android/Blosc/app/src/main/cpp/c-blosc-1.21.6/blosc/)
-SET(BLOSC_LIBRARIES F:/FreeProjects/android/Blosc/app/.cxx/cmake/release/arm64-v8a/blosc/libblosc.a)
-SET(BLOSC_ROOT_DIR F:/FreeProjects/android/Blosc/app/src/main/cpp/c-blosc-1.21.6/blosc/)
-SET(BLOSC_LIBRARY F:/FreeProjects/android/Blosc/app/.cxx/cmake/release/arm64-v8a/blosc/libblosc.a)
+SET(BLOSC_INCLUDE_DIRS D:/FreeProjects/Blender/Blender/lib-android_arm64/blosc/include/)
+SET(BLOSC_LIBRARIES D:/FreeProjects/Blender/Blender/lib-android_arm64/blosc/lib/libblosc.a)
+SET(BLOSC_ROOT_DIR D:/FreeProjects/Blender/Blender/lib-android_arm64/blosc/include/)
+SET(BLOSC_LIBRARY D:/FreeProjects/Blender/Blender/lib-android_arm64/blosc/lib/libblosc.a)
 SET(BLOSC_FOUND ON)

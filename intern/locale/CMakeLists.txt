@@ -43,9 +43,13 @@ endif()
 if(WITH_INTERNATIONAL)
   list(APPEND INC_SYS
     ${BOOST_INCLUDE_DIR}
+  D:/FreeProjects/Blender/Blender/lib-android_arm64/boost/boost_1_71_0/
   )
   list(APPEND LIB
     ${BOOST_LIBRARIES}
+	D:/FreeProjects/Blender/Blender/lib-android_arm64/ICUC/lib/libicuc.so
+        D:/FreeProjects/Blender/Blender/lib-android_arm64/BoostLocal/lib/libboostlocale.so
+        D:/FreeProjects/Blender/Blender/lib-android_arm64/BoostPython/lib/libboostpython.so
   )
   add_definitions(${BOOST_DEFINITIONS})
 endif()

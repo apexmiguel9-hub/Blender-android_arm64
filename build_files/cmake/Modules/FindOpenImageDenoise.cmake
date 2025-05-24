@@ -117,15 +117,18 @@
 #UNSET(_openimagedenoise_SEARCH_DIRS)
 #UNSET(_openimagedenoise_FIND_COMPONENTS)
 #UNSET(_openimagedenoise_LIBRARIES)
-SET(OPENIMAGEDENOISE_INCLUDE_DIRS F:/FreeProjects/android/Oidn/app/src/main/cpp/oidn-2.1.0/include)
+SET(OPENIMAGEDENOISE_INCLUDE_DIRS D:/FreeProjects/Blender/Blender/lib-android_arm64/Oidn/include/)
 SET(OPENIMAGEDENOISE_LIBRARIES
-        F:/FreeProjects/android/Oidn/app/build/intermediates/stripped_native_libs/release/out/lib/arm64-v8a/libdnnl.so
-        F:/FreeProjects/android/Oidn/app/build/intermediates/stripped_native_libs/release/out/lib/arm64-v8a/libOpenImageDenoise.so
-        F:/FreeProjects/android/Oidn/app/build/intermediates/stripped_native_libs/release/out/lib/arm64-v8a/libOpenImageDenoise_core.so
-        F:/FreeProjects/android/Oidn/app/build/intermediates/stripped_native_libs/release/out/lib/arm64-v8a/libOpenImageDenoise_device_cpu.so
+        D:/FreeProjects/Blender/Blender/lib-android_arm64/Oidn/lib/libdnnl.so
+        D:/FreeProjects/Blender/Blender/lib-android_arm64/Oidn/lib/libOpenImageDenoise.so
+        D:/FreeProjects/Blender/Blender/lib-android_arm64/Oidn/lib/libOpenImageDenoise_core.so
+        D:/FreeProjects/Blender/Blender/lib-android_arm64/Oidn/lib/libOpenImageDenoise_device_cpu.so
         )
-SET(OPENIMAGEDENOISE_ROOT_DIR F:/FreeProjects/android/Oidn/app/src/main/cpp/oidn-2.1.0/include)
+SET(OPENIMAGEDENOISE_ROOT_DIR D:/FreeProjects/Blender/Blender/lib-android_arm64/Oidn/include/)
 SET(OPENIMAGEDENOISE_FOUND ON)
 SET(OPENIMAGEDENOISE_LIBRARY
-        F:/FreeProjects/android/Oidn/app/build/intermediates/stripped_native_libs/release/out/lib/arm64-v8a/
+        D:/FreeProjects/Blender/Blender/lib-android_arm64/Oidn/lib/libdnnl.so
+        D:/FreeProjects/Blender/Blender/lib-android_arm64/Oidn/lib/libOpenImageDenoise.so
+        D:/FreeProjects/Blender/Blender/lib-android_arm64/Oidn/lib/libOpenImageDenoise_core.so
+        D:/FreeProjects/Blender/Blender/lib-android_arm64/Oidn/lib/libOpenImageDenoise_device_cpu.so
         )

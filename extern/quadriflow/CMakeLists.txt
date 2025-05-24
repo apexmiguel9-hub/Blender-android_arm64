@@ -48,6 +48,7 @@ set(INC
 set(INC_SYS
   ${BOOST_INCLUDE_DIR}
   ${EIGEN3_INCLUDE_DIRS}
+  D:/FreeProjects/Blender/Blender/lib-android_arm64/boost/boost_1_71_0/
 )
 
 set(SRC

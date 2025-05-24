@@ -244,21 +244,21 @@
 #  PYTHON_EXECUTABLE
 #)
 SET(PYTHON_LIBRARY
-        F:/FreeProjects/android/cpython/app/build/intermediates/stripped_native_libs/release/out/lib/arm64-v8a/libcpython.so
-        F:/FreeProjects/android/cpython/app/build/intermediates/stripped_native_libs/release/out/lib/arm64-v8a/libcrypto.so
-        F:/FreeProjects/android/cpython/app/build/intermediates/stripped_native_libs/release/out/lib/arm64-v8a/libssl.so
-        F:/FreeProjects/android/Sqlite/app/build/intermediates/stripped_native_libs/release/out/lib/arm64-v8a/libsqlite.so
-        F:/FreeProjects/android/zip/app/build/intermediates/stripped_native_libs/release/out/lib/arm64-v8a/libzip.so)
-SET(PYTHON_LIBPATH            F:/FreeProjects/android/cpython/app/src/main/cpp/)
-SET(PYTHON_INCLUDE_DIR        F:/FreeProjects/android/cpython/app/src/main/cpp/include/)
-SET(PYTHON_INCLUDE_DIRS       F:/FreeProjects/android/cpython/app/src/main/cpp/include/)
-SET(PYTHON_INCLUDE_CONFIG_DIR F:/FreeProjects/android/cpython/app/src/main/cpp/android/linux_arm64/pyconfig/)
+        D:/FreeProjects/Blender/Blender/lib-android_arm64/cpython/lib/libcpython.so
+        D:/FreeProjects/Blender/Blender/lib-android_arm64/cpython/lib/libcrypto.so
+        D:/FreeProjects/Blender/Blender/lib-android_arm64/cpython/lib/libssl.so
+        D:/FreeProjects/Blender/Blender/lib-android_arm64/sqlite/lib/libsqlite.so
+        D:/FreeProjects/Blender/Blender/lib-android_arm64/zip/lib/libzip.so)
+SET(PYTHON_LIBPATH            D:/FreeProjects/Blender/Blender/lib-android_arm64/cpython/include/)
+SET(PYTHON_INCLUDE_DIR        D:/FreeProjects/Blender/Blender/lib-android_arm64/cpython/include/include/)
+SET(PYTHON_INCLUDE_DIRS       D:/FreeProjects/Blender/Blender/lib-android_arm64/cpython/include/include/)
+SET(PYTHON_INCLUDE_CONFIG_DIR D:/FreeProjects/Blender/Blender/lib-android_arm64/cpython/include/android/linux_arm64/pyconfig/)
 SET(PYTHONLIBS_FOUND TRUE)
 SET(PYTHON_LIBRARIES
-        F:/FreeProjects/android/cpython/app/build/intermediates/stripped_native_libs/release/out/lib/arm64-v8a/libcpython.so
-        F:/FreeProjects/android/cpython/app/build/intermediates/stripped_native_libs/release/out/lib/arm64-v8a/libcrypto.so
-        F:/FreeProjects/android/cpython/app/build/intermediates/stripped_native_libs/release/out/lib/arm64-v8a/libssl.so
-        F:/FreeProjects/android/Sqlite/app/build/intermediates/stripped_native_libs/release/out/lib/arm64-v8a/libsqlite.so
-        F:/FreeProjects/android/zip/app/build/intermediates/stripped_native_libs/release/out/lib/arm64-v8a/libzip.so)
-set(PYTHON_NUMPY_INCLUDE_DIRS F:/FreeProjects/android/cpython/app/src/main/cpp/extern/numpy/core/include/)
+        D:/FreeProjects/Blender/Blender/lib-android_arm64/cpython/lib/libcpython.so
+        D:/FreeProjects/Blender/Blender/lib-android_arm64/cpython/lib/libcrypto.so
+        D:/FreeProjects/Blender/Blender/lib-android_arm64/cpython/lib/libssl.so
+        D:/FreeProjects/Blender/Blender/lib-android_arm64/sqlite/lib/libsqlite.so
+        D:/FreeProjects/Blender/Blender/lib-android_arm64/zip/lib/libzip.so)
+set(PYTHON_NUMPY_INCLUDE_DIRS D:/FreeProjects/Blender/Blender/lib-android_arm64/cpython/include/extern/numpy/core/include/)
 set(NUMPY_FOUND ON)

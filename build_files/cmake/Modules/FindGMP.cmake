@@ -85,12 +85,12 @@
 #  GMP_LIBRARY
 #  GMPXX_INCLUDE_DIR
 #  GMPXX_LIBRARY
-SET(GMP_INCLUDE_DIRS D:/FreeProjects/gmp621/include/)
-SET(GMP_INCLUDE_DIR D:/FreeProjects/gmp621/include/)
+SET(GMP_INCLUDE_DIRS D:/FreeProjects/Blender/Blender/lib-android_arm64/GMP/include/)
+SET(GMP_INCLUDE_DIR  D:/FreeProjects/Blender/Blender/lib-android_arm64/GMP/include/)
 SET(GMP_LIBRARIES
-        D:/FreeProjects/gmp621/lib/libgmp.so
-        D:/FreeProjects/gmp621/lib/libgmpxx.so
+        D:/FreeProjects/Blender/Blender/lib-android_arm64/GMP/lib/libgmp.so
+        D:/FreeProjects/Blender/Blender/lib-android_arm64/GMP/lib/libgmpxx.so
         c++_shared
         )
-SET(GMP_ROOT_DIR D:/FreeProjects/gmp621/)
+SET(GMP_ROOT_DIR D:/FreeProjects/Blender/Blender/lib-android_arm64/GMP/)
 SET(GMP_FOUND ON)

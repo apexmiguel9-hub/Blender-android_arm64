@@ -45,8 +45,8 @@
 #  Epoxy_INCLUDE_DIR
 #  Epoxy_LIBRARY
 #)
-SET(Epoxy_INCLUDE_DIRS F:/FreeProjects/android/Epoxy/app/src/main/cpp/)
-SET(Epoxy_LIBRARY F:/FreeProjects/android/Epoxy/app/build/intermediates/cmake/release/obj/arm64-v8a/libepoxy.a)
-SET(Epoxy_LIBRARIES F:/FreeProjects/android/Epoxy/app/build/intermediates/cmake/release/obj/arm64-v8a/libepoxy.a)
-SET(Epoxy_ROOT_DIR F:/FreeProjects/android/Epoxy/app/src/main/cpp/)
+SET(Epoxy_INCLUDE_DIRS D:/FreeProjects/Blender/Blender/lib-android_arm64/Epoxy/include/)
+SET(Epoxy_LIBRARY D:/FreeProjects/Blender/Blender/lib-android_arm64/Epoxy/lib/libepoxy.a)
+SET(Epoxy_LIBRARIES D:/FreeProjects/Blender/Blender/lib-android_arm64/Epoxy/lib/libepoxy.a)
+SET(Epoxy_ROOT_DIR D:/FreeProjects/Blender/Blender/lib-android_arm64/Epoxy/include/)
 SET(Epoxy_FOUND ON)

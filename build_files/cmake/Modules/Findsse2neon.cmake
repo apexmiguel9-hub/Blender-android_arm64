@@ -43,7 +43,7 @@
 #)
 #
 #UNSET(_sse2neon_SEARCH_DIRS)
-SET(SSE2NEON_INCLUDE_DIR F:/FreeProjects/android/Embree/app/src/main/cpp/embree-4.3.0/common/simd/arm/)
-SET(SSE2NEON_INCLUDE_DIRS F:/FreeProjects/android/Embree/app/src/main/cpp/embree-4.3.0/common/simd/arm/)
-SET(SSE2NEON_ROOT_DIR F:/FreeProjects/android/Embree/app/src/main/cpp/embree-4.3.0/common/simd/arm/)
+SET(SSE2NEON_INCLUDE_DIR D:/FreeProjects/Blender/Blender/lib-android_arm64/Embree/common/simd/arm/)
+SET(SSE2NEON_INCLUDE_DIRS D:/FreeProjects/Blender/Blender/lib-android_arm64/Embree/common/simd/arm/)
+SET(SSE2NEON_ROOT_DIR D:/FreeProjects/Blender/Blender/lib-android_arm64/Embree/common/simd/arm/)
 SET(SSE2NEON_FOUND ON)

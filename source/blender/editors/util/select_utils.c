@@ -187,7 +187,7 @@ const char *ED_select_circle_get_name(wmOperatorType *UNUSED(ot), PointerRNA *pt
     case SEL_OP_SUB:
       return CTX_N_(BLT_I18NCONTEXT_OPERATOR_DEFAULT, "Circle Select (Deselect)");
     case SEL_OP_XOR:
-      ATTR_FALLTHROUGH;
+//      ATTR_FALLTHROUGH;
     case SEL_OP_AND:
       BLI_assert_unreachable();
       ATTR_FALLTHROUGH;

@@ -30,6 +30,7 @@ if(WITH_OPENSUBDIV)
   list(APPEND INC_SYS
     ${OPENSUBDIV_INCLUDE_DIRS}
     ${Epoxy_INCLUDE_DIRS}
+  D:/FreeProjects/Blender/Blender/lib-android_arm64/Epoxy/include/
   )
 
   list(APPEND SRC

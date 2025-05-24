@@ -48,6 +48,6 @@
 #  endif()
 #
 #endif()
-SET(OPENAL_INCLUDE_DIR "F:/FreeProjects/android/OpenAL/app/src/main/cpp/openal-soft-master/include/AL/")
-SET(OPENAL_LIBRARY "F:/FreeProjects/android/OpenAL/app/build/intermediates/stripped_native_libs/debug/out/lib/arm64-v8a/libopenal.so" OpenSLES)
+SET(OPENAL_INCLUDE_DIR D:/FreeProjects/Blender/Blender/lib-android_arm64/OpenAL/include/openal-soft-master/include/AL/)
+SET(OPENAL_LIBRARY D:/FreeProjects/Blender/Blender/lib-android_arm64/OpenAL/lib/libopenal.so OpenSLES)
 SET(OPENAL_FOUND ON)

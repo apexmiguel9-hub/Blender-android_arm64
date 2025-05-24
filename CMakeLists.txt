@@ -599,11 +599,11 @@ if((UNIX AND NOT APPLE) OR (CMAKE_GENERATOR MATCHES "^Visual Studio.+"))
 endif()
 
 option(WITH_BOOST "Enable features depending on boost" ON)
-SET(OPENAL_INCLUDE_DIR "F:/FreeProjects/android/OpenAL/app/src/main/cpp/openal-soft-master/include/AL/")
-SET(OPENAL_LIBRARY "F:/FreeProjects/android/OpenAL/app/build/intermediates/stripped_native_libs/debug/out/lib/arm64-v8a/libopenal.so" OpenSLES)
+SET(OPENAL_INCLUDE_DIR D:/FreeProjects/Blender/Blender/lib-android_arm64/OpenAL/include/openal-soft-master/include/AL/)
+SET(OPENAL_LIBRARY D:/FreeProjects/Blender/Blender/lib-android_arm64/OpenAL/lib/libopenal.so OpenSLES)
 SET(OPENAL_FOUND ON)
-SET(Boost_INCLUDE_DIR C:/local/boost_1_71_0/)
-SET(BOOST_INCLUDE_DIR C:/local/boost_1_71_0/)
+SET(Boost_INCLUDE_DIR D:/FreeProjects/Blender/Blender/lib-android_arm64/boost/boost_1_71_0/)
+SET(BOOST_INCLUDE_DIR D:/FreeProjects/Blender/Blender/lib-android_arm64/boost/boost_1_71_0/)
 option(WITH_TBB   "Enable multithreading. TBB is also required for features such as Cycles, OpenVDB and USD" ON)
 
 # TBB malloc is only supported on for windows currently

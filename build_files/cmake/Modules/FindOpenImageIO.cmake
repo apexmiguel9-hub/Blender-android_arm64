@@ -115,11 +115,11 @@
 #
 #UNSET(_openimageio_SEARCH_DIRS)
 #UNSET(_openimageio_LIBRARIES)
-SET(OPENIMAGEIO_ROOT_DIR F:/FreeProjects/android/OpenImageIOEx/app/src/main/cpp/src/include)
-set(OPENIMAGEIO_INCLUDE_DIR F:/FreeProjects/android/OpenImageIOEx/app/src/main/cpp/src/include)
-SET(OPENIMAGEIO_INCLUDE_DIRS F:/FreeProjects/android/OpenImageIOEx/app/src/main/cpp/src/include)
-set(OPENIMAGEIO_LIBRARY F:/FreeProjects/android/OpenImageIOEx/app/build/intermediates/stripped_native_libs/release/out/lib/arm64-v8a/libOpenImageIO.so
-        F:/FreeProjects/android/OpenImageIOEx/app/build/intermediates/stripped_native_libs/release/out/lib/arm64-v8a/libOpenImageIO_Util.so)
-set(OPENIMAGEIO_LIBRARIES F:/FreeProjects/android/OpenImageIOEx/app/build/intermediates/stripped_native_libs/release/out/lib/arm64-v8a/libOpenImageIO.so
-        F:/FreeProjects/android/OpenImageIOEx/app/build/intermediates/stripped_native_libs/release/out/lib/arm64-v8a/libOpenImageIO_Util.so)
+SET(OPENIMAGEIO_ROOT_DIR     D:/FreeProjects/Blender/Blender/lib-android_arm64/OpenImageIO/include/src/include/)
+set(OPENIMAGEIO_INCLUDE_DIR  D:/FreeProjects/Blender/Blender/lib-android_arm64/OpenImageIO/include/src/include/)
+SET(OPENIMAGEIO_INCLUDE_DIRS D:/FreeProjects/Blender/Blender/lib-android_arm64/OpenImageIO/include/src/include/)
+set(OPENIMAGEIO_LIBRARY D:/FreeProjects/Blender/Blender/lib-android_arm64/OpenImageIO/lib/libOpenImageIO.so
+        D:/FreeProjects/Blender/Blender/lib-android_arm64/OpenImageIO/lib/libOpenImageIO_Util.so)
+set(OPENIMAGEIO_LIBRARIES D:/FreeProjects/Blender/Blender/lib-android_arm64/OpenImageIO/lib/libOpenImageIO.so
+        D:/FreeProjects/Blender/Blender/lib-android_arm64/OpenImageIO/lib/libOpenImageIO_Util.so)
 SET(OPENIMAGEIO_FOUND ON)

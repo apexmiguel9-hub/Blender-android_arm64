@@ -213,17 +213,17 @@
 #UNSET(_openexr_FIND_COMPONENTS)
 #UNSET(_openexr_LIBRARIES)
 #UNSET(_openexr_SEARCH_DIRS)
-SET(OPENEXR_ROOT_DIR      "F:/FreeProjects/android/OpenExr/app/src/main/cpp/openexr-3.0.1/src/")
-SET(OPENEXR_INCLUDE_DIRS  "F:/FreeProjects/android/OpenExr/app/src/main/cpp/openexr-3.0.1/src/"
-        "F:/FreeProjects/android/OpenExr/app/src/main/cpp/openexr-3.0.1/src/OpenEXR/"
-        F:/FreeProjects/android/IMath/app/src/main/cpp/Imath-3.0.1/src
-        F:/FreeProjects/android/IMath/app/src/main/cpp/Imath-3.0.1/src/Imath
+SET(OPENEXR_ROOT_DIR      D:/FreeProjects/Blender/Blender/lib-android_arm64/OpenExr/include)
+SET(OPENEXR_INCLUDE_DIRS  D:/FreeProjects/Blender/Blender/lib-android_arm64/OpenExr/include
+        D:/FreeProjects/Blender/Blender/lib-android_arm64/OpenExr/include/OpenEXR/
+        D:/FreeProjects/Blender/Blender/lib-android_arm64/IMath/include/
+        D:/FreeProjects/Blender/Blender/lib-android_arm64/IMath/include/Imath
         )
 SET(OPENEXR_LIBRARIES
-        F:/FreeProjects/android/IMath/app/build/intermediates/stripped_native_libs/release/out/lib/arm64-v8a/libImath-3_0.so
-        F:/FreeProjects/android/OpenExr/app/build/intermediates/stripped_native_libs/release/out/lib/arm64-v8a/libIlmThread-3_0.so
-        F:/FreeProjects/android/OpenExr/app/build/intermediates/stripped_native_libs/release/out/lib/arm64-v8a/libOpenEXRUtil-3_0.so
-        F:/FreeProjects/android/OpenExr/app/build/intermediates/stripped_native_libs/release/out/lib/arm64-v8a/libOpenEXR-3_0.so
-        F:/FreeProjects/android/OpenExr/app/build/intermediates/stripped_native_libs/release/out/lib/arm64-v8a/libIex-3_0.so
+        D:/FreeProjects/Blender/Blender/lib-android_arm64/IMath/lib/libImath-3_0.so
+        D:/FreeProjects/Blender/Blender/lib-android_arm64/OpenExr/lib/libIlmThread-3_0.so
+        D:/FreeProjects/Blender/Blender/lib-android_arm64/OpenExr/lib/libOpenEXRUtil-3_0.so
+        D:/FreeProjects/Blender/Blender/lib-android_arm64/OpenExr/lib/libOpenEXR-3_0.so
+        D:/FreeProjects/Blender/Blender/lib-android_arm64/OpenExr/lib/libIex-3_0.so
         )
 SET(OPENEXR_FOUND ON)

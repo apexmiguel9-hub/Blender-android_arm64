@@ -59,11 +59,11 @@
 #  TBB_INCLUDE_DIR
 #  TBB_LIBRARY
 SET(TBB_FOUND TRUE)
-SET(TBB_INCLUDE_DIRS F:/FreeProjects/android/Tbb/app/src/main/cpp/tbb-master/include/)
-SET(TBB_INCLUDE_DIR F:/FreeProjects/android/Tbb/app/src/main/cpp/tbb-master/include/)
+SET(TBB_INCLUDE_DIRS D:/FreeProjects/Blender/Blender/lib-android_arm64/Tbb/include/tbb-master/include)
+SET(TBB_INCLUDE_DIR D:/FreeProjects/Blender/Blender/lib-android_arm64/Tbb/include/tbb-master/include)
 SET(TBB_LIBRARIES
-        F:/FreeProjects/android/Tbb/app/build/intermediates/stripped_native_libs/release/out/lib/arm64-v8a/libtbb.so
-        F:/FreeProjects/android/Tbb/app/build/intermediates/stripped_native_libs/release/out/lib/arm64-v8a/libtbbmalloc.so
-        F:/FreeProjects/android/Tbb/app/build/intermediates/stripped_native_libs/release/out/lib/arm64-v8a/libtbbmalloc_proxy.so
+        D:/FreeProjects/Blender/Blender/lib-android_arm64/Tbb/lib/libtbb.so
+        D:/FreeProjects/Blender/Blender/lib-android_arm64/Tbb/lib/libtbbmalloc.so
+        D:/FreeProjects/Blender/Blender/lib-android_arm64/Tbb/lib/libtbbmalloc_proxy.so
         android
         )

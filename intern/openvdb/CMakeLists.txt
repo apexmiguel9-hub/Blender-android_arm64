@@ -5,6 +5,7 @@ set(INC
   .
   ../guardedalloc
   ${BOOST_INCLUDE_DIR}
+  D:/FreeProjects/Blender/Blender/lib-android_arm64/boost/boost_1_71_0/
 )
 
 set(INC_SYS

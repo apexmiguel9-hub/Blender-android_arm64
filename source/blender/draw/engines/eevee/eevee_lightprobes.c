@@ -33,6 +33,7 @@
 
 #include "WM_api.h"
 #include "WM_types.h"
+#include <epoxy/egl_generated.h>
 
 static struct {
   struct GPUTexture *planar_pool_placeholder;
