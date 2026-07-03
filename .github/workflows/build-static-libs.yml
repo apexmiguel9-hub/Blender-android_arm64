@@ -53,13 +53,14 @@ jobs:
 
       - name: Download and extract NDK r21e
         run: |
-          NDK_DIR="/usr/local/lib/android-ndk-r21e"
+          NDK_DIR="$HOME/android-ndk-r21e"
           if [ ! -d "$NDK_DIR" ]; then
             NDK_ZIP="/tmp/android-ndk-r21e-linux-x86_64.zip"
             echo "Downloading NDK r21e from ${{ env.NDK_URL }} ..."
             wget -q "${{ env.NDK_URL }}" -O "$NDK_ZIP"
             echo "Extracting NDK ..."
-            unzip -q "$NDK_ZIP" -d /usr/local/lib/
+            mkdir -p "$NDK_DIR"
+            unzip -q "$NDK_ZIP" -d "$HOME/"
             rm "$NDK_ZIP"
             echo "NDK r21e extracted to $NDK_DIR"
           fi
