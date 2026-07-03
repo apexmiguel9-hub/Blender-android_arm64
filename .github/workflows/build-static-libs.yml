@@ -177,9 +177,12 @@ jobs:
           # get generated. If flags differ, the generated RNA code will be missing
           # properties that the cross-compiled modules expect, causing missing
           # functionality or runtime errors.
+          PYTHON_INC=$(python3 -c "from sysconfig import get_path; print(get_path('include'))" 2>/dev/null || echo "/usr/include/python3")
+          echo "Using Python include dir: $PYTHON_INC"
           cmake -B "$GITROOT/build_host" -G Ninja \
             -DCMAKE_BUILD_TYPE=Release \
             -DLIB_DIR="${LIB_DIR}" \
+            -DPYTHON_INCLUDE_DIR="${PYTHON_INC}" \
             -DWITH_BLENDER=ON \
             -DWITH_PYTHON=ON \
             -DWITH_INTERNATIONAL=OFF \
@@ -314,6 +317,10 @@ jobs:
           NDK_DIR="${{ env.ANDROID_NDK_HOME }}"
           HOST_TOOLS="$GITROOT/build/host_tools"
 
+          # For the host Phase 3, we determine the system Python include dir.
+          # For cross-compile, use the Android Python headers from precompiled libs.
+          PYTHON_INC_CROSS=$(find "${LIB_DIR}/cpython" -name "Python.h" -exec dirname {} \; 2>/dev/null | head -1)
+          echo "Using cross Python include dir: ${PYTHON_INC_CROSS:-${LIB_DIR}/cpython/include}"
           cmake -B "$GITROOT/build" \
             -G "Ninja" \
             -DCMAKE_TOOLCHAIN_FILE="${NDK_DIR}/build/cmake/android.toolchain.cmake" \
@@ -323,6 +330,7 @@ jobs:
             -DCMAKE_C_FLAGS="-fvisibility=default" \
             -DCMAKE_CXX_FLAGS="-fvisibility=default" \
             -DLIB_DIR="${LIB_DIR}" \
+            -DPYTHON_INCLUDE_DIR="${PYTHON_INC_CROSS:-${LIB_DIR}/cpython/include}" \
             -DDATATOC_EXECUTABLE="$HOST_TOOLS/datatoc" \
             -DDATATOC_ICON_EXECUTABLE="$HOST_TOOLS/datatoc_icon" \
             -DSMAA_AREATEX_EXECUTABLE="$HOST_TOOLS/smaa_areatex" \
