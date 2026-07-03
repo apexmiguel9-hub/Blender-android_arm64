@@ -105,6 +105,10 @@ jobs:
           find "$REAL_LIB_ABS/" -type f \( -name "*.cmake" -o -name "CMakeLists.txt" -o -name "*.c" -o -name "*.cpp" \) \
             -exec sed -i "s|F:/FreeProjects/android|${REAL_LIB_ABS}|g" {} +
 
+          echo "=== Fixing case-sensitive path: include/include/ -> include/Include/ (Windows assumed case-insensitive FS) ==="
+          find "${{ github.workspace }}/" -type f \( -name "*.cmake" -o -name "CMakeLists.txt" \) \
+            -exec sed -i "s|include/include/|include/Include/|g" {} +
+
           echo "=== Hardcoded path counts AFTER ==="
           BLENDER_COUNT_AFTER=$(grep -rn "D:/FreeProjects" "${{ github.workspace }}/" --include="*.cmake" --include="CMakeLists.txt" 2>/dev/null | wc -l)
           echo "Blender-android_arm64 (D:/FreeProjects): $BLENDER_COUNT_AFTER matches (target: 0)"
