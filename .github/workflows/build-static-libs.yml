@@ -86,6 +86,31 @@ jobs:
             libboost-all-dev \
             libgl1-mesa-dev libglu1-mesa-dev
 
+      - name: Patch hardcoded Windows paths in cmake modules
+        run: |
+          REAL_LIB_PATH="${{ github.workspace }}/../lib-android_arm64"
+          REAL_LIB_ABS="$(cd "$REAL_LIB_PATH" && pwd)"
+
+          echo "=== Hardcoded path counts BEFORE ==="
+          BLENDER_COUNT=$(grep -rn "D:/FreeProjects" "${{ github.workspace }}/" --include="*.cmake" --include="CMakeLists.txt" 2>/dev/null | wc -l)
+          echo "Blender-android_arm64 (D:/FreeProjects): $BLENDER_COUNT matches"
+          LIB_COUNT=$(grep -rn "F:/FreeProjects" "$REAL_LIB_ABS/" --include="*.cmake" --include="CMakeLists.txt" --include="*.c" --include="*.cpp" 2>/dev/null | wc -l)
+          echo "lib-android_arm64 (F:/FreeProjects): $LIB_COUNT matches"
+
+          echo "=== Patching D:/FreeProjects/Blender/Blender/lib-android_arm64 -> $REAL_LIB_ABS ==="
+          find "${{ github.workspace }}/" -type f \( -name "*.cmake" -o -name "CMakeLists.txt" \) \
+            -exec sed -i "s|D:/FreeProjects/Blender/Blender/lib-android_arm64|${REAL_LIB_ABS}|g" {} +
+
+          echo "=== Patching F:/FreeProjects/android -> $REAL_LIB_ABS ==="
+          find "$REAL_LIB_ABS/" -type f \( -name "*.cmake" -o -name "CMakeLists.txt" -o -name "*.c" -o -name "*.cpp" \) \
+            -exec sed -i "s|F:/FreeProjects/android|${REAL_LIB_ABS}|g" {} +
+
+          echo "=== Hardcoded path counts AFTER ==="
+          BLENDER_COUNT_AFTER=$(grep -rn "D:/FreeProjects" "${{ github.workspace }}/" --include="*.cmake" --include="CMakeLists.txt" 2>/dev/null | wc -l)
+          echo "Blender-android_arm64 (D:/FreeProjects): $BLENDER_COUNT_AFTER matches (target: 0)"
+          LIB_COUNT_AFTER=$(grep -rn "F:/FreeProjects" "$REAL_LIB_ABS/" --include="*.cmake" --include="CMakeLists.txt" --include="*.c" --include="*.cpp" 2>/dev/null | wc -l)
+          echo "lib-android_arm64 (F:/FreeProjects): $LIB_COUNT_AFTER matches (target: 0)"
+
       - name: Phase 1 - Build host tools natively
         run: |
           GITROOT="${{ github.workspace }}"
@@ -177,12 +202,9 @@ jobs:
           # get generated. If flags differ, the generated RNA code will be missing
           # properties that the cross-compiled modules expect, causing missing
           # functionality or runtime errors.
-          PYTHON_INC=$(python3 -c "from sysconfig import get_path; print(get_path('include'))" 2>/dev/null || echo "/usr/include/python3")
-          echo "Using Python include dir: $PYTHON_INC"
           cmake -B "$GITROOT/build_host" -G Ninja \
             -DCMAKE_BUILD_TYPE=Release \
             -DLIB_DIR="${LIB_DIR}" \
-            -DPYTHON_INCLUDE_DIR="${PYTHON_INC}" \
             -DWITH_BLENDER=ON \
             -DWITH_PYTHON=ON \
             -DWITH_INTERNATIONAL=OFF \
@@ -317,10 +339,6 @@ jobs:
           NDK_DIR="${{ env.ANDROID_NDK_HOME }}"
           HOST_TOOLS="$GITROOT/build/host_tools"
 
-          # For the host Phase 3, we determine the system Python include dir.
-          # For cross-compile, use the Android Python headers from precompiled libs.
-          PYTHON_INC_CROSS=$(find "${LIB_DIR}/cpython" -name "Python.h" -exec dirname {} \; 2>/dev/null | head -1)
-          echo "Using cross Python include dir: ${PYTHON_INC_CROSS:-${LIB_DIR}/cpython/include}"
           cmake -B "$GITROOT/build" \
             -G "Ninja" \
             -DCMAKE_TOOLCHAIN_FILE="${NDK_DIR}/build/cmake/android.toolchain.cmake" \
@@ -330,7 +348,6 @@ jobs:
             -DCMAKE_C_FLAGS="-fvisibility=default" \
             -DCMAKE_CXX_FLAGS="-fvisibility=default" \
             -DLIB_DIR="${LIB_DIR}" \
-            -DPYTHON_INCLUDE_DIR="${PYTHON_INC_CROSS:-${LIB_DIR}/cpython/include}" \
             -DDATATOC_EXECUTABLE="$HOST_TOOLS/datatoc" \
             -DDATATOC_ICON_EXECUTABLE="$HOST_TOOLS/datatoc_icon" \
             -DSMAA_AREATEX_EXECUTABLE="$HOST_TOOLS/smaa_areatex" \
