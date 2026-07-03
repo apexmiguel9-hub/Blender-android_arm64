@@ -43,11 +43,7 @@ void EEVEE_subsurface_draw_init(EEVEE_ViewLayerData *sldata, EEVEE_Data *vedata)
     effects->sss_blur = DRW_texture_pool_query_2d_ex(
         fs_size[0], fs_size[1], GPU_R11F_G11F_B10F, usage, &draw_engine_eevee_type);
     effects->sss_irradiance = DRW_texture_pool_query_2d_ex(
-        fs_size[0], fs_size[1], GPU_R11F_G11F_B10F, usage, &draw_engine_eevee_type);
-    effects->sss_radius = DRW_texture_pool_query_2d_ex(
-        fs_size[0], fs_size[1], GPU_R16F, usage, &draw_engine_eevee_type);
-    effects->sss_albedo = DRW_texture_pool_query_2d_ex(
-        fs_size[0], fs_size[1], GPU_R11F_G11F_B10F, usage, &draw_engine_eevee_type);
+        fs_size[0], fs_size[1], GPU_RGBA16F, usage, &draw_engine_eevee_type);
 
     GPUTexture *stencil_tex = effects->sss_stencil;
 
@@ -75,8 +71,7 @@ void EEVEE_subsurface_draw_init(EEVEE_ViewLayerData *sldata, EEVEE_Data *vedata)
 
     GPU_framebuffer_ensure_config(&fbl->sss_clear_fb,
                                   {GPU_ATTACHMENT_NONE,
-                                   GPU_ATTACHMENT_TEXTURE(effects->sss_irradiance),
-                                   GPU_ATTACHMENT_TEXTURE(effects->sss_radius)});
+                                   GPU_ATTACHMENT_TEXTURE(effects->sss_irradiance)});
     if ((stl->g_data->render_passes & EEVEE_RENDER_PASS_DIFFUSE_LIGHT) != 0) {
       EEVEE_subsurface_output_init(sldata, vedata, 0);
     }
@@ -95,7 +90,6 @@ void EEVEE_subsurface_draw_init(EEVEE_ViewLayerData *sldata, EEVEE_Data *vedata)
     effects->sss_stencil = NULL;
     effects->sss_blur = NULL;
     effects->sss_irradiance = NULL;
-    effects->sss_radius = NULL;
   }
 }
 
@@ -199,8 +193,8 @@ void EEVEE_subsurface_add_pass(EEVEE_ViewLayerData *sldata,
                                               psl->sss_blur_ps);
     DRW_shgroup_uniform_texture(grp, "utilTex", EEVEE_materials_get_util_tex());
     DRW_shgroup_uniform_texture_ref(grp, "depthBuffer", depth_src);
-    DRW_shgroup_uniform_texture_ref_ex(grp, "sssIrradiance", &effects->sss_irradiance, state);
-    DRW_shgroup_uniform_texture_ref_ex(grp, "sssRadius", &effects->sss_radius, state);
+    DRW_shgroup_uniform_texture_ref_ex(grp, "sssRadiance", &effects->sss_irradiance, state);
+    DRW_shgroup_uniform_texture_ref_ex(grp, "sssData", &effects->sss_irradiance, state);
     DRW_shgroup_uniform_block(grp, "sssProfile", sss_profile);
     DRW_shgroup_uniform_block(grp, "common_block", sldata->common_ubo);
     DRW_shgroup_uniform_block(grp, "renderpass_block", sldata->renderpass_ubo.combined);
@@ -210,9 +204,8 @@ void EEVEE_subsurface_add_pass(EEVEE_ViewLayerData *sldata,
     grp = DRW_shgroup_create(EEVEE_shaders_subsurface_second_pass_sh_get(), psl->sss_resolve_ps);
     DRW_shgroup_uniform_texture(grp, "utilTex", EEVEE_materials_get_util_tex());
     DRW_shgroup_uniform_texture_ref(grp, "depthBuffer", depth_src);
-    DRW_shgroup_uniform_texture_ref_ex(grp, "sssIrradiance", &effects->sss_blur, state);
-    DRW_shgroup_uniform_texture_ref_ex(grp, "sssAlbedo", &effects->sss_albedo, state);
-    DRW_shgroup_uniform_texture_ref_ex(grp, "sssRadius", &effects->sss_radius, state);
+    DRW_shgroup_uniform_texture_ref_ex(grp, "sssRadiance", &effects->sss_blur, state);
+    DRW_shgroup_uniform_texture_ref_ex(grp, "sssData", &effects->sss_irradiance, state);
     DRW_shgroup_uniform_block(grp, "sssProfile", sss_profile);
     DRW_shgroup_uniform_block(grp, "common_block", sldata->common_ubo);
     DRW_shgroup_uniform_block(grp, "renderpass_block", sldata->renderpass_ubo.combined);
@@ -226,7 +219,7 @@ void EEVEE_subsurface_add_pass(EEVEE_ViewLayerData *sldata,
     DRW_shgroup_uniform_texture(grp, "utilTex", EEVEE_materials_get_util_tex());
     DRW_shgroup_uniform_texture(grp, "sssTexProfile", sss_tex_profile);
     DRW_shgroup_uniform_texture_ref(grp, "depthBuffer", depth_src);
-    DRW_shgroup_uniform_texture_ref(grp, "sssRadius", &effects->sss_radius);
+    DRW_shgroup_uniform_texture_ref(grp, "sssData", &effects->sss_irradiance);
     DRW_shgroup_uniform_texture_ref(grp, "sssShadowCubes", &sldata->shadow_cube_pool);
     DRW_shgroup_uniform_texture_ref(grp, "sssShadowCascades", &sldata->shadow_cascade_pool);
     DRW_shgroup_uniform_block(grp, "sssProfile", sss_profile);
@@ -256,10 +249,7 @@ void EEVEE_subsurface_data_render(EEVEE_ViewLayerData *UNUSED(sldata), EEVEE_Dat
                                   {GPU_ATTACHMENT_LEAVE,
                                    GPU_ATTACHMENT_LEAVE,
                                    GPU_ATTACHMENT_LEAVE,
-                                   GPU_ATTACHMENT_LEAVE,
-                                   GPU_ATTACHMENT_TEXTURE(effects->sss_irradiance),
-                                   GPU_ATTACHMENT_TEXTURE(effects->sss_radius),
-                                   GPU_ATTACHMENT_TEXTURE(effects->sss_albedo)});
+                                   GPU_ATTACHMENT_TEXTURE(effects->sss_irradiance)});
 
     GPU_framebuffer_bind(fbl->main_fb);
     DRW_draw_pass(psl->material_sss_ps);
@@ -269,9 +259,6 @@ void EEVEE_subsurface_data_render(EEVEE_ViewLayerData *UNUSED(sldata), EEVEE_Dat
                                   {GPU_ATTACHMENT_LEAVE,
                                    GPU_ATTACHMENT_LEAVE,
                                    GPU_ATTACHMENT_LEAVE,
-                                   GPU_ATTACHMENT_LEAVE,
-                                   GPU_ATTACHMENT_NONE,
-                                   GPU_ATTACHMENT_NONE,
                                    GPU_ATTACHMENT_NONE});
   }
 }

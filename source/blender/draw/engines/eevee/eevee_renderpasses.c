@@ -494,10 +494,7 @@ void EEVEE_renderpasses_draw_debug(EEVEE_Data *vedata)
       tx = effects->sss_irradiance;
       break;
     case 9:
-      tx = effects->sss_radius;
-      break;
     case 10:
-      tx = effects->sss_albedo;
       break;
     case 11:
       tx = effects->velocity_tx;

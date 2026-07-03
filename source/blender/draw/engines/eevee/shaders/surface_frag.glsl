@@ -102,9 +102,7 @@ void main()
   outRadiance = vec4(cl.radiance, holdout);
   ssrNormals = normal_encode(normalize(mat3(ViewMatrix) * out_ssr_N), vec3(0.0));
   ssrData = vec4(out_ssr_color, out_ssr_roughness);
-  sssIrradiance = out_sss_radiance;
-  sssRadius = out_sss_radius;
-  sssAlbedo = out_sss_color;
+  sssData = vec4(out_sss_radiance * out_sss_color, out_sss_radius);
 #endif
 
 #ifdef USE_REFRACTION
@@ -124,7 +122,7 @@ void main()
   float alpha_div = safe_rcp(alpha);
   outRadiance.rgb *= alpha_div;
   ssrData.rgb *= alpha_div;
-  sssAlbedo.rgb *= alpha_div;
+  sssData.rgb *= alpha_div;
 
   if (renderPassAOV) {
     if (aov_is_valid) {

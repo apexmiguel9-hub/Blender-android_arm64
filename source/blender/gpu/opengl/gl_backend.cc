@@ -606,6 +606,13 @@ void GLBackend::capabilities_init()
       "GL_ARB_vertex_attrib_binding");
     GLContext::clip_cull_distance_support = false;//epoxy_has_gl_extension("GL_EXT_clip_cull_distance");
 
+  /* Log real GL_MAX_DRAW_BUFFERS for Mali GLES debugging. */
+  {
+    GLint max_draw_buffers = 0;
+    glGetIntegerv(GL_MAX_DRAW_BUFFERS, &max_draw_buffers);
+    printf("[%s] GL_MAX_DRAW_BUFFERS = %d\n", __func__, max_draw_buffers);
+  }
+
   detect_workarounds();
 
   /* Disable this feature entirely when not debugging. */

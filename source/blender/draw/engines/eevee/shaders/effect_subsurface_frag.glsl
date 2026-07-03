@@ -10,8 +10,8 @@ void main(void)
 {
   vec2 pixel_size = 1.0 / vec2(textureSize(depthBuffer, 0).xy); /* TODO: precompute. */
   vec2 uvs = gl_FragCoord.xy * pixel_size;
-  vec3 sss_irradiance = texture(sssIrradiance, uvs).rgb;
-  float sss_radius = texture(sssRadius, uvs).r * radii_max_radius.w * avg_inv_radius;
+  vec3 sss_irradiance = texture(sssRadiance, uvs).rgb;
+  float sss_radius = texture(sssData, uvs).w * radii_max_radius.w * avg_inv_radius;
   float depth = texture(depthBuffer, uvs).r;
   float depth_view = get_view_z_from_depth(depth);
 
@@ -38,7 +38,7 @@ void main(void)
   for (int i = 1; i < sss_samples && i < MAX_SSS_SAMPLES; i++) {
     vec2 sample_uv = uvs + sss_kernel[i].a * finalStep *
                                ((abs(sss_kernel[i].a) > sssJitterThreshold) ? dir : dir_rand);
-    vec3 color = texture(sssIrradiance, sample_uv).rgb;
+    vec3 color = texture(sssRadiance, sample_uv).rgb;
     float sample_depth = texture(depthBuffer, sample_uv).r;
     sample_depth = get_view_z_from_depth(sample_depth);
     /* Depth correction factor. See Real Time Realistic Skin Translucency 2010
@@ -58,6 +58,6 @@ void main(void)
 #if defined(FIRST_PASS)
   sssRadiance = vec4(accum, 1.0);
 #else /* SECOND_PASS */
-  sssRadiance = vec4(accum * texture(sssAlbedo, uvs).rgb, 1.0);
+  sssRadiance = vec4(accum, 1.0);
 #endif
 }

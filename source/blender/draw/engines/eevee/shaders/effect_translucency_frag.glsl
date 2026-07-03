@@ -214,7 +214,7 @@ bool reconstruct_view_position_and_normal_from_depth(vec2 uvs, out vec3 vP, out 
 void main(void)
 {
   vec2 uvs = uvcoordsvar.xy;
-  float sss_scale = texture(sssRadius, uvs).r;
+  float sss_scale = texture(sssData, uvs).w;
 
   vec3 rand = texelfetch_noise_tex(gl_FragCoord.xy).zwy;
   rand.xy *= fast_sqrt(rand.z);
@@ -246,5 +246,5 @@ void main(void)
     accum += att * ld.l_color * light_translucent(ld, P, -Ng, l_vector, rand.xy, sss_scale);
   }
 
-  FragColor = vec4(accum, 1.0);
+  FragColor = vec4(accum, 0.0);
 }

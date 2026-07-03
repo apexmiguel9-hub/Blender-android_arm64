@@ -690,9 +690,7 @@ typedef struct EEVEE_EffectsInfo {
   /* SSSS */
   int sss_sample_count;
   int sss_surface_count;
-  struct GPUTexture *sss_irradiance; /* Textures from pool */
-  struct GPUTexture *sss_radius;
-  struct GPUTexture *sss_albedo;
+  struct GPUTexture *sss_irradiance; /* Textures from pool (RGBA: RGB=irradiance*albedo, A=radius) */
   struct GPUTexture *sss_blur;
   struct GPUTexture *sss_stencil;
   /* Volumetrics */
