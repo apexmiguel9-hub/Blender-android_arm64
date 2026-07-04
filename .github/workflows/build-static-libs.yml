@@ -2,9 +2,9 @@ name: Build Blender Android ARM64 Static Libs
 
 on:
   push:
-    branches: [main, master]
+    branches: [main, master, blender-v3.6-release]
   pull_request:
-    branches: [main, master]
+    branches: [main, master, blender-v3.6-release]
   workflow_dispatch:
 
 env:
