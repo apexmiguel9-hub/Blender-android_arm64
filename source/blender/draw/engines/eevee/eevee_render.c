@@ -100,13 +100,26 @@ bool EEVEE_render_init(EEVEE_Data *ved, RenderEngine *engine, struct Depsgraph *
 
   /* TODO: 32 bit depth. */
   DRW_texture_ensure_fullscreen_2d(&dtxl->depth, GPU_DEPTH24_STENCIL8, 0);
-  DRW_texture_ensure_fullscreen_2d(&txl->color, GPU_RGBA32F, DRW_TEX_FILTER);
+  /* NOTE(dexapex): Mali GPU does not support GPU_RGBA32F as color-renderable (EXT_color_buffer_float).
+   * The viewport already uses GPU_RGBA16F successfully. Use same format for render path. */
+  DRW_texture_ensure_fullscreen_2d(&txl->color, GPU_RGBA16F, DRW_TEX_FILTER);
 
-  GPU_framebuffer_ensure_config(
-      &dfbl->default_fb,
-      {GPU_ATTACHMENT_TEXTURE(dtxl->depth), GPU_ATTACHMENT_TEXTURE(txl->color)});
-  GPU_framebuffer_ensure_config(
-      &fbl->main_fb, {GPU_ATTACHMENT_TEXTURE(dtxl->depth), GPU_ATTACHMENT_TEXTURE(txl->color)});
+  GPU_framebuffer_ensure_config(&dfbl->default_fb,
+                                {GPU_ATTACHMENT_TEXTURE(dtxl->depth),
+                                 GPU_ATTACHMENT_TEXTURE(txl->color),
+                                 GPU_ATTACHMENT_LEAVE,
+                                 GPU_ATTACHMENT_LEAVE,
+                                 GPU_ATTACHMENT_LEAVE,
+                                 GPU_ATTACHMENT_LEAVE});
+  /* NOTE(dexapex): Match viewport's main_fb slot count (6 slots: depth + color + 4 LEAVE).
+   * Avoids slot-index mismatch when eevee_render_draw_background configures slots 2-4. */
+  GPU_framebuffer_ensure_config(&fbl->main_fb,
+                                {GPU_ATTACHMENT_TEXTURE(dtxl->depth),
+                                 GPU_ATTACHMENT_TEXTURE(txl->color),
+                                 GPU_ATTACHMENT_LEAVE,
+                                 GPU_ATTACHMENT_LEAVE,
+                                 GPU_ATTACHMENT_LEAVE,
+                                 GPU_ATTACHMENT_LEAVE});
   GPU_framebuffer_ensure_config(&fbl->main_color_fb,
                                 {GPU_ATTACHMENT_NONE, GPU_ATTACHMENT_TEXTURE(txl->color)});
 

@@ -1214,7 +1214,9 @@ void EEVEE_material_transparent_output_init(EEVEE_Data *vedata)
                                    GPU_ATTACHMENT_TEXTURE(txl->transparent_color_tmp)});
     /* Final result to with AntiAliasing. */
     /* TODO mem usage. */
-    const eGPUTextureFormat texture_format = (true) ? GPU_RGBA32F : GPU_RGBA16F;
+    /* NOTE(dexapex): Mali does not support GPU_RGBA32F as color-renderable.
+     * Use GPU_RGBA16F for Mali compatibility. Higher precision needed only for 128+ samples. */
+    const eGPUTextureFormat texture_format = GPU_RGBA16F;
     eGPUTextureUsage usage_accum = GPU_TEXTURE_USAGE_SHADER_READ | GPU_TEXTURE_USAGE_HOST_READ |
                                    GPU_TEXTURE_USAGE_ATTACHMENT;
     DRW_texture_ensure_fullscreen_2d_ex(&txl->transparent_accum, texture_format, usage_accum, 0);
