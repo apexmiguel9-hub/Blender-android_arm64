@@ -105,6 +105,10 @@ jobs:
           find "$REAL_LIB_ABS/" -type f \( -name "*.cmake" -o -name "CMakeLists.txt" -o -name "*.c" -o -name "*.cpp" \) \
             -exec sed -i "s|F:/FreeProjects/android|${REAL_LIB_ABS}|g" {} +
 
+          echo "=== Patching F:\\\\FreeProjects\\\\android (double backslash) in Blender repo cmake -> $REAL_LIB_ABS/OpenCOLLADA/include ==="
+          find "${{ github.workspace }}/" -type f \( -name "*.cmake" -o -name "CMakeLists.txt" \) \
+            -exec sed -i 's|F:\\\\FreeProjects\\\\android|'"${REAL_LIB_ABS}"'/OpenCOLLADA/include|g' {} +
+
           echo "=== Fixing case-sensitive path: include/include/ -> include/Include/ (Windows assumed case-insensitive FS) ==="
           find "${{ github.workspace }}/" -type f \( -name "*.cmake" -o -name "CMakeLists.txt" \) \
             -exec sed -i "s|include/include/|include/Include/|g" {} +
