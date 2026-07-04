@@ -11,6 +11,9 @@
 
 #include "workbench_engine.h"
 #include "workbench_private.h"
+#include <CLG_log.h>
+
+static CLG_LogRef LOG = {"workbench.shader"};
 
 /* Maximum number of variations. */
 #define MAX_LIGHTING 3
@@ -150,6 +153,9 @@ static GPUShader *workbench_shader_get_ex(WORKBENCH_PrivateData *wpd,
     create_info_name += (wpd->sh_cfg == GPU_SHADER_CFG_CLIPPED) ? "_clip" : "_no_clip";
 
     *shader = GPU_shader_create_from_info_name(create_info_name.c_str());
+    if (*shader == nullptr) {
+      CLOG_ERROR(&LOG, "Failed to create shader: %s", create_info_name.c_str());
+    }
   }
   return *shader;
 }
@@ -189,6 +195,9 @@ GPUShader *workbench_shader_composite_get(WORKBENCH_PrivateData *wpd)
     std::string create_info_name = "workbench_composite";
     create_info_name += workbench_lighting_mode_to_str(light);
     *shader = GPU_shader_create_from_info_name(create_info_name.c_str());
+    if (*shader == nullptr) {
+      CLOG_ERROR(&LOG, "Failed to create shader: %s", create_info_name.c_str());
+    }
   }
   return *shader;
 }
@@ -223,6 +232,9 @@ static GPUShader *workbench_shader_shadow_pass_get_ex(bool depth_pass, bool mani
     create_info_name += "_debug";
 #endif
     *shader = GPU_shader_create_from_info_name(create_info_name.c_str());
+    if (*shader == nullptr) {
+      CLOG_ERROR(&LOG, "Failed to create shader: %s", create_info_name.c_str());
+    }
   }
   return *shader;
 }
@@ -247,6 +259,9 @@ GPUShader *workbench_shader_cavity_get(bool cavity, bool curvature)
     create_info_name += (cavity) ? "_cavity" : "";
     create_info_name += (curvature) ? "_curvature" : "";
     *shader = GPU_shader_create_from_info_name(create_info_name.c_str());
+    if (*shader == nullptr) {
+      CLOG_ERROR(&LOG, "Failed to create shader: %s", create_info_name.c_str());
+    }
   }
   return *shader;
 }
@@ -321,6 +336,9 @@ GPUShader *workbench_shader_volume_get(bool slice,
     create_info_name += (coba) ? "_coba" : "_no_coba";
     create_info_name += (slice) ? "_slice" : "_no_slice";
     *shader = GPU_shader_create_from_info_name(create_info_name.c_str());
+    if (*shader == nullptr) {
+      CLOG_ERROR(&LOG, "Failed to create shader: %s", create_info_name.c_str());
+    }
   }
   return *shader;
 }
