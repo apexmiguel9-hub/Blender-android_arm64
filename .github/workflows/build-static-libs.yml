@@ -392,19 +392,38 @@ jobs:
             -DCMAKE_C_COMPILER_LAUNCHER=ccache \
             -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
 
-      - name: Stage generated DNA files into cross-compile build tree
+      - name: Stage generated DNA and RNA files into cross-compile build tree
         run: |
           GITROOT="${{ github.workspace }}"
+
+          echo "=== Staging DNA files (makesdna generated) ==="
           HOST_DNA_DIR="$GITROOT/build/host_dna_gen"
           CROSS_DNA_DIR="$GITROOT/build/source/blender/makesdna/intern"
           mkdir -p "$CROSS_DNA_DIR"
-          cp -v "$HOST_DNA_DIR/dna.c" "$HOST_DNA_DIR/dna_type_offsets.h" \
-                "$HOST_DNA_DIR/dna_verify.c" \
-                "$HOST_DNA_DIR/dna_includes_all.h" \
-                "$HOST_DNA_DIR/dna_includes_as_strings.h" \
-                "$CROSS_DNA_DIR/"
-          echo "DNA files staged for cross-compile:"
+          for f in "$HOST_DNA_DIR"/*.h "$HOST_DNA_DIR"/*.c; do
+            [ -f "$f" ] && cp -v "$f" "$CROSS_DNA_DIR/"
+          done
+          echo "DNA files staged:"
           ls -la "$CROSS_DNA_DIR/"
+
+          echo "=== Staging RNA files (makesrna generated) ==="
+          HOST_RNA_DIR="$GITROOT/build_host/source/blender/makesrna/intern"
+          CROSS_RNA_DIR="$GITROOT/build/source/blender/makesrna/intern"
+          mkdir -p "$CROSS_RNA_DIR"
+          for f in "$HOST_RNA_DIR"/*.c "$HOST_RNA_DIR"/*.h; do
+            [ -f "$f" ] && cp -v "$f" "$CROSS_RNA_DIR/"
+          done
+          echo "RNA files staged for cross-compile (intern):"
+          ls -la "$CROSS_RNA_DIR/"
+
+          HOST_RNA_PARENT="$GITROOT/build_host/source/blender/makesrna"
+          CROSS_RNA_PARENT="$GITROOT/build/source/blender/makesrna"
+          mkdir -p "$CROSS_RNA_PARENT"
+          for f in "$HOST_RNA_PARENT"/*.h; do
+            [ -f "$f" ] && cp -v "$f" "$CROSS_RNA_PARENT/"
+          done
+          echo "RNA header files staged for cross-compile (parent):"
+          ls -la "$CROSS_RNA_PARENT/" 2>/dev/null | head -10
 
       - name: Cross-compile static libraries
         shell: bash -o pipefail {0}
