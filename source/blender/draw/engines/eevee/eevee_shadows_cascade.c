@@ -191,6 +191,9 @@ static void eevee_shadow_cascade_setup(EEVEE_LightsInfo *linfo,
     csm_end = max_ff(view_far, -cascade_max_dist);
     /* Avoid artifacts */
     csm_end = min_ff(view_near, csm_end);
+    /* Prevent cascade range collapse (Mali: CSM precision-sensitive).
+     * Ensure csm_end < csm_start so split calculation doesn't degenerate. */
+    csm_end = min_ff(csm_end, csm_start - 1e-6f);
   }
   else {
     csm_start = -view_far;

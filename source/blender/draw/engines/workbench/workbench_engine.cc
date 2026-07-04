@@ -342,7 +342,8 @@ class Instance {
     }
 
     Framebuffer fb = Framebuffer("Workbench.Clear");
-    fb.ensure(GPU_ATTACHMENT_TEXTURE(resources.depth_tx));
+    fb.ensure(GPU_ATTACHMENT_TEXTURE(resources.depth_tx),
+              GPU_ATTACHMENT_TEXTURE(resources.color_tx));
     fb.bind();
     GPU_framebuffer_clear_depth_stencil(fb, 1.0f, 0x00);
 
@@ -354,7 +355,8 @@ class Instance {
       if (opaque_ps.gbuffer_in_front_ps_.is_empty()) {
         /* Clear only if it wont be overwritten by `opaque_ps`. */
         Framebuffer fb = Framebuffer("Workbench.Clear");
-        fb.ensure(GPU_ATTACHMENT_TEXTURE(resources.depth_in_front_tx));
+        fb.ensure(GPU_ATTACHMENT_TEXTURE(resources.depth_in_front_tx),
+                  GPU_ATTACHMENT_TEXTURE(resources.color_tx));
         fb.bind();
         GPU_framebuffer_clear_depth_stencil(fb, 1.0f, 0x00);
       }

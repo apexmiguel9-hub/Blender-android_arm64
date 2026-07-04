@@ -176,14 +176,20 @@ static void eevee_light_setup(Object *ob, EEVEE_Light *evli)
   /* Vectors */
   normalize_m4_m4_ex(mat, ob->object_to_world, scale);
   copy_v3_v3(evli->forwardvec, mat[2]);
-  normalize_v3(evli->forwardvec);
+  if (!normalize_v3(evli->forwardvec)) {
+    evli->forwardvec[2] = -1.0f;
+  }
   negate_v3(evli->forwardvec);
 
   copy_v3_v3(evli->rightvec, mat[0]);
-  normalize_v3(evli->rightvec);
+  if (!normalize_v3(evli->rightvec)) {
+    evli->rightvec[0] = 1.0f;
+  }
 
   copy_v3_v3(evli->upvec, mat[1]);
-  normalize_v3(evli->upvec);
+  if (!normalize_v3(evli->upvec)) {
+    evli->upvec[1] = 1.0f;
+  }
 
   /* Make sure we have a consistent Right Hand coord frame.
    * (in case of negatively scaled Z axis) */

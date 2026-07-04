@@ -108,13 +108,13 @@ float cubeFaceIndexEEVEE(vec3 P)
 vec2 cubeFaceCoordEEVEE(vec3 P, float face, float scale)
 {
   if (face < 2.0) {
-    return (P.zy / P.x) * scale * vec2(-0.5, -sign(P.x) * 0.5) + 0.5;
+    return (P.zy / max(abs(P.x), 1e-8)) * scale * vec2(-0.5, -sign(P.x) * 0.5) + 0.5;
   }
   else if (face < 4.0) {
-    return (P.xz / P.y) * scale * vec2(sign(P.y) * 0.5, 0.5) + 0.5;
+    return (P.xz / max(abs(P.y), 1e-8)) * scale * vec2(sign(P.y) * 0.5, 0.5) + 0.5;
   }
   else {
-    return (P.xy / P.z) * scale * vec2(0.5, -sign(P.z) * 0.5) + 0.5;
+    return (P.xy / max(abs(P.z), 1e-8)) * scale * vec2(0.5, -sign(P.z) * 0.5) + 0.5;
   }
 }
 
@@ -218,7 +218,7 @@ float distance_attenuation(float dist_sqr, float inv_sqr_influence)
 
 float spot_attenuation(LightData ld, vec3 l_vector)
 {
-  float z = dot(ld.l_forward, l_vector.xyz);
+  float z = max(dot(ld.l_forward, l_vector.xyz), 1e-8);
   vec3 lL = l_vector.xyz / z;
   float x = dot(ld.l_right, lL) / ld.l_sizex;
   float y = dot(ld.l_up, lL) / ld.l_sizey;

@@ -172,6 +172,10 @@ void OpaquePass::draw(Manager &manager,
                      GPU_ATTACHMENT_TEXTURE(gbuffer_normal_tx),
                      object_id_attachment);
     opaque_fb.bind();
+    {
+      const float zero[4] = {0.0f, 0.0f, 0.0f, 0.0f};
+      GPU_framebuffer_clear_color(opaque_fb, zero);
+    }
 
     manager.submit(gbuffer_in_front_ps_, view);
     if (resources.depth_in_front_tx.is_valid()) {
@@ -186,9 +190,15 @@ void OpaquePass::draw(Manager &manager,
                      GPU_ATTACHMENT_TEXTURE(gbuffer_normal_tx),
                      object_id_attachment);
     opaque_fb.bind();
+    {
+      const float zero[4] = {0.0f, 0.0f, 0.0f, 0.0f};
+      GPU_framebuffer_clear_color(opaque_fb, zero);
+    }
 
     manager.submit(gbuffer_ps_, view);
   }
+
+  GPU_memory_barrier(GPU_BARRIER_TEXTURE_FETCH);
 
   bool needs_stencil_copy = shadow_pass && !gbuffer_in_front_ps_.is_empty() &&
                             !accumulation_ps_is_empty;
@@ -209,7 +219,7 @@ void OpaquePass::draw(Manager &manager,
     deferred_ps_stencil_tx = resources.depth_tx.stencil_view();
   }
 
-  if (shadow_pass && !gbuffer_in_front_ps_.is_empty()) {
+  if (shadow_pass) {
     opaque_fb.ensure(GPU_ATTACHMENT_TEXTURE(deferred_ps_stencil_tx));
     opaque_fb.bind();
     GPU_framebuffer_clear_stencil(opaque_fb, 0);

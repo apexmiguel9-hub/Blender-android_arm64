@@ -102,7 +102,7 @@ void EEVEE_subsurface_output_init(EEVEE_ViewLayerData *UNUSED(sldata),
   EEVEE_StorageList *stl = vedata->stl;
   EEVEE_EffectsInfo *effects = stl->effects;
 
-  const eGPUTextureFormat texture_format_light = GPU_RGBA32F;
+  const eGPUTextureFormat texture_format_light = GPU_RGBA16F;
   const bool texture_created = txl->sss_accum == NULL;
   DRW_texture_ensure_fullscreen_2d(&txl->sss_accum, texture_format_light, 0);
 

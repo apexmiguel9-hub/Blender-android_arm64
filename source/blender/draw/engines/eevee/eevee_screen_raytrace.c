@@ -286,7 +286,7 @@ void EEVEE_reflection_output_init(EEVEE_ViewLayerData *UNUSED(sldata),
   EEVEE_TextureList *txl = vedata->txl;
 
   /* Create FrameBuffer. */
-  const eGPUTextureFormat texture_format = (tot_samples > 256) ? GPU_RGBA32F : GPU_RGBA16F;
+  const eGPUTextureFormat texture_format = GPU_RGBA16F;
   DRW_texture_ensure_fullscreen_2d(&txl->ssr_accum, texture_format, 0);
 
   GPU_framebuffer_ensure_config(&fbl->ssr_accum_fb,

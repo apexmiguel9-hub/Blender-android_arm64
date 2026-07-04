@@ -125,7 +125,14 @@ void SceneResources::init(const SceneState &scene_state)
     }
   }
   if (!matcap_tx.is_valid()) {
-    matcap_tx.ensure_2d_array(GPU_RGBA16F, int2(1), 1, GPU_TEXTURE_USAGE_SHADER_READ);
+    float gray_data[16] = {0.5f, 0.5f, 0.5f, 1.0f, 0.5f, 0.5f, 0.5f, 1.0f,
+                           0.5f, 0.5f, 0.5f, 1.0f, 0.5f, 0.5f, 0.5f, 1.0f};
+    matcap_tx = Texture("matcap_fallback",
+                         GPU_RGBA16F,
+                         GPU_TEXTURE_USAGE_SHADER_READ,
+                         int2(2),
+                         1,
+                         gray_data);
   }
 
   float4x4 world_shading_rotation = float4x4::identity();

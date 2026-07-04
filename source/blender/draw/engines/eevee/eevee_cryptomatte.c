@@ -144,7 +144,7 @@ void EEVEE_cryptomatte_output_init(EEVEE_ViewLayerData *UNUSED(sldata),
   const int num_cryptomatte_layers = eevee_cryptomatte_layers_count(view_layer);
   eGPUTextureFormat format = (num_cryptomatte_layers == 1) ? GPU_R32F :
                              (num_cryptomatte_layers == 2) ? GPU_RG32F :
-                                                             GPU_RGBA32F;
+                                                              GPU_RGBA16F;
   const float *viewport_size = DRW_viewport_size_get();
   const int buffer_size = viewport_size[0] * viewport_size[1];
 

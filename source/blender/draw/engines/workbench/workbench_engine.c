@@ -562,6 +562,10 @@ void workbench_draw_sample(void *ved)
 
     if (do_opaque_pass) {
       GPU_framebuffer_bind(fbl->opaque_fb);
+      {
+        const float clear_col[4] = {0.0f, 0.0f, 0.0f, 0.0f};
+        GPU_framebuffer_clear_color(fbl->opaque_fb, clear_col);
+      }
       DRW_draw_pass(psl->opaque_ps);
 
       if (psl->shadow_ps[0]) {
@@ -577,6 +581,7 @@ void workbench_draw_sample(void *ved)
         DRW_draw_pass(psl->merge_infront_ps);
       }
 
+      GPU_memory_barrier(GPU_BARRIER_TEXTURE_FETCH);
       GPU_framebuffer_bind(dfbl->default_fb);
       DRW_draw_pass(psl->composite_ps);
 
