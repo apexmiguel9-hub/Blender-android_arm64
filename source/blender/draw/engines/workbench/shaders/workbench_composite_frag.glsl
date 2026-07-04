@@ -20,9 +20,28 @@ void main()
   /* When using matcaps, mat_data.a is the back-face sign. */
   N = (mat_data.a > 0.0) ? N : -N;
 
-  fragColor.rgb = get_matcap_lighting(matcap_diffuse_tx, matcap_specular_tx, base_color, N, I);
-#endif
+  // DEBUG: remove after diagnosis
+  vec3 matcap_test = texture(matcap_diffuse_tx, vec2(0.5)).rgb;
+  if (length(matcap_test) < 0.001) {
+    fragColor.rgb = vec3(1, 0, 0); // Red: Matcap texture empty
+    fragColor.a = 1.0;
+    return;
+  }
+  if (length(base_color) < 0.001) {
+    fragColor.rgb = vec3(0, 1, 0); // Green: Base color zero
+    fragColor.a = 1.0;
+    return;
+  }
 
+  vec3 lighting = get_matcap_lighting(matcap_diffuse_tx, matcap_specular_tx, base_color, N, I);
+  float shadow = get_shadow(N, forceShadowing);
+  if (shadow < 0.001) {
+    fragColor.rgb = vec3(0, 0, 1); // Blue: Shadow total black
+    fragColor.a = 1.0;
+    return;
+  }
+  fragColor.rgb = max(lighting * shadow, vec3(0.05));
+#else
 #ifdef WORKBENCH_LIGHTING_STUDIO
   fragColor.rgb = get_world_lighting(base_color, roughness, metallic, N, I);
 #endif
@@ -32,6 +51,7 @@ void main()
 #endif
 
   fragColor.rgb *= get_shadow(N, forceShadowing);
+#endif
 
   fragColor.a = 1.0;
 }
