@@ -215,7 +215,7 @@ jobs:
             -DLIB_DIR="${LIB_DIR}" \
             -DWITH_BLENDER=ON \
             -DWITH_PYTHON=ON \
-            -DWITH_INTERNATIONAL=OFF \
+            -DWITH_INTERNATIONAL=ON \
             -DWITH_CODEC_FFMPEG=ON \
             -DWITH_OPENAL=ON \
             -DWITH_SDL=OFF \
@@ -229,7 +229,7 @@ jobs:
             -DWITH_OPENVDB=ON \
             -DWITH_NANOVDB=ON \
             -DWITH_ALEMBIC=ON \
-            -DWITH_USD=OFF \
+            -DWITH_USD=ON \
             -DWITH_CYCLES=ON \
             -DWITH_CYCLES_OSL=OFF \
             -DWITH_CYCLES_EMBREE=ON \
@@ -243,7 +243,7 @@ jobs:
             -DWITH_BUILDINFO=OFF \
             -DWITH_BULLET=ON \
             -DWITH_AUDASPACE=OFF \
-            -DWITH_MOD_FLUID=OFF \
+            -DWITH_MOD_FLUID=ON \
             -DWITH_FREESTYLE=ON \
             -DWITH_IMAGE_OPENEXR=ON \
             -DWITH_IMAGE_CINEON=OFF \
@@ -362,8 +362,8 @@ jobs:
             -DMAKESRNA_EXECUTABLE="$HOST_TOOLS/makesrna" \
             -DWITH_BLENDER=ON \
             -DWITH_PYTHON=ON \
-            -DWITH_INTERNATIONAL=OFF \
-            -DWITH_MOD_FLUID=OFF \
+            -DWITH_INTERNATIONAL=ON \
+            -DWITH_MOD_FLUID=ON \
             -DWITH_CODEC_FFMPEG=ON \
             -DWITH_OPENAL=ON \
             -DWITH_SDL=OFF \
@@ -377,7 +377,7 @@ jobs:
             -DWITH_OPENVDB=ON \
             -DWITH_NANOVDB=ON \
             -DWITH_ALEMBIC=ON \
-            -DWITH_USD=OFF \
+            -DWITH_USD=ON \
             -DWITH_CYCLES=ON \
             -DWITH_CYCLES_OSL=OFF \
             -DWITH_CYCLES_EMBREE=ON \
