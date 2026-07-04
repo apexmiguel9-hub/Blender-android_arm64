@@ -402,10 +402,11 @@ jobs:
           grep -n "smaa_areatex\|shader_builder" "$NINJA_FILE" 2>/dev/null || echo "No matches"
 
           echo "=== Patching smaa_areatex in custom commands ==="
-          # Replace smaa_areatex binary path in CUSTOM_COMMAND blocks to use host version
-          # The ARM64 binary can't run on x86_64 runner
-          sed -i "/CUSTOM_COMMAND/,/^$/s|bin/smaa_areatex|${HOST_TOOLS}/smaa_areatex|g" "$NINJA_FILE" 2>/dev/null || true
-          echo "Done patching"
+          # Replace the absolute path to the ARM64 smaa_areatex binary with the host (x86_64) version.
+          # The cross-compile builds smaa_areatex as ARM64 which can't run on the x86_64 runner.
+          # Use the host-built version for the custom command that generates COM_SMAAAreaTexture.h
+          sed -i "s|${GITROOT}/build/bin/smaa_areatex|${HOST_TOOLS}/smaa_areatex|g" "$NINJA_FILE" 2>/dev/null || true
+          echo "Done patching smaa_areatex"
 
       - name: Stage generated DNA and RNA files into cross-compile build tree
         run: |
