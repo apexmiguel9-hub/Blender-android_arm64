@@ -13,8 +13,11 @@
 #include "gl_debug.hh"
 
 #include "gl_backend.hh"
+#include <CLG_log.h>
 
 namespace blender::gpu {
+
+static CLG_LogRef LOG = {"gl.backend"};
 
 /* -------------------------------------------------------------------- */
 /** \name Platform
@@ -610,7 +613,7 @@ void GLBackend::capabilities_init()
   {
     GLint max_draw_buffers = 0;
     glGetIntegerv(GL_MAX_DRAW_BUFFERS, &max_draw_buffers);
-    printf("[%s] GL_MAX_DRAW_BUFFERS = %d\n", __func__, max_draw_buffers);
+    CLOG_INFO(&LOG, 1, "GL_MAX_DRAW_BUFFERS = %d", max_draw_buffers);
   }
 
   detect_workarounds();
