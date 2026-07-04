@@ -392,6 +392,20 @@ jobs:
             -DCMAKE_C_COMPILER_LAUNCHER=ccache \
             -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
 
+      - name: Stage generated DNA files into cross-compile build tree
+        run: |
+          GITROOT="${{ github.workspace }}"
+          HOST_DNA_DIR="$GITROOT/build/host_dna_gen"
+          CROSS_DNA_DIR="$GITROOT/build/source/blender/makesdna/intern"
+          mkdir -p "$CROSS_DNA_DIR"
+          cp -v "$HOST_DNA_DIR/dna.c" "$HOST_DNA_DIR/dna_type_offsets.h" \
+                "$HOST_DNA_DIR/dna_verify.c" \
+                "$HOST_DNA_DIR/dna_includes_all.h" \
+                "$HOST_DNA_DIR/dna_includes_as_strings.h" \
+                "$CROSS_DNA_DIR/"
+          echo "DNA files staged for cross-compile:"
+          ls -la "$CROSS_DNA_DIR/"
+
       - name: Cross-compile static libraries
         shell: bash -o pipefail {0}
         run: |
