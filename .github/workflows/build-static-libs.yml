@@ -401,12 +401,23 @@ jobs:
           echo "=== Host tool paths in build.ninja ==="
           grep -n "smaa_areatex\|shader_builder" "$NINJA_FILE" 2>/dev/null || echo "No matches"
 
-          echo "=== Patching smaa_areatex in custom commands ==="
-          # Replace the absolute path to the ARM64 smaa_areatex binary with the host (x86_64) version.
-          # The cross-compile builds smaa_areatex as ARM64 which can't run on the x86_64 runner.
-          # Use the host-built version for the custom command that generates COM_SMAAAreaTexture.h
-          sed -i "s|${GITROOT}/build/bin/smaa_areatex|${HOST_TOOLS}/smaa_areatex|g" "$NINJA_FILE" 2>/dev/null || true
-          echo "Done patching smaa_areatex"
+          echo "=== Patching host tool paths in build.ninja ==="
+          # The cross-compile builds datatoc, datatoc_icon, and smaa_areatex as ARM64 binaries,
+          # but they need to run as host tools to generate shader/header files at build time.
+          # Replace their absolute paths with the host-built (x86_64) versions.
+          for tool in datatoc datatoc_icon smaa_areatex; do
+            SRC="${GITROOT}/build/bin/${tool}"
+            DST="${HOST_TOOLS}/${tool}"
+            if [ -f "$DST" ]; then
+              count=$(grep -c "$SRC" "$NINJA_FILE" 2>/dev/null || echo 0)
+              if [ "$count" -gt 0 ]; then
+                sed -i "s|$SRC|$DST|g" "$NINJA_FILE"
+                echo "  Patched $tool: $count occurrences -> $DST"
+              fi
+            else
+              echo "  Skipped $tool: host binary not found at $DST"
+            fi
+          done
 
       - name: Stage generated DNA and RNA files into cross-compile build tree
         run: |
