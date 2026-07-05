@@ -8,6 +8,7 @@
 #include "DRW_render.h"
 
 #include <string>
+#include <android/log.h>
 
 #include "workbench_engine.h"
 #include "workbench_private.h"
@@ -155,6 +156,8 @@ static GPUShader *workbench_shader_get_ex(WORKBENCH_PrivateData *wpd,
     *shader = GPU_shader_create_from_info_name(create_info_name.c_str());
     if (*shader == nullptr) {
       CLOG_ERROR(&LOG, "Failed to create shader: %s", create_info_name.c_str());
+    __android_log_print(ANDROID_LOG_ERROR, "Blender.Workbench",
+        "Failed to create shader: %s", create_info_name.c_str());
     }
   }
   return *shader;
@@ -197,6 +200,8 @@ GPUShader *workbench_shader_composite_get(WORKBENCH_PrivateData *wpd)
     *shader = GPU_shader_create_from_info_name(create_info_name.c_str());
     if (*shader == nullptr) {
       CLOG_ERROR(&LOG, "Failed to create shader: %s", create_info_name.c_str());
+    __android_log_print(ANDROID_LOG_ERROR, "Blender.Workbench",
+        "Failed to create shader: %s", create_info_name.c_str());
     }
   }
   return *shader;
@@ -234,6 +239,8 @@ static GPUShader *workbench_shader_shadow_pass_get_ex(bool depth_pass, bool mani
     *shader = GPU_shader_create_from_info_name(create_info_name.c_str());
     if (*shader == nullptr) {
       CLOG_ERROR(&LOG, "Failed to create shader: %s", create_info_name.c_str());
+    __android_log_print(ANDROID_LOG_ERROR, "Blender.Workbench",
+        "Failed to create shader: %s", create_info_name.c_str());
     }
   }
   return *shader;
@@ -261,6 +268,8 @@ GPUShader *workbench_shader_cavity_get(bool cavity, bool curvature)
     *shader = GPU_shader_create_from_info_name(create_info_name.c_str());
     if (*shader == nullptr) {
       CLOG_ERROR(&LOG, "Failed to create shader: %s", create_info_name.c_str());
+    __android_log_print(ANDROID_LOG_ERROR, "Blender.Workbench",
+        "Failed to create shader: %s", create_info_name.c_str());
     }
   }
   return *shader;
@@ -338,6 +347,8 @@ GPUShader *workbench_shader_volume_get(bool slice,
     *shader = GPU_shader_create_from_info_name(create_info_name.c_str());
     if (*shader == nullptr) {
       CLOG_ERROR(&LOG, "Failed to create shader: %s", create_info_name.c_str());
+    __android_log_print(ANDROID_LOG_ERROR, "Blender.Workbench",
+        "Failed to create shader: %s", create_info_name.c_str());
     }
   }
   return *shader;
