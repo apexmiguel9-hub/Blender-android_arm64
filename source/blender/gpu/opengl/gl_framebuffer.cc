@@ -216,7 +216,14 @@ void GLFrameBuffer::update_attachments()
 
   dirty_attachments_ = false;
 
-  glDrawBuffers(ARRAY_SIZE(gl_attachments_), gl_attachments_);
+  int color_attachments_count = 0;
+  for (int i = GPU_FB_MAX_COLOR_ATTACHMENT - 1; i >= 0; --i) {
+    if (gl_attachments_[i] != GL_NONE) {
+      color_attachments_count = i + 1;
+      break;
+    }
+  }
+  glDrawBuffers(color_attachments_count, gl_attachments_);
 
   if (G.debug & G_DEBUG_GPU) {
     BLI_assert(this->check(nullptr));

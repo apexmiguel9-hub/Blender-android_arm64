@@ -30,8 +30,8 @@ typedef enum GPUAttachmentType : int {
   GPU_FB_COLOR_ATTACHMENT6,
   GPU_FB_COLOR_ATTACHMENT7,
   /* Number of maximum output slots. */
-  /* Keep in mind that GL max is GL_MAX_DRAW_BUFFERS and is at least 8, corresponding to
-   * the maximum number of COLOR attachments specified by glDrawBuffers. */
+  /* Keep in mind that GL max is GL_MAX_DRAW_BUFFERS and is at least 8 on desktop (at least 4 on GLES),
+   * corresponding to the maximum number of COLOR attachments specified by glDrawBuffers. */
   GPU_FB_MAX_ATTACHMENT,
 
 } GPUAttachmentType;

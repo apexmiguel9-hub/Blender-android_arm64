@@ -582,7 +582,7 @@ void workbench_draw_sample(void *ved)
         DRW_draw_pass(psl->merge_infront_ps);
       }
 
-      GPU_memory_barrier(GPU_BARRIER_TEXTURE_FETCH);
+      GPU_memory_barrier(GPU_BARRIER_TEXTURE_FETCH | GPU_BARRIER_FRAMEBUFFER);
       GPU_framebuffer_bind(dfbl->default_fb);
       DRW_draw_pass(psl->composite_ps);
 
