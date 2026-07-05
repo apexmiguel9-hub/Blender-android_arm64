@@ -10,6 +10,7 @@
  */
 
 #include "DRW_render.h"
+#include <android/log.h>
 
 #include "BLI_alloca.h"
 
@@ -40,7 +41,7 @@
 
 void workbench_engine_init(void *ved)
 {
-  GPU_render_begin();
+  __android_log_print(ANDROID_LOG_INFO, "Blender.Workbench", "workbench_engine_init entered");
   WORKBENCH_Data *vedata = ved;
   WORKBENCH_StorageList *stl = vedata->stl;
   WORKBENCH_TextureList *txl = vedata->txl;
@@ -633,6 +634,7 @@ static void workbench_draw_scene(void *ved)
 {
   WORKBENCH_Data *vedata = ved;
   WORKBENCH_PrivateData *wpd = vedata->stl->wpd;
+  __android_log_print(ANDROID_LOG_INFO, "Blender.Workbench", "workbench_draw_scene entered");
 
   if (DRW_state_is_opengl_render()) {
     while (wpd->taa_sample < max_ii(1, wpd->taa_sample_len)) {
