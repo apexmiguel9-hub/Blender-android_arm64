@@ -27,6 +27,10 @@ void setNativeWindow(void*nativeWindow){
     g_NativeWindow= nativeWindow;
 }
 void blenderWMInitReinit(){
+  GHOST_ISystem *system = GHOST_ISystem::getSystem();
+  if (system) {
+    system->wmInitReInit();
+  }
 }
 void blenderInputKey(int p_physical_keycode,
                             int p_unicode, int p_key_label, bool p_pressed,
