@@ -1451,67 +1451,19 @@ void GHOST_SystemAndroid::inputKey(int p_physical_keycode,
 }
 
 void GHOST_SystemAndroid::wmInitReInit() {
-    // CLOG_ERROR(&LOG, "交互wmInitReInit 1");
-    uint32_t width, height;
-    getMainDisplayDimensions(width, height);
-    GHOST_WindowAndroid *windowNewActivate = nullptr;
-    GHOST_WindowAndroid *windowNewActivateNew = nullptr;
-    auto windows = getWindowManager()->getWindows();
-    std::vector<GHOST_WindowAndroid *> windowsToRemove;
-    std::vector<GHOST_WindowAndroid *> windowsToAdd;
-    // CLOG_ERROR(&LOG, "交互wmInitReInit 2");
-    for (auto window:windows) {
-        // CLOG_ERROR(&LOG, "交互wmInitReInit 3");
-        GHOST_WindowAndroid *nullWindow = (GHOST_WindowAndroid *) window;
-        // CLOG_ERROR(&LOG, "交互wmInitReInit 4 %d %d %d", nullWindow->m_shpeType, width, height);
-        if (getWindowManager()->getActiveWindow() == window) {
-            // CLOG_ERROR(&LOG, "交互wmInitReInit 5");
-            windowNewActivate = nullWindow;
-        }
-        // CLOG_ERROR(&LOG, "交互wmInitReInit 6");
-        windowsToAdd.push_back(nullWindow);
-        windowsToRemove.push_back(nullWindow);
-        // CLOG_ERROR(&LOG, "交互wmInitReInit 7");
+    // Instead of removing all windows and creating new ones (which breaks Blender's
+    // wmWindow → GHOST window mapping), update existing windows in-place:
+    // update m_nativeWindow to the new ANativeWindow and recreate the EGL context.
+    struct android_app *app = (struct android_app *) m_nativeWindow;
+    for (auto window : getWindowManager()->getWindows()) {
+        GHOST_WindowAndroid *win = (GHOST_WindowAndroid *) window;
+        win->m_nativeWindow = app->window;
+        // Force recreation of EGL context with the new native window handle.
+        // Must go through None first since setDrawingContextType() is a no-op
+        // when the type hasn't changed.
+        win->setDrawingContextType(GHOST_kDrawingContextTypeNone);
+        win->setDrawingContextType(GHOST_kDrawingContextTypeOpenGL);
     }
-    // CLOG_ERROR(&LOG, "交互wmInitReInit 8");
-    for (auto window:windowsToRemove) {
-        // CLOG_ERROR(&LOG, "交互wmInitReInit 9");
-        getWindowManager()->removeWindow(window);
-    }
-    // CLOG_ERROR(&LOG, "交互wmInitReInit 10");
-    for (auto *window:windowsToAdd) {
-        struct android_app *app = (struct android_app *) m_nativeWindow;
-        GHOST_WindowAndroid *windowNew = new GHOST_WindowAndroid(window->m_shpeType,
-                                                                 this,
-                                                                 "",
-                                                                 0,
-                                                                 0,
-                                                                 width,
-                                                                 height,
-                                                                 GHOST_TWindowState::GHOST_kWindowStateFullScreen,
-                                                                 nullptr,
-                                                                 GHOST_TDrawingContextType::GHOST_kDrawingContextTypeOpenGL,
-                                                                 false,
-                                                                 app->window);
-        // CLOG_ERROR(&LOG, "交互wmInitReInit 11 %d", windowNew->getValid());
-        getWindowManager()->addWindow(windowNew);
-        if (window == windowNewActivate) {
-            windowNewActivateNew = windowNew;
-        }
-    }
-    // CLOG_ERROR(&LOG, "交互wmInitReInit 12");
-    if (windowNewActivateNew != nullptr) {
-        // CLOG_ERROR(&LOG, "交互wmInitReInit 13");
-        getWindowManager()->setActiveWindow(windowNewActivateNew);
-    } else {
-        // If no window was active, default to the first new window to avoid black screen (Scenario B)
-        auto newWindows = getWindowManager()->getWindows();
-        if (!newWindows.empty()) {
-            getWindowManager()->setActiveWindow(newWindows[0]);
-        }
-    }
-
-    // CLOG_ERROR(&LOG, "交互wmInitReInit 14");
 }
 
 //  快捷键键盘输入
