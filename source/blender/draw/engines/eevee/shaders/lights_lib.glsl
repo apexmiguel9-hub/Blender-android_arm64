@@ -108,13 +108,13 @@ float cubeFaceIndexEEVEE(vec3 P)
 vec2 cubeFaceCoordEEVEE(vec3 P, float face, float scale)
 {
   if (face < 2.0) {
-    return (P.zy / max(abs(P.x), 1e-8)) * scale * vec2(-0.5, -sign(P.x) * 0.5) + 0.5;
+    return (P.zy / (sign(P.x) * max(abs(P.x), 1e-8))) * scale * vec2(-0.5, -sign(P.x) * 0.5) + 0.5;
   }
   else if (face < 4.0) {
-    return (P.xz / max(abs(P.y), 1e-8)) * scale * vec2(sign(P.y) * 0.5, 0.5) + 0.5;
+    return (P.xz / (sign(P.y) * max(abs(P.y), 1e-8))) * scale * vec2(sign(P.y) * 0.5, 0.5) + 0.5;
   }
   else {
-    return (P.xy / max(abs(P.z), 1e-8)) * scale * vec2(0.5, -sign(P.z) * 0.5) + 0.5;
+    return (P.xy / (sign(P.z) * max(abs(P.z), 1e-8))) * scale * vec2(0.5, -sign(P.z) * 0.5) + 0.5;
   }
 }
 
