@@ -411,6 +411,10 @@ void EEVEE_shadows_draw_cascades(EEVEE_ViewLayerData *sldata,
   EEVEE_ShadowCascadeRender *csm_render = linfo->shadow_cascade_render +
                                           (int)shdw_data->type_data_id;
 
+  __android_log_print(ANDROID_LOG_INFO, "Blender.Shadow",
+      "EEVEE_shadows_draw_cascades called, cascade_index=%d, linfo->cascade_len=%d",
+      cascade_index, linfo->cascade_len);
+
   float near = DRW_view_near_distance_get(view);
   float far = DRW_view_far_distance_get(view);
 
