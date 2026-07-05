@@ -218,7 +218,7 @@ float distance_attenuation(float dist_sqr, float inv_sqr_influence)
 
 float spot_attenuation(LightData ld, vec3 l_vector)
 {
-  float z = max(dot(ld.l_forward, l_vector.xyz), 1e-8);
+  float z = sign(dot(ld.l_forward, l_vector.xyz)) * max(abs(dot(ld.l_forward, l_vector.xyz)), 1e-8);
   vec3 lL = l_vector.xyz / z;
   float x = dot(ld.l_right, lL) / ld.l_sizex;
   float y = dot(ld.l_up, lL) / ld.l_sizey;
