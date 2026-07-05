@@ -9,6 +9,7 @@
 #include "GHOST_EventWheel.hh"
 #include "OBLButtonID.h"
 #include <android/input.h>
+#include <android/log.h>
 #include <CLG_log.h>
 #include <zconf.h>
 #include <android/native_window_jni.h>
@@ -1410,11 +1411,13 @@ void GHOST_SystemAndroid::setValueOn(int values[], int num) {
     char utf8_char[6] = {0};
     if (num == 1) {
         OBLButtonID oblButtonId = (OBLButtonID) values[0];
-        // CLOG_ERROR(&LOG, "交互GHOST_SystemAndroid setValueOff 3 %d %d", num, values[0]);
         int oblButtonNum = sizeof(oBLButtonIDGhostKeys) / sizeof(oBLButtonIDGhostKeys[0]);
-        // CLOG_ERROR(&LOG, "交互GHOST_SystemAndroid setValueOff 4 %d %d", num, values[0]);
+        __android_log_print(ANDROID_LOG_INFO, "OBL.DIAG",
+            "setValueOn: ordinal=%d arraySize=%d", (int)oblButtonId, oblButtonNum);
         for (int i = 0; i < oblButtonNum; i++) {
             if (oBLButtonIDGhostKeys[i].oblButtonId == oblButtonId) {
+                __android_log_print(ANDROID_LOG_INFO, "OBL.DIAG",
+                    "setValueOn: MATCH at i=%d ghostTKey=%d", i, (int)oBLButtonIDGhostKeys[i].ghostTKey);
                 utf8_char[0] = oBLButtonIDGhostKeys[i].ghostTKey;
                 GHOST_EventKey *eventKeyUp = new GHOST_EventKey(getMilliSeconds(),
                                                                 GHOST_kEventKeyDown,
@@ -1423,10 +1426,11 @@ void GHOST_SystemAndroid::setValueOn(int values[], int num) {
                                                                 false,
                                                                 utf8_char);
                 pushEvent(eventKeyUp);
-                // CLOG_ERROR(&LOG, "交互GHOST_SystemAndroid setValueOff 6 %d %d", num, values[0]);
                 break;
             }
         }
+        __android_log_print(ANDROID_LOG_INFO, "OBL.DIAG",
+            "setValueOn: done (no match if no MATCH above)");
     }
 }
 
@@ -1510,11 +1514,13 @@ void GHOST_SystemAndroid::setValueOff(int values[], int num) {
     char utf8_char[6] = {0};
     if (num == 1) {
         OBLButtonID oblButtonId = (OBLButtonID) values[0];
-        // CLOG_ERROR(&LOG, "交互GHOST_SystemAndroid setValueOff 3 %d %d", num, values[0]);
         int oblButtonNum = sizeof(oBLButtonIDGhostKeys) / sizeof(oBLButtonIDGhostKeys[0]);
-        // CLOG_ERROR(&LOG, "交互GHOST_SystemAndroid setValueOff 4 %d %d", num, values[0]);
+        __android_log_print(ANDROID_LOG_INFO, "OBL.DIAG",
+            "setValueOff: ordinal=%d arraySize=%d", (int)oblButtonId, oblButtonNum);
         for (int i = 0; i < oblButtonNum; i++) {
             if (oBLButtonIDGhostKeys[i].oblButtonId == oblButtonId) {
+                __android_log_print(ANDROID_LOG_INFO, "OBL.DIAG",
+                    "setValueOff: MATCH at i=%d ghostTKey=%d", i, (int)oBLButtonIDGhostKeys[i].ghostTKey);
                 utf8_char[0] = oBLButtonIDGhostKeys[i].ghostTKey;
                 GHOST_EventKey *eventKeyUp = new GHOST_EventKey(getMilliSeconds(),
                                                                 GHOST_kEventKeyUp,
@@ -1523,10 +1529,11 @@ void GHOST_SystemAndroid::setValueOff(int values[], int num) {
                                                                 false,
                                                                 utf8_char);
                 pushEvent(eventKeyUp);
-                // CLOG_ERROR(&LOG, "交互GHOST_SystemAndroid setValueOff 6 %d %d", num, values[0]);
                 break;
             }
         }
+        __android_log_print(ANDROID_LOG_INFO, "OBL.DIAG",
+            "setValueOff: done (no match if no MATCH above)");
     }
 }
 
@@ -1535,16 +1542,15 @@ void GHOST_SystemAndroid::setValue(int values[], int num) {
     GHOST_WindowAndroid *window = (GHOST_WindowAndroid *) getWindowManager()->getActiveWindow();
     char utf8_char[6] = {0};
     if (num == 1) {
-        // CLOG_ERROR(&LOG, "交互GHOST_SystemAndroid setValue 1 %d %d", num, values[0]);
-        // CLOG_ERROR(&LOG, "交互GHOST_SystemAndroid setValue 2 %d %d", num, values[0]);
         OBLButtonID oblButtonId = (OBLButtonID) values[0];
-        // CLOG_ERROR(&LOG, "交互GHOST_SystemAndroid setValue 3 %d %d", num, values[0]);
         int oblButtonNum = sizeof(oBLButtonIDGhostKeys) / sizeof(oBLButtonIDGhostKeys[0]);
-        // CLOG_ERROR(&LOG, "交互GHOST_SystemAndroid setValue 4 %d %d", num, values[0]);
+        __android_log_print(ANDROID_LOG_INFO, "OBL.DIAG",
+            "setValue: ordinal=%d arraySize=%d", (int)oblButtonId, oblButtonNum);
         for (int i = 0; i < oblButtonNum; i++) {
             if (oBLButtonIDGhostKeys[i].oblButtonId == oblButtonId) {
+                __android_log_print(ANDROID_LOG_INFO, "OBL.DIAG",
+                    "setValue: MATCH at i=%d ghostTKey=%d", i, (int)oBLButtonIDGhostKeys[i].ghostTKey);
                 utf8_char[0] = oBLButtonIDGhostKeys[i].ghostTKey;
-                // CLOG_ERROR(&LOG, "交互GHOST_SystemAndroid setValue 5 %d %d", num, values[0]);
                 GHOST_EventKey *eventKeyDown = new GHOST_EventKey(getMilliSeconds(),
                                                                   GHOST_kEventKeyDown,
                                                                   window,
@@ -1559,11 +1565,11 @@ void GHOST_SystemAndroid::setValue(int values[], int num) {
                                                                 false,
                                                                 utf8_char);
                 pushEvent(eventKeyUp);
-                // CLOG_ERROR(&LOG, "交互GHOST_SystemAndroid setValue 6 %d %d", num, values[0]);
                 break;
             }
         }
-        // CLOG_ERROR(&LOG, "交互GHOST_SystemAndroid setValue 7 %d %d", num, values[0]);
+        __android_log_print(ANDROID_LOG_INFO, "OBL.DIAG",
+            "setValue: done (no match if no MATCH above)");
         if (oblButtonId == OBLButtonID_ScrollUp) {
             GHOST_EventWheel *eventKey = new GHOST_EventWheel(getMilliSeconds(), window, 5);
             pushEvent(eventKey);
