@@ -374,6 +374,10 @@ int main(int argc,
   /* Initialize logging. */
   CLG_init();
   CLG_fatal_fn_set(callback_clg_fatal);
+  /* Force CLOG level for Android diagnostic build. (TODO: revert after diagnosis) */
+  CLG_level_set(5);
+  CLG_type_filter_include("*workbench*", -1);
+  CLG_type_filter_include("*shadow*", -1);
 
   C = CTX_create();
 
