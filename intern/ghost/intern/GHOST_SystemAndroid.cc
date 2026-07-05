@@ -12,6 +12,7 @@
 #include <android/log.h>
 #include <CLG_log.h>
 #include <zconf.h>
+#include <android/native_window.h>
 #include <android/native_window_jni.h>
 
 static CLG_LogRef LOG = {"Ghost.wm"};
@@ -1455,14 +1456,75 @@ void GHOST_SystemAndroid::wmInitReInit() {
     // wmWindow → GHOST window mapping), update existing windows in-place:
     // update m_nativeWindow to the new ANativeWindow and recreate the EGL context.
     struct android_app *app = (struct android_app *) m_nativeWindow;
+
+    // DIAGNOSTIC: log new ANativeWindow properties
+    ANativeWindow *newWin = app->window;
+    if (newWin) {
+        int32_t newWidth = ANativeWindow_getWidth(newWin);
+        int32_t newHeight = ANativeWindow_getHeight(newWin);
+        int32_t newFormat = ANativeWindow_getFormat(newWin);
+        __android_log_print(ANDROID_LOG_INFO, "Blender.EGL",
+            "wmInitReInit: new ANativeWindow width=%d height=%d format=%d",
+            newWidth, newHeight, newFormat);
+    }
+
     for (auto window : getWindowManager()->getWindows()) {
         GHOST_WindowAndroid *win = (GHOST_WindowAndroid *) window;
+
+        // DIAGNOSTIC: log old EGL config before destroying context
+        GHOST_ContextEGL *oldCtx = dynamic_cast<GHOST_ContextEGL *>(win->getDrawingContext());
+        if (oldCtx) {
+            EGLDisplay dpy = oldCtx->getDisplay();
+            EGLConfig cfg = oldCtx->getConfig();
+            if (dpy != EGL_NO_DISPLAY && cfg) {
+                EGLint v;
+                eglGetConfigAttrib(dpy, cfg, EGL_CONFIG_ID, &v);
+                EGLint cid = v;
+                eglGetConfigAttrib(dpy, cfg, EGL_NATIVE_VISUAL_ID, &v);
+                EGLint nid = v;
+                eglGetConfigAttrib(dpy, cfg, EGL_RED_SIZE, &v);
+                EGLint rs = v;
+                eglGetConfigAttrib(dpy, cfg, EGL_GREEN_SIZE, &v);
+                EGLint gs = v;
+                eglGetConfigAttrib(dpy, cfg, EGL_BLUE_SIZE, &v);
+                EGLint bs = v;
+                eglGetConfigAttrib(dpy, cfg, EGL_ALPHA_SIZE, &v);
+                EGLint as = v;
+                eglGetConfigAttrib(dpy, cfg, EGL_BUFFER_SIZE, &v);
+                EGLint bufs = v;
+                eglGetConfigAttrib(dpy, cfg, EGL_SURFACE_TYPE, &v);
+                EGLint st = v;
+                __android_log_print(ANDROID_LOG_INFO, "Blender.EGL",
+                    "wmInitReInit: OLD config id=%d nativeVisualID=0x%x "
+                    "R%dG%dB%dA%d bufSize=%d surfType=0x%x",
+                    cid, nid, rs, gs, bs, as, bufs, st);
+            }
+        }
+
         win->m_nativeWindow = app->window;
         // Force recreation of EGL context with the new native window handle.
         // Must go through None first since setDrawingContextType() is a no-op
         // when the type hasn't changed.
         win->setDrawingContextType(GHOST_kDrawingContextTypeNone);
         win->setDrawingContextType(GHOST_kDrawingContextTypeOpenGL);
+
+        // DIAGNOSTIC: log new EGL surface properties after recreation
+        GHOST_ContextEGL *newCtx = dynamic_cast<GHOST_ContextEGL *>(win->getDrawingContext());
+        if (newCtx) {
+            EGLDisplay dpy = newCtx->getDisplay();
+            EGLConfig cfg = newCtx->getConfig();
+            EGLSurface sfc = eglGetCurrentSurface(EGL_DRAW);
+            if (dpy != EGL_NO_DISPLAY && sfc != EGL_NO_SURFACE) {
+                EGLint w, h, cid, nid;
+                eglQuerySurface(dpy, sfc, EGL_WIDTH, &w);
+                eglQuerySurface(dpy, sfc, EGL_HEIGHT, &h);
+                eglQuerySurface(dpy, sfc, EGL_CONFIG_ID, &cid);
+                eglGetConfigAttrib(dpy, cfg, EGL_NATIVE_VISUAL_ID, &nid);
+                __android_log_print(ANDROID_LOG_INFO, "Blender.EGL",
+                    "wmInitReInit: NEW surface %dx%d configId=%d nativeVisualID=0x%x",
+                    w, h, cid, nid);
+            }
+        }
     }
 }
 
