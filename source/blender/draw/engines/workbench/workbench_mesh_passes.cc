@@ -1,6 +1,5 @@
 /* SPDX-License-Identifier: GPL-2.0-or-later */
 
-#include <android/log.h>
 #include <CLG_log.h>
 
 static CLG_LogRef LOG = {"workbench.mesh_passes"};
@@ -161,9 +160,6 @@ void OpaquePass::draw(Manager &manager,
   if (is_empty()) {
     return;
   }
-  CLOG_INFO(&LOG, 1, "Workbench: OpaquePass::draw entered");
-  __android_log_print(ANDROID_LOG_INFO, "Blender.Workbench",
-      "Workbench: OpaquePass::draw entered");
   gbuffer_material_tx.acquire(
       resolution, GPU_RGBA16F, GPU_TEXTURE_USAGE_SHADER_READ | GPU_TEXTURE_USAGE_ATTACHMENT);
   gbuffer_normal_tx.acquire(

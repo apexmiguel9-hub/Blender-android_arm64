@@ -13,7 +13,6 @@
 #include "eevee_private.h"
 
 #include "BLI_rand.h" /* needs to be after for some reason. */
-#include <android/log.h>
 #include <CLG_log.h>
 
 static CLG_LogRef LOG = {"eevee.shadow.cascade"};
@@ -203,13 +202,6 @@ static void eevee_shadow_cascade_setup(EEVEE_LightsInfo *linfo,
     csm_start = -view_far;
     csm_end = view_far;
   }
-
-  CLOG_INFO(&LOG, 1,
-      "CSM: view_near=%.6f view_far=%.6f csm_start=%.6f csm_end=%.6f cascade_max_dist=%.6f is_persp=%d",
-      view_near, view_far, csm_start, csm_end, cascade_max_dist, is_persp);
-  __android_log_print(ANDROID_LOG_INFO, "Blender.Shadow",
-      "CSM: view_near=%.6f view_far=%.6f csm_start=%.6f csm_end=%.6f cascade_max_dist=%.6f is_persp=%d",
-      view_near, view_far, csm_start, csm_end, cascade_max_dist, is_persp);
 
   /* init near/far */
   for (int c = 0; c < MAX_CASCADE_NUM; c++) {
@@ -410,10 +402,6 @@ void EEVEE_shadows_draw_cascades(EEVEE_ViewLayerData *sldata,
   EEVEE_ShadowCascade *csm_data = linfo->shadow_cascade_data + (int)shdw_data->type_data_id;
   EEVEE_ShadowCascadeRender *csm_render = linfo->shadow_cascade_render +
                                           (int)shdw_data->type_data_id;
-
-  __android_log_print(ANDROID_LOG_INFO, "Blender.Shadow",
-      "EEVEE_shadows_draw_cascades called, cascade_index=%d, linfo->cascade_len=%d",
-      cascade_index, linfo->cascade_len);
 
   float near = DRW_view_near_distance_get(view);
   float far = DRW_view_far_distance_get(view);
