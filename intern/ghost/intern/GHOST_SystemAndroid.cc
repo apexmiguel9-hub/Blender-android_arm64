@@ -1511,11 +1511,6 @@ void GHOST_SystemAndroid::wmInitReInit() {
         }
     }
 
-    // Delete old windows to avoid memory leaks
-    for (auto window : windowsToRemove) {
-        delete window;
-    }
-
     // CLOG_ERROR(&LOG, "交互wmInitReInit 14");
 }
 
