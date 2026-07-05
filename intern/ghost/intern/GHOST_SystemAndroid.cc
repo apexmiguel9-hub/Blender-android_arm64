@@ -1503,6 +1503,17 @@ void GHOST_SystemAndroid::wmInitReInit() {
     if (windowNewActivateNew != nullptr) {
         // CLOG_ERROR(&LOG, "交互wmInitReInit 13");
         getWindowManager()->setActiveWindow(windowNewActivateNew);
+    } else {
+        // If no window was active, default to the first new window to avoid black screen (Scenario B)
+        auto newWindows = getWindowManager()->getWindows();
+        if (!newWindows.empty()) {
+            getWindowManager()->setActiveWindow(newWindows[0]);
+        }
+    }
+
+    // Delete old windows to avoid memory leaks
+    for (auto window : windowsToRemove) {
+        delete window;
     }
 
     // CLOG_ERROR(&LOG, "交互wmInitReInit 14");
