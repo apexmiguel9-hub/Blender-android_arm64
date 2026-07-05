@@ -10,6 +10,7 @@
 
 #include <cstdio>
 #include <cstring>
+#include <android/log.h>
 
 #include "DNA_collection_types.h"
 #include "DNA_defaults.h"
@@ -1118,6 +1119,12 @@ static void view3d_main_region_listener(const wmRegionListenerParams *params)
 
   /* context changes */
   switch (wmn->category) {
+    case NC_WINDOW:
+      __android_log_print(ANDROID_LOG_DEBUG, "Blender.View3D",
+                          "view3d_main_region_listener: NC_WINDOW (data=%d action=%d)",
+                          wmn->data, wmn->action);
+      ED_region_tag_redraw(region);
+      break;
     case NC_WM:
       if (ELEM(wmn->data, ND_UNDO)) {
         WM_gizmomap_tag_refresh(gzmap);
@@ -1150,6 +1157,9 @@ static void view3d_main_region_listener(const wmRegionListenerParams *params)
       }
       break;
     case NC_SCENE:
+      __android_log_print(ANDROID_LOG_DEBUG, "Blender.View3D",
+                          "view3d_main_region_listener: NC_SCENE (data=%d action=%d)",
+                          wmn->data, wmn->action);
       switch (wmn->data) {
         case ND_SCENEBROWSE:
         case ND_LAYER_CONTENT:
