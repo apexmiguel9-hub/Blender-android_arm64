@@ -11,6 +11,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include <android/log.h>
+
 #include "MEM_guardedalloc.h"
 
 #include "BLI_blenlib.h"
@@ -2057,11 +2059,13 @@ static bool gpencil_session_initdata(bContext *C, wmOperator *op, tGPsdata *p)
   p->align_flag = &ts->gpencil_v3d_align;
 
   if (region->regiondata == NULL) {
+    __android_log_print(ANDROID_LOG_DEBUG, "Blender.GP", "  session_initdata: ERROR regiondata NULL");
     p->status = GP_STATUS_ERROR;
     return 0;
   }
 
   if ((!obact) || (obact->type != OB_GPENCIL_LEGACY)) {
+    __android_log_print(ANDROID_LOG_DEBUG, "Blender.GP", "  session_initdata: creating GP object (obact=%p)", (void*)obact);
     View3D *v3d = p->area->spacedata.first;
     /* if active object doesn't exist or isn't a GP Object, create one */
     const float *cur = p->scene->cursor.location;
@@ -2106,6 +2110,9 @@ static bool gpencil_session_initdata(bContext *C, wmOperator *op, tGPsdata *p)
     WM_event_add_notifier(C, NC_SPACE | ND_SPACE_PROPERTIES, NULL);
   }
 
+  __android_log_print(ANDROID_LOG_DEBUG, "Blender.GP", "  session_initdata OK: ob=%p gpd=%p gpd_flag=0x%x sbuf_used=%d",
+    (void*)p->ob, (void*)p->gpd, p->gpd ? p->gpd->flag : 0, p->gpd ? p->gpd->runtime.sbuffer_used : -1);
+
   /* lock axis (in some modes, disable) */
   if (((*p->align_flag & GP_PROJECT_DEPTH_VIEW) == 0) &&
       ((*p->align_flag & GP_PROJECT_DEPTH_STROKE) == 0))
@@ -2144,6 +2151,9 @@ static tGPsdata *gpencil_session_initpaint(bContext *C, wmOperator *op)
   rng_seed ^= POINTER_AS_UINT(p);
   p->rng = BLI_rng_new(rng_seed);
 
+  __android_log_print(ANDROID_LOG_DEBUG, "Blender.GP", "session_initpaint OK: p=%p paintmode=%d brush=%s",
+    (void*)p, p->paintmode, p->brush ? p->brush->id.name + 2 : "NULL");
+
   /* return context data for running paint operator */
   return p;
 }
@@ -2155,8 +2165,11 @@ static void gpencil_session_cleanup(tGPsdata *p)
 
   /* error checking */
   if (gpd == NULL) {
+    __android_log_print(ANDROID_LOG_DEBUG, "Blender.GP", "session_cleanup: gpd NULL, skipping");
     return;
   }
+
+  __android_log_print(ANDROID_LOG_DEBUG, "Blender.GP", "session_cleanup: sbuf_used=%d->0 sbuf=%p", gpd->runtime.sbuffer_used, (void*)gpd->runtime.sbuffer);
 
   /* free stroke buffer */
   if (gpd->runtime.sbuffer) {
@@ -2367,6 +2380,7 @@ static void gpencil_paint_strokeend(tGPsdata *p)
 {
   ToolSettings *ts = p->scene->toolsettings;
   const bool is_eraser = (p->gpd->runtime.sbuffer_sflag & GP_STROKE_ERASER) != 0;
+  __android_log_print(ANDROID_LOG_DEBUG, "Blender.GP", "strokeend: sbuf_used=%d is_eraser=%d", p->gpd ? p->gpd->runtime.sbuffer_used : -1, is_eraser);
   /* for surface sketching, need to set the right OpenGL context stuff so
    * that the conversions will project the values correctly...
    */
@@ -2488,6 +2502,8 @@ static void gpencil_draw_exit(bContext *C, wmOperator *op)
 {
   tGPsdata *p = op->customdata;
 
+  __android_log_print(ANDROID_LOG_DEBUG, "Blender.GP", "draw_exit: p=%p", (void*)p);
+
   /* don't assume that operator data exists at all */
   if (p) {
     /* check size of buffer before cleanup, to determine if anything happened here */
@@ -2542,13 +2558,17 @@ static int gpencil_draw_init(bContext *C, wmOperator *op, const wmEvent *event)
   /* if mode is draw and the brush is eraser, cancel */
   if (paintmode != GP_PAINTMODE_ERASER) {
     if ((brush) && (brush->gpencil_tool == GPAINT_TOOL_ERASE)) {
+      __android_log_print(ANDROID_LOG_DEBUG, "Blender.GP", "draw_init: eraser brush cancels");
       return 0;
     }
   }
 
+  __android_log_print(ANDROID_LOG_DEBUG, "Blender.GP", "draw_init: paintmode=%d brush=%s event=%p", paintmode, brush ? brush->id.name+2 : "NULL", (void*)event);
+
   /* check context */
   p = op->customdata = gpencil_session_initpaint(C, op);
   if ((p == NULL) || (p->status == GP_STATUS_ERROR)) {
+    __android_log_print(ANDROID_LOG_DEBUG, "Blender.GP", "draw_init: session_initpaint FAILED");
     /* something wasn't set correctly in context */
     gpencil_draw_exit(C, op);
     return 0;
@@ -2559,6 +2579,7 @@ static int gpencil_draw_init(bContext *C, wmOperator *op, const wmEvent *event)
   /* init painting data */
   gpencil_paint_initstroke(p, paintmode, CTX_data_ensure_evaluated_depsgraph(C));
   if (p->status == GP_STATUS_ERROR) {
+    __android_log_print(ANDROID_LOG_DEBUG, "Blender.GP", "draw_init: paint_initstroke FAILED");
     gpencil_draw_exit(C, op);
     return 0;
   }
@@ -2569,6 +2590,8 @@ static int gpencil_draw_init(bContext *C, wmOperator *op, const wmEvent *event)
   else {
     p->keymodifier = -1;
   }
+
+  __android_log_print(ANDROID_LOG_DEBUG, "Blender.GP", "draw_init OK: p=%p status=%d", (void*)p, p->status);
 
   /* everything is now setup ok */
   return 1;
@@ -2910,6 +2933,9 @@ static void gpencil_draw_apply_event(bContext *C,
   bool is_speed_guide = ((guide->use_guide) &&
                          (p->brush && (p->brush->gpencil_tool == GPAINT_TOOL_DRAW)));
 
+  __android_log_print(ANDROID_LOG_DEBUG, "Blender.GP", "  apply_event: mval=(%d,%d) sbuf_used=%d firstrun=%d",
+    event->mval[0], event->mval[1], p->gpd->runtime.sbuffer_used, (p->flags & GP_PAINTFLAG_FIRSTRUN) ? 1 : 0);
+
   /* convert from window-space to area-space mouse coordinates
    * add any x,y override position
    */
@@ -3250,6 +3276,11 @@ static int gpencil_draw_invoke(bContext *C, wmOperator *op, const wmEvent *event
   Object *ob = CTX_data_active_object(C);
   bGPdata *gpd = (bGPdata *)ob->data;
 
+  __android_log_print(ANDROID_LOG_DEBUG, "Blender.GP", "draw_invoke: ob=%p type=%d gpd=%p ev_type=%d ev_val=%d gpd_flag=0x%x",
+    (void*)ob, ob ? ob->type : -1, (void*)gpd,
+    event ? event->type : -1, event ? event->val : -1,
+    gpd ? gpd->flag : 0);
+
   /* support for tablets eraser pen */
   if (gpencil_is_tablet_eraser_active(event)) {
     RNA_enum_set(op->ptr, "mode", GP_PAINTMODE_ERASER);
@@ -3342,6 +3373,9 @@ static int gpencil_draw_invoke(bContext *C, wmOperator *op, const wmEvent *event
   WM_event_add_notifier(C, NC_GPENCIL | NA_EDITED, NULL);
 
   /* add a modal handler for this operator, so that we can then draw continuous strokes */
+
+  __android_log_print(ANDROID_LOG_DEBUG, "Blender.GP", "draw_invoke: returning RUNNING_MODAL p=%p status=%d", (void*)p, p->status);
+
   WM_event_add_modal_handler(C, op);
 
   return OPERATOR_RUNNING_MODAL;
@@ -3357,6 +3391,8 @@ static bool gpencil_area_exists(bContext *C, ScrArea *area_test)
 static tGPsdata *gpencil_stroke_begin(bContext *C, wmOperator *op)
 {
   tGPsdata *p = op->customdata;
+
+  __android_log_print(ANDROID_LOG_DEBUG, "Blender.GP", "stroke_begin: p=%p status=%d paintmode=%d", (void*)p, p ? p->status : -1, p ? p->paintmode : -1);
 
   /* we must check that we're still within the area that we're set up to work from
    * otherwise we could crash (see bug #20586)
@@ -3645,6 +3681,11 @@ static int gpencil_draw_modal(bContext *C, wmOperator *op, const wmEvent *event)
   tGPsdata *p = op->customdata;
   // ToolSettings *ts = CTX_data_tool_settings(C);
   GP_Sculpt_Guide *guide = &p->scene->toolsettings->gp_sculpt.guide;
+
+  __android_log_print(ANDROID_LOG_DEBUG, "Blender.GP", "modal: p=%p ev_type=%d ev_val=%d status=%d paintmode=%d sbuf_used=%d",
+    (void*)p, event->type, event->val, p ? p->status : -1,
+    p ? p->paintmode : -1,
+    (p && p->gpd) ? p->gpd->runtime.sbuffer_used : -1);
 
   /* Default exit state - pass through to support MMB view navigation, etc. */
   int estate = OPERATOR_PASS_THROUGH;
@@ -3939,6 +3980,8 @@ static int gpencil_draw_modal(bContext *C, wmOperator *op, const wmEvent *event)
       /* event doesn't need to be handled */
       break;
   }
+
+  __android_log_print(ANDROID_LOG_DEBUG, "Blender.GP", "modal: returning estate=%d", estate);
 
   /* return status code */
   return estate;
