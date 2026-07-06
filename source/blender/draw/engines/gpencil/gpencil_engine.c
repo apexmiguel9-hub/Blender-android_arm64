@@ -863,14 +863,6 @@ static void GPENCIL_draw_object(GPENCIL_Data *vedata, GPENCIL_tObject *ob)
       __android_log_print(ANDROID_LOG_DEBUG, "Blender.GP",
           "  layer %d: blend drawn", layer_count);
     }
-
-    {
-      GLenum err = glGetError();
-      if (err != GL_NO_ERROR) {
-        __android_log_print(ANDROID_LOG_ERROR, "Blender.GP",
-            "  GL error after layer %d pass: 0x%x", layer_count, err);
-      }
-    }
   }
 
   int vfx_count = 0;
@@ -880,13 +872,6 @@ static void GPENCIL_draw_object(GPENCIL_Data *vedata, GPENCIL_tObject *ob)
     DRW_draw_pass(vfx->vfx_ps);
     __android_log_print(ANDROID_LOG_DEBUG, "Blender.GP",
         "  vfx %d drawn", vfx_count);
-    {
-      GLenum err = glGetError();
-      if (err != GL_NO_ERROR) {
-        __android_log_print(ANDROID_LOG_ERROR, "Blender.GP",
-            "  GL error after vfx %d: 0x%x", vfx_count, err);
-      }
-    }
   }
 
   copy_m4_m4(pd->object_bound_mat, ob->plane_mat);
@@ -992,14 +977,6 @@ void GPENCIL_draw_scene(void *ved)
   }
 
   pd->gp_object_pool = pd->gp_layer_pool = pd->gp_vfx_pool = pd->gp_maskbit_pool = NULL;
-
-  {
-    GLenum err = glGetError();
-    if (err != GL_NO_ERROR) {
-      __android_log_print(ANDROID_LOG_ERROR, "Blender.GP",
-          "GL error after GPENCIL_draw_scene #%d: 0x%x", draw_count, err);
-    }
-  }
 
   /* Free temp stroke buffers. */
   if (pd->sbuffer_gpd) {
