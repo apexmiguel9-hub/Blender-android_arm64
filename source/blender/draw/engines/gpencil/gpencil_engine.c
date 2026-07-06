@@ -973,6 +973,7 @@ void GPENCIL_draw_scene(void *ved)
   }
 
   if (pd->scene_fb) {
+    GPU_memory_barrier(GPU_BARRIER_TEXTURE_FETCH | GPU_BARRIER_FRAMEBUFFER);
     GPENCIL_antialiasing_draw(vedata);
   }
 
