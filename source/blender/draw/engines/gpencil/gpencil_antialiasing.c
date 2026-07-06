@@ -11,6 +11,8 @@
 
 #include "BLI_smaa_textures.h"
 
+#include <android/log.h>
+
 void GPENCIL_antialiasing_init(struct GPENCIL_Data *vedata)
 {
   GPENCIL_PrivateData *pd = vedata->stl->pd;
@@ -127,14 +129,38 @@ void GPENCIL_antialiasing_draw(struct GPENCIL_Data *vedata)
   GPENCIL_PrivateData *pd = vedata->stl->pd;
   GPENCIL_PassList *psl = vedata->psl;
 
+  __android_log_print(ANDROID_LOG_DEBUG, "Blender.GP",
+      "  SMAA: simplify=%d", pd->simplify_antialias);
+
   if (!pd->simplify_antialias) {
     GPU_framebuffer_bind(fbl->smaa_edge_fb);
     DRW_draw_pass(psl->smaa_edge_ps);
+    {
+      GLenum err = glGetError();
+      if (err != GL_NO_ERROR) {
+        __android_log_print(ANDROID_LOG_ERROR, "Blender.GP",
+            "  SMAA: GL error after edge pass: 0x%x", err);
+      }
+    }
 
     GPU_framebuffer_bind(fbl->smaa_weight_fb);
     DRW_draw_pass(psl->smaa_weight_ps);
+    {
+      GLenum err = glGetError();
+      if (err != GL_NO_ERROR) {
+        __android_log_print(ANDROID_LOG_ERROR, "Blender.GP",
+            "  SMAA: GL error after weight pass: 0x%x", err);
+      }
+    }
   }
 
   GPU_framebuffer_bind(pd->scene_fb);
   DRW_draw_pass(psl->smaa_resolve_ps);
+  {
+    GLenum err = glGetError();
+    if (err != GL_NO_ERROR) {
+      __android_log_print(ANDROID_LOG_ERROR, "Blender.GP",
+          "  SMAA: GL error after resolve pass: 0x%x", err);
+    }
+  }
 }

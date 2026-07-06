@@ -28,6 +28,7 @@
 #include "DNA_view3d_types.h"
 
 #include "GPU_texture.h"
+#include <android/log.h>
 #include "GPU_uniform_buffer.h"
 
 #include "gpencil_engine.h"
@@ -837,9 +838,13 @@ static void GPENCIL_draw_object(GPENCIL_Data *vedata, GPENCIL_tObject *ob)
     GPU_framebuffer_multi_clear(fb_object, clear_cols);
   }
 
+  int layer_count = 0;
   LISTBASE_FOREACH (GPENCIL_tLayer *, layer, &ob->layers) {
+    layer_count++;
     if (layer->mask_bits) {
       gpencil_draw_mask(vedata, ob, layer);
+      __android_log_print(ANDROID_LOG_DEBUG, "Blender.GP",
+          "  layer %d: mask drawn", layer_count);
     }
 
     if (layer->blend_ps) {
@@ -855,12 +860,33 @@ static void GPENCIL_draw_object(GPENCIL_Data *vedata, GPENCIL_tObject *ob)
     if (layer->blend_ps) {
       GPU_framebuffer_bind(fb_object);
       DRW_draw_pass(layer->blend_ps);
+      __android_log_print(ANDROID_LOG_DEBUG, "Blender.GP",
+          "  layer %d: blend drawn", layer_count);
+    }
+
+    {
+      GLenum err = glGetError();
+      if (err != GL_NO_ERROR) {
+        __android_log_print(ANDROID_LOG_ERROR, "Blender.GP",
+            "  GL error after layer %d pass: 0x%x", layer_count, err);
+      }
     }
   }
 
+  int vfx_count = 0;
   LISTBASE_FOREACH (GPENCIL_tVfx *, vfx, &ob->vfx) {
+    vfx_count++;
     GPU_framebuffer_bind(*(vfx->target_fb));
     DRW_draw_pass(vfx->vfx_ps);
+    __android_log_print(ANDROID_LOG_DEBUG, "Blender.GP",
+        "  vfx %d drawn", vfx_count);
+    {
+      GLenum err = glGetError();
+      if (err != GL_NO_ERROR) {
+        __android_log_print(ANDROID_LOG_ERROR, "Blender.GP",
+            "  GL error after vfx %d: 0x%x", vfx_count, err);
+      }
+    }
   }
 
   copy_m4_m4(pd->object_bound_mat, ob->plane_mat);
@@ -916,6 +942,13 @@ void GPENCIL_draw_scene(void *ved)
   GPENCIL_FramebufferList *fbl = vedata->fbl;
   float clear_cols[2][4] = {{0.0f, 0.0f, 0.0f, 0.0f}, {1.0f, 1.0f, 1.0f, 1.0f}};
 
+  static int draw_count = 0;
+  draw_count++;
+  __android_log_print(ANDROID_LOG_DEBUG, "Blender.GP",
+      "GPENCIL_draw_scene #%d: tobjects=%d do_fast=%d",
+      draw_count, BLI_listbase_count(&pd->tobjects),
+      pd->do_fast_drawing);
+
   /* Fade 3D objects. */
   if ((!pd->is_render) && (pd->fade_3d_object_opacity > -1.0f) && (pd->obact != NULL) &&
       (pd->obact->type == OB_GPENCIL_LEGACY))
@@ -960,9 +993,19 @@ void GPENCIL_draw_scene(void *ved)
 
   pd->gp_object_pool = pd->gp_layer_pool = pd->gp_vfx_pool = pd->gp_maskbit_pool = NULL;
 
+  {
+    GLenum err = glGetError();
+    if (err != GL_NO_ERROR) {
+      __android_log_print(ANDROID_LOG_ERROR, "Blender.GP",
+          "GL error after GPENCIL_draw_scene #%d: 0x%x", draw_count, err);
+    }
+  }
+
   /* Free temp stroke buffers. */
   if (pd->sbuffer_gpd) {
     DRW_cache_gpencil_sbuffer_clear(pd->obact);
+    __android_log_print(ANDROID_LOG_DEBUG, "Blender.GP",
+        "GPENCIL_draw_scene #%d: sbuffer cleared", draw_count);
   }
 }
 
