@@ -280,6 +280,11 @@ EGLContext GHOST_ContextEGL::getContext() const
   return m_context;
 }
 
+EGLSurface GHOST_ContextEGL::getSurface() const
+{
+  return m_surface;
+}
+
 GHOST_TSuccess GHOST_ContextEGL::activateDrawingContext()
 {
   if (m_display) {

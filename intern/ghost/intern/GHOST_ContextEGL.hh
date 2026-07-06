@@ -96,6 +96,8 @@ class GHOST_ContextEGL : public GHOST_Context {
 
   EGLContext getContext() const;
 
+  EGLSurface getSurface() const;
+
  private:
   bool bindAPI(EGLenum api);
 

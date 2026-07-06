@@ -1471,11 +1471,23 @@ void GHOST_SystemAndroid::wmInitReInit() {
     for (auto window : getWindowManager()->getWindows()) {
         GHOST_WindowAndroid *win = (GHOST_WindowAndroid *) window;
 
-        // DIAGNOSTIC: log old EGL config before destroying context
+        // DIAGNOSTIC: log old EGL state before destroying context
+        {
+            EGLContext curCtx = eglGetCurrentContext();
+            EGLSurface curDraw = eglGetCurrentSurface(EGL_DRAW);
+            EGLSurface curRead = eglGetCurrentSurface(EGL_READ);
+            __android_log_print(ANDROID_LOG_INFO, "Blender.EGL",
+                "wmInitReInit: BEFORE destruction — current context=0x%p draw=0x%p read=0x%p",
+                (void *)curCtx, (void *)curDraw, (void *)curRead);
+        }
         GHOST_ContextEGL *oldCtx = dynamic_cast<GHOST_ContextEGL *>(win->getDrawingContext());
         if (oldCtx) {
             EGLDisplay dpy = oldCtx->getDisplay();
             EGLConfig cfg = oldCtx->getConfig();
+            EGLSurface oldSfc = oldCtx->getSurface();
+            __android_log_print(ANDROID_LOG_INFO, "Blender.EGL",
+                "wmInitReInit: OLD surface=0x%p config=0x%p display=0x%p context=0x%p",
+                (void *)oldSfc, (void *)cfg, (void *)dpy, (void *)oldCtx->getContext());
             if (dpy != EGL_NO_DISPLAY && cfg) {
                 EGLint v;
                 eglGetConfigAttrib(dpy, cfg, EGL_CONFIG_ID, &v);
@@ -1502,18 +1514,35 @@ void GHOST_SystemAndroid::wmInitReInit() {
         }
 
         win->m_nativeWindow = app->window;
+
         // Force recreation of EGL context with the new native window handle.
         // Must go through None first since setDrawingContextType() is a no-op
         // when the type hasn't changed.
         win->setDrawingContextType(GHOST_kDrawingContextTypeNone);
+
+        // DIAGNOSTIC: check if ~GHOST_ContextEGL left any EGL errors during surface/context destruction
+        {
+            EGLint err = eglGetError();
+            if (err != EGL_SUCCESS) {
+                __android_log_print(ANDROID_LOG_INFO, "Blender.EGL",
+                    "wmInitReInit: eglError AFTER ~GHOST_ContextEGL destructor = 0x%x", err);
+            } else {
+                __android_log_print(ANDROID_LOG_INFO, "Blender.EGL",
+                    "wmInitReInit: eglDestroySurface+eglDestroyContext OK (no error)");
+            }
+        }
         win->setDrawingContextType(GHOST_kDrawingContextTypeOpenGL);
 
-        // DIAGNOSTIC: log new EGL surface properties after recreation
+        // DIAGNOSTIC: log new EGL surface handle and properties after recreation
         GHOST_ContextEGL *newCtx = dynamic_cast<GHOST_ContextEGL *>(win->getDrawingContext());
         if (newCtx) {
             EGLDisplay dpy = newCtx->getDisplay();
             EGLConfig cfg = newCtx->getConfig();
-            EGLSurface sfc = eglGetCurrentSurface(EGL_DRAW);
+            EGLSurface sfc = newCtx->getSurface();
+            EGLSurface currentSfc = eglGetCurrentSurface(EGL_DRAW);
+            __android_log_print(ANDROID_LOG_INFO, "Blender.EGL",
+                "wmInitReInit: NEW surface=0x%p (current draw=0x%p) config=0x%p",
+                (void *)sfc, (void *)currentSfc, (void *)cfg);
             if (dpy != EGL_NO_DISPLAY && sfc != EGL_NO_SURFACE) {
                 EGLint w, h, cid, nid;
                 eglQuerySurface(dpy, sfc, EGL_WIDTH, &w);
