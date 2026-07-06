@@ -711,7 +711,6 @@ void DRW_cache_gpencil_sbuffer_clear(Object *ob)
   GPU_BATCH_DISCARD_SAFE(gpd->runtime.sbuffer_batch);
   GPU_VERTBUF_DISCARD_SAFE(gpd->runtime.sbuffer_position_buf);
   GPU_VERTBUF_DISCARD_SAFE(gpd->runtime.sbuffer_color_buf);
-  gpd->runtime.sbuffer_used = 0;
 }
 
 /** \} */

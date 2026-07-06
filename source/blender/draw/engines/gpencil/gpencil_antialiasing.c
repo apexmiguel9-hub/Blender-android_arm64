@@ -135,12 +135,15 @@ void GPENCIL_antialiasing_draw(struct GPENCIL_Data *vedata)
   if (!pd->simplify_antialias) {
     GPU_framebuffer_bind(fbl->smaa_edge_fb);
     DRW_draw_pass(psl->smaa_edge_ps);
+    GPU_memory_barrier(GPU_BARRIER_TEXTURE_FETCH);
 
     GPU_framebuffer_bind(fbl->smaa_weight_fb);
     DRW_draw_pass(psl->smaa_weight_ps);
+    GPU_memory_barrier(GPU_BARRIER_TEXTURE_FETCH);
   }
 
   GPU_framebuffer_bind(pd->scene_fb);
+  GPU_memory_barrier(GPU_BARRIER_TEXTURE_FETCH | GPU_BARRIER_FRAMEBUFFER);
   DRW_draw_pass(psl->smaa_resolve_ps);
   __android_log_print(ANDROID_LOG_DEBUG, "Blender.GP", "  SMAA exit");
 }

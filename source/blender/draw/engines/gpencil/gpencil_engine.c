@@ -929,10 +929,14 @@ void GPENCIL_draw_scene(void *ved)
 
   static int draw_count = 0;
   draw_count++;
+  int sbuf_used = 0;
+  if (pd->obact && pd->obact->type == OB_GPENCIL_LEGACY) {
+    sbuf_used = ((bGPdata *)pd->obact->data)->runtime.sbuffer_used;
+  }
   __android_log_print(ANDROID_LOG_DEBUG, "Blender.GP",
-      "GPENCIL_draw_scene #%d: tobjects=%d do_fast=%d",
+      "GPENCIL_draw_scene #%d: tobjects=%d do_fast=%d sbuffer_used=%d",
       draw_count, BLI_listbase_count(&pd->tobjects),
-      pd->do_fast_drawing);
+      pd->do_fast_drawing, sbuf_used);
 
   /* Fade 3D objects. */
   if ((!pd->is_render) && (pd->fade_3d_object_opacity > -1.0f) && (pd->obact != NULL) &&
