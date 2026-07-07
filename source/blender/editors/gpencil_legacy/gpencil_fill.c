@@ -6,7 +6,6 @@
  */
 
 #include <stdio.h>
-#include <stdlib.h>
 #include <unistd.h>
 #include <sys/time.h>
 #include <stdarg.h>
@@ -15,23 +14,17 @@
 #include <android/log.h>
 
 /* Synchronous file logging to survive device reboot.
- * Writes to HOME/gp_crash3.log with fflush+fsync after every line. */
+ * Writes to /sdcard/gp_crash3.log with fflush+fsync after every line. */
 static void gp_sync_log(const char *fmt, ...)
 {
   static FILE *fp = NULL;
   if (!fp) {
-    const char *home = getenv("HOME");
-    if (!home) home = "/sdcard/";
-    char path[512];
-    snprintf(path, sizeof(path), "%sgp_crash3.log", home);
-    fp = fopen(path, "ab");
+    fp = fopen("/sdcard/gp_crash3.log", "ab");
     if (!fp) {
       __android_log_print(ANDROID_LOG_ERROR, "Blender.GP",
-                          "gp_sync_log: cannot open %s", path);
+                          "gp_sync_log: cannot open /sdcard/gp_crash3.log");
       return;
     }
-    __android_log_print(ANDROID_LOG_INFO, "Blender.GP",
-                        "gp_sync_log: opened %s OK", path);
   }
   va_list args;
   va_start(args, fmt);
@@ -2603,7 +2596,6 @@ static int gpencil_fill_init(bContext *C, wmOperator *op)
 /* start of interactive part of operator */
 static int gpencil_fill_invoke(bContext *C, wmOperator *op, const wmEvent *UNUSED(event))
 {
-  GP_FILL_LOG("INVOKE: gpencil_fill_invoke entered");
   Object *ob = CTX_data_active_object(C);
   ToolSettings *ts = CTX_data_tool_settings(C);
   Brush *brush = BKE_paint_brush(&ts->gp_paint->paint);
@@ -2899,7 +2891,6 @@ static bool gpencil_do_frame_fill(tGPDfill *tgpf, const bool is_inverted)
 /* events handling during interactive part of operator */
 static int gpencil_fill_modal(bContext *C, wmOperator *op, const wmEvent *event)
 {
-  GP_FILL_LOG("MODAL: gpencil_fill_modal entered, event type=%d val=%d", event->type, event->val);
   tGPDfill *tgpf = op->customdata;
   Brush *brush = tgpf->brush;
   BrushGpencilSettings *brush_settings = brush->gpencil_settings;
