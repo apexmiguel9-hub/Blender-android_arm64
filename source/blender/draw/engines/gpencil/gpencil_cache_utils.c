@@ -5,6 +5,14 @@
  * \ingroup draw
  */
 
+#ifdef __ANDROID__
+#  include <android/log.h>
+#  define GP_LOG_TAG "Blender.GP"
+#  define GP_LOG(...) __android_log_print(ANDROID_LOG_DEBUG, GP_LOG_TAG, __VA_ARGS__)
+#else
+#  define GP_LOG(...) ((void)0)
+#endif
+
 #include "DRW_engine.h"
 #include "DRW_render.h"
 
@@ -275,6 +283,8 @@ GPENCIL_tLayer *gpencil_layer_cache_add(GPENCIL_PrivateData *pd,
   /* Negate thickness sign to tag that strokes are in screen space.
    * Convert to world units (by default, 1 meter = 2000 pixels). */
   float thickness_scale = (is_screenspace) ? -1.0f : (gpd->pixfactor / GPENCIL_PIXEL_FACTOR);
+  GP_LOG("LAYER: pixfactor=%.4f is_screenspace=%d thickness_scale=%.6f object_scale=%.4f",
+         gpd->pixfactor, is_screenspace, thickness_scale, tgp_ob->object_scale);
   float layer_opacity = gpencil_layer_final_opacity_get(pd, ob, gpl);
   float layer_tint[4];
   float layer_alpha;

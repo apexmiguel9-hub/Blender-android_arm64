@@ -324,6 +324,11 @@ static void gpencil_buffer_add_point(GPUIndexBufBuilder *ibo,
   vert->stroke_id = gps->runtime.vertex_start;
   vert->point_id = v;
   vert->thickness = max_ff(0.0f, gps->thickness * pt->pressure) * (round_cap1 ? 1.0f : -1.0f);
+  if (v == 0) {
+    __android_log_print(ANDROID_LOG_DEBUG, "Blender.GP",
+                        "STROKE: mat_nr=%d gps_thickness=%d pressure=%.2f vert_thickness=%.1f totpoints=%d",
+                        gps->mat_nr, (int)gps->thickness, pt->pressure, vert->thickness, gps->totpoints);
+  }
   /* Tag endpoint material to -1 so they get discarded by vertex shader. */
   vert->mat = (is_endpoint) ? -1 : (gps->mat_nr % GPENCIL_MATERIAL_BUFFER_LEN);
 

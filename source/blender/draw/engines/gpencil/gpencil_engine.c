@@ -57,6 +57,16 @@ void GPENCIL_engine_init(void *ved)
     stl->pd = MEM_callocN(sizeof(GPENCIL_PrivateData), "GPENCIL_PrivateData");
   }
 
+  {
+    const float *vp = DRW_viewport_size_get();
+    float proj[4][4];
+    DRW_view_projection_matrix_get(proj);
+    __android_log_print(ANDROID_LOG_DEBUG, "Blender.GP",
+                        "ENGINE_INIT: vp_size=(%.0fx%.0f) proj[1][1]=%.4f cfra=%d",
+                        vp[0], vp[1], proj[1][1],
+                        (ctx->scene ? CFRA : -1));
+  }
+
   if (txl->dummy_texture == NULL) {
     const float pixels[1][4] = {{1.0f, 0.0f, 1.0f, 1.0f}};
     txl->dummy_texture = DRW_texture_create_2d(1, 1, GPU_RGBA16F, DRW_TEX_WRAP, (float *)pixels);
