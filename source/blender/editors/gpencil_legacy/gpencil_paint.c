@@ -2933,8 +2933,9 @@ static void gpencil_draw_apply_event(bContext *C,
   bool is_speed_guide = ((guide->use_guide) &&
                          (p->brush && (p->brush->gpencil_tool == GPAINT_TOOL_DRAW)));
 
-  __android_log_print(ANDROID_LOG_DEBUG, "Blender.GP", "  apply_event: mval=(%d,%d) sbuf_used=%d firstrun=%d",
-    event->mval[0], event->mval[1], p->gpd->runtime.sbuffer_used, (p->flags & GP_PAINTFLAG_FIRSTRUN) ? 1 : 0);
+  __android_log_print(ANDROID_LOG_DEBUG, "Blender.GP", "  apply_event: mval=(%d,%d) sbuf_used=%d firstrun=%d tablet=%d press=%.2f",
+    event->mval[0], event->mval[1], p->gpd->runtime.sbuffer_used, (p->flags & GP_PAINTFLAG_FIRSTRUN) ? 1 : 0,
+    event->tablet.active, p->pressure);
 
   /* convert from window-space to area-space mouse coordinates
    * add any x,y override position
@@ -3005,8 +3006,17 @@ static void gpencil_draw_apply_event(bContext *C,
 
     /* special exception here for too high pressure values on first touch in
      * windows for some tablets, then we just skip first touch...
+     * NOTE: must clear FIRSTRUN flag and init stroke state even when skipping,
+     * otherwise subsequent events will also be skipped (Android touch events
+     * always report high pressure).
      */
     if ((event->tablet.active != EVT_TABLET_NONE) && (p->pressure >= 0.99f)) {
+      p->flags &= ~GP_PAINTFLAG_FIRSTRUN;
+      p->opressure = p->pressure;
+      p->inittime = p->ocurtime = p->curtime;
+      p->straight = 0;
+      copy_v2_v2(p->mvalo, p->mval);
+      copy_v2_v2(p->mvali, p->mval);
       return;
     }
 
