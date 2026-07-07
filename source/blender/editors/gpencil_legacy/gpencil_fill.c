@@ -1360,14 +1360,7 @@ static bool gpencil_render_offscreen(tGPDfill *tgpf)
   GP_FILL_LOG("CP09 render_offscreen: cleared, saving rv3d matrices");
 
   /* Save original rv3d matrices to restore after offscreen render. */
-  float saved_winmat[4][4], saved_persmat[4][4], saved_persinv[4][4];
-  float saved_viewcamtexcofac[4];
-  float saved_pixsize;
-  copy_m4_m4(saved_winmat, tgpf->rv3d->winmat);
-  copy_m4_m4(saved_persmat, tgpf->rv3d->persmat);
-  copy_m4_m4(saved_persinv, tgpf->rv3d->persinv);
-  copy_v4_v4(saved_viewcamtexcofac, tgpf->rv3d->viewcamtexcofac);
-  saved_pixsize = tgpf->rv3d->pixsize;
+  struct RV3DMatrixStore *saved_mats = ED_view3d_mats_rv3d_backup(tgpf->rv3d);
 
   GP_FILL_LOG("CP10 render_offscreen: before ED_view3d_update_viewmat");
   ED_view3d_update_viewmat(
@@ -1421,11 +1414,8 @@ static bool gpencil_render_offscreen(tGPDfill *tgpf)
   GP_FILL_LOG("CP19 render_offscreen: offscreen freed");
 
   /* Restore original rv3d matrices. */
-  copy_m4_m4(tgpf->rv3d->winmat, saved_winmat);
-  copy_m4_m4(tgpf->rv3d->persmat, saved_persmat);
-  copy_m4_m4(tgpf->rv3d->persinv, saved_persinv);
-  copy_v4_v4(tgpf->rv3d->viewcamtexcofac, saved_viewcamtexcofac);
-  tgpf->rv3d->pixsize = saved_pixsize;
+  ED_view3d_mats_rv3d_restore(tgpf->rv3d, saved_mats);
+  MEM_freeN(saved_mats);
 
   GP_FILL_LOG("CP20 render_offscreen: matrices restored, returning true");
   return true;
