@@ -6,10 +6,44 @@
  */
 
 #include <stdio.h>
+#include <unistd.h>
+#include <sys/time.h>
+#include <stdarg.h>
 
 #ifdef __ANDROID__
 #include <android/log.h>
-#define GP_FILL_LOG(...) __android_log_print(ANDROID_LOG_DEBUG, "Blender.GP", __VA_ARGS__)
+
+/* Synchronous file logging to survive device reboot.
+ * Writes to /sdcard/gp_crash3.log with fflush+fsync after every line. */
+static void gp_sync_log(const char *fmt, ...)
+{
+  static FILE *fp = NULL;
+  if (!fp) {
+    fp = fopen("/sdcard/gp_crash3.log", "ab");
+    if (!fp) {
+      __android_log_print(ANDROID_LOG_ERROR, "Blender.GP",
+                          "gp_sync_log: cannot open /sdcard/gp_crash3.log");
+      return;
+    }
+  }
+  va_list args;
+  va_start(args, fmt);
+  struct timeval tv;
+  gettimeofday(&tv, NULL);
+  fprintf(fp, "[%ld.%06ld] ", (long)tv.tv_sec, (long)tv.tv_usec);
+  vfprintf(fp, fmt, args);
+  fputc('\n', fp);
+  fflush(fp);
+  fsync(fileno(fp));
+  va_end(args);
+}
+
+#define GP_FILL_LOG(...) \
+  do { \
+    __android_log_print(ANDROID_LOG_DEBUG, "Blender.GP", __VA_ARGS__); \
+    gp_sync_log(__VA_ARGS__); \
+  } while (0)
+
 #else
 #define GP_FILL_LOG(...) printf(__VA_ARGS__)
 #endif
@@ -1225,7 +1259,10 @@ static bool gpencil_render_offscreen(tGPDfill *tgpf)
   bool is_ortho = false;
   float winmat[4][4];
 
+  GP_FILL_LOG("CP01 render_offscreen: entry");
+
   if (!tgpf->gpd) {
+    GP_FILL_LOG("CP01a render_offscreen: no gpd, return false");
     return false;
   }
 
@@ -1246,18 +1283,19 @@ static bool gpencil_render_offscreen(tGPDfill *tgpf)
   tgpf->sizex = (int)tgpf->region->winx;
   tgpf->sizey = (int)tgpf->region->winy;
 
-  GP_FILL_LOG("  render_offscreen: creating %dx%d offscreen, fill_factor=%.2f zoom=%.2f",
+  GP_FILL_LOG("CP02 render_offscreen: region resized to %dx%d fill_factor=%.2f zoom=%.2f",
               tgpf->sizex, tgpf->sizey, tgpf->fill_factor, tgpf->zoom);
 
+  GP_FILL_LOG("CP03 render_offscreen: before GPU_offscreen_create");
   char err_out[256] = "unknown";
   GPUOffScreen *offscreen = GPU_offscreen_create(
       tgpf->sizex, tgpf->sizey, true, GPU_RGBA8, GPU_TEXTURE_USAGE_HOST_READ, err_out);
   if (offscreen == NULL) {
-    GP_FILL_LOG("  render_offscreen: FAILED to create offscreen");
+    GP_FILL_LOG("CP03a render_offscreen: FAILED to create offscreen: %s", err_out);
     return false;
   }
+  GP_FILL_LOG("CP04 render_offscreen: offscreen created OK, binding...");
 
-  GP_FILL_LOG("  render_offscreen: offscreen created, binding...");
   GPU_offscreen_bind(offscreen, true);
   uint flag = IB_rectfloat;
   ImBuf *ibuf = IMB_allocImBuf(tgpf->sizex, tgpf->sizey, 32, flag);
@@ -1265,6 +1303,7 @@ static bool gpencil_render_offscreen(tGPDfill *tgpf)
   rctf viewplane;
   float clip_start, clip_end;
 
+  GP_FILL_LOG("CP05 render_offscreen: before ED_view3d_viewplane_get");
   is_ortho = ED_view3d_viewplane_get(tgpf->depsgraph,
                                      tgpf->v3d,
                                      tgpf->rv3d,
@@ -1274,10 +1313,10 @@ static bool gpencil_render_offscreen(tGPDfill *tgpf)
                                      &clip_start,
                                      &clip_end,
                                      NULL);
-
-  GP_FILL_LOG("  render_offscreen: is_ortho=%d clip=(%.4f,%.4f) viewplane=(%.4f,%.4f,%.4f,%.4f)",
+  GP_FILL_LOG("CP06 render_offscreen: is_ortho=%d clip_s=%.4f clip_e=%.4f vp=(%.4f,%.4f,%.4f,%.4f)",
               is_ortho, clip_start, clip_end,
-              viewplane.xmin, viewplane.ymin, viewplane.xmax, viewplane.ymax);
+              (double)viewplane.xmin, (double)viewplane.ymin,
+              (double)viewplane.xmax, (double)viewplane.ymax);
 
   /* Rescale `viewplane` to fit all strokes. */
   float width = viewplane.xmax - viewplane.xmin;
@@ -1295,26 +1334,21 @@ static bool gpencil_render_offscreen(tGPDfill *tgpf)
 
   if (is_ortho) {
     orthographic_m4(winmat,
-                    viewplane.xmin,
-                    viewplane.xmax,
-                    viewplane.ymin,
-                    viewplane.ymax,
-                    -clip_end,
-                    clip_end);
+                    viewplane.xmin, viewplane.xmax,
+                    viewplane.ymin, viewplane.ymax,
+                    -clip_end, clip_end);
   }
   else {
     perspective_m4(winmat,
-                   viewplane.xmin,
-                   viewplane.xmax,
-                   viewplane.ymin,
-                   viewplane.ymax,
-                   clip_start,
-                   clip_end);
+                   viewplane.xmin, viewplane.xmax,
+                   viewplane.ymin, viewplane.ymax,
+                   clip_start, clip_end);
   }
 
-  GP_FILL_LOG("  render_offscreen: winmat[0][0]=%.4f [3][3]=%.4f",
-              winmat[0][0], winmat[3][3]);
+  GP_FILL_LOG("CP07 render_offscreen: winmat built [0][0]=%.6f [3][3]=%.6f",
+              (double)winmat[0][0], (double)winmat[3][3]);
 
+  GP_FILL_LOG("CP08 render_offscreen: before GPU_matrix_push_projection");
   GPU_matrix_push_projection();
   GPU_matrix_identity_projection_set();
   GPU_matrix_push();
@@ -1323,6 +1357,7 @@ static bool gpencil_render_offscreen(tGPDfill *tgpf)
   GPU_depth_mask(true);
   GPU_clear_color(0.0f, 0.0f, 0.0f, 0.0f);
   GPU_clear_depth(1.0f);
+  GP_FILL_LOG("CP09 render_offscreen: cleared, saving rv3d matrices");
 
   /* Save original rv3d matrices to restore after offscreen render. */
   float saved_winmat[4][4], saved_persmat[4][4], saved_persinv[4][4];
@@ -1334,52 +1369,65 @@ static bool gpencil_render_offscreen(tGPDfill *tgpf)
   copy_v4_v4(saved_viewcamtexcofac, tgpf->rv3d->viewcamtexcofac);
   saved_pixsize = tgpf->rv3d->pixsize;
 
+  GP_FILL_LOG("CP10 render_offscreen: before ED_view3d_update_viewmat");
   ED_view3d_update_viewmat(
       tgpf->depsgraph, tgpf->scene, tgpf->v3d, tgpf->region, NULL, winmat, NULL, true);
+  GP_FILL_LOG("CP11 render_offscreen: after ED_view3d_update_viewmat");
+
   /* set for opengl */
   GPU_matrix_projection_set(tgpf->rv3d->winmat);
   GPU_matrix_set(tgpf->rv3d->viewmat);
+  GP_FILL_LOG("CP12 render_offscreen: matrices set, about to call gpencil_draw_datablock");
 
-  GP_FILL_LOG("  render_offscreen: drawing strokes...");
   /* draw strokes */
   const float ink[4] = {1.0f, 0.0f, 0.0f, 1.0f};
   gpencil_draw_datablock(tgpf, ink);
-  GP_FILL_LOG("  render_offscreen: strokes drawn OK");
+
+  GP_FILL_LOG("CP13 render_offscreen: gpencil_draw_datablock returned OK");
 
   GPU_depth_mask(false);
 
   GPU_matrix_pop_projection();
   GPU_matrix_pop();
+  GP_FILL_LOG("CP14 render_offscreen: GPU matrices popped");
 
   /* create a image to see result of template */
   if (ibuf->rect_float) {
     GPU_offscreen_read_color(offscreen, GPU_DATA_FLOAT, ibuf->rect_float);
+    GP_FILL_LOG("CP15 render_offscreen: read_color float OK");
   }
   else if (ibuf->rect) {
     GPU_offscreen_read_color(offscreen, GPU_DATA_UBYTE, ibuf->rect);
+    GP_FILL_LOG("CP15b render_offscreen: read_color ubyte OK");
+  }
+  else {
+    GP_FILL_LOG("CP15c render_offscreen: no rect data to read!");
   }
   if (ibuf->rect_float && ibuf->rect) {
     IMB_rect_from_float(ibuf);
+    GP_FILL_LOG("CP16 render_offscreen: rect_from_float OK");
   }
 
+  GP_FILL_LOG("CP17 render_offscreen: before BKE_image_add_from_imbuf");
   tgpf->ima = BKE_image_add_from_imbuf(tgpf->bmain, ibuf, "GP_fill");
   tgpf->ima->id.tag |= LIB_TAG_DOIT;
 
   BKE_image_release_ibuf(tgpf->ima, ibuf, NULL);
+  GP_FILL_LOG("CP18 render_offscreen: image saved and released");
 
   /* Switch back to window-system-provided frame-buffer. */
   GPU_offscreen_unbind(offscreen, true);
   GPU_offscreen_free(offscreen);
+  GP_FILL_LOG("CP19 render_offscreen: offscreen freed");
 
-  /* Restore original rv3d matrices so subsequent fill processing (coordinate conversion, depth)
-   * uses the correct viewport projection instead of the zoom-scaled offscreen projection. */
+  /* Restore original rv3d matrices. */
   copy_m4_m4(tgpf->rv3d->winmat, saved_winmat);
   copy_m4_m4(tgpf->rv3d->persmat, saved_persmat);
   copy_m4_m4(tgpf->rv3d->persinv, saved_persinv);
   copy_v4_v4(tgpf->rv3d->viewcamtexcofac, saved_viewcamtexcofac);
   tgpf->rv3d->pixsize = saved_pixsize;
 
-  GP_FILL_LOG("  render_offscreen: matrices restored, returning true");
+  GP_FILL_LOG("CP20 render_offscreen: matrices restored, returning true");
   return true;
 }
 
@@ -2758,21 +2806,26 @@ static bool gpencil_do_frame_fill(tGPDfill *tgpf, const bool is_inverted)
 {
   wmWindow *win = CTX_wm_window(tgpf->C);
 
+  GP_FILL_LOG("CF01 do_frame_fill: entry is_inverted=%d", is_inverted);
+
   /* render screen to temp image */
   int totpoints = 1;
-  if (gpencil_render_offscreen(tgpf)) {
-    GP_FILL_LOG("  do_frame_fill: offscreen render OK, processing fill...");
-
+  bool render_ok = gpencil_render_offscreen(tgpf);
+  GP_FILL_LOG("CF02 do_frame_fill: render_offscreen returned %d", render_ok);
+  if (render_ok) {
+    GP_FILL_LOG("CF03 do_frame_fill: before gpencil_set_borders(true)");
     /* Set red borders to create a external limit. */
     gpencil_set_borders(tgpf, true);
+    GP_FILL_LOG("CF04 do_frame_fill: set_borders OK, before gpencil_boundaryfill_area");
 
     /* apply boundary fill */
     const bool border_contact = gpencil_boundaryfill_area(tgpf);
+    GP_FILL_LOG("CF05 do_frame_fill: boundaryfill_area returned border_contact=%d", border_contact);
 
-    /* Fill only if it never comes in contact with an edge. It is better not to fill than
-     * to fill the entire area, as this is confusing for the artist. */
+    /* Fill only if it never comes in contact with an edge. */
     if ((!border_contact) || (is_inverted)) {
-      /* Invert direction if press Ctrl. */
+      GP_FILL_LOG("CF06 do_frame_fill: fill region, is_inverted=%d", is_inverted);
+
       if (is_inverted) {
         gpencil_invert_image(tgpf);
         while (gpencil_find_and_mark_empty_areas(tgpf)) {
@@ -2781,6 +2834,7 @@ static bool gpencil_do_frame_fill(tGPDfill *tgpf, const bool is_inverted)
             break;
           }
         }
+        GP_FILL_LOG("CF07 do_frame_fill: inverted fill done");
       }
 
       /* Clean borders to avoid infinite loops. */
@@ -2789,27 +2843,27 @@ static bool gpencil_do_frame_fill(tGPDfill *tgpf, const bool is_inverted)
       int totpoints_prv = 0;
       int loop_limit = 0;
       while (totpoints > 0) {
-        GP_FILL_LOG("  do_frame_fill: loop totpoints=%d", totpoints);
+        GP_FILL_LOG("CF08 do_frame_fill: outline loop totpoints=%d", totpoints);
         /* Analyze outline. */
         gpencil_get_outline_points(tgpf, (totpoints == 1) ? true : false);
+        GP_FILL_LOG("CF09 do_frame_fill: get_outline_points done");
 
         /* Create array of points from stack. */
         totpoints = gpencil_points_from_stack(tgpf);
-        GP_FILL_LOG("  do_frame_fill: after from_stack totpoints=%d", totpoints);
+        GP_FILL_LOG("CF10 do_frame_fill: from_stack totpoints=%d", totpoints);
         if (totpoints > 0) {
           /* Create z-depth array for reproject. */
+          GP_FILL_LOG("CF11 do_frame_fill: before get_depth_array");
           gpencil_get_depth_array(tgpf);
-
+          GP_FILL_LOG("CF12 do_frame_fill: before stroke_from_buffer");
           /* Create stroke and reproject. */
-          GP_FILL_LOG("  do_frame_fill: calling stroke_from_buffer...");
           gpencil_stroke_from_buffer(tgpf);
-          GP_FILL_LOG("  do_frame_fill: stroke created OK");
+          GP_FILL_LOG("CF13 do_frame_fill: stroke_from_buffer completed OK");
         }
         if (is_inverted) {
           gpencil_erase_processed_area(tgpf);
         }
         else {
-          /* Exit of the loop. */
           totpoints = 0;
         }
 
@@ -2823,11 +2877,9 @@ static bool gpencil_do_frame_fill(tGPDfill *tgpf, const bool is_inverted)
         MEM_SAFE_FREE(tgpf->sbuffer);
         MEM_SAFE_FREE(tgpf->depth_arr);
 
-        /* Limit very small areas. */
         if (totpoints < 3) {
           break;
         }
-        /* Limit infinite loops is some corner cases. */
         if (totpoints_prv == totpoints) {
           loop_limit++;
           if (loop_limit > 3) {
@@ -2836,19 +2888,24 @@ static bool gpencil_do_frame_fill(tGPDfill *tgpf, const bool is_inverted)
         }
         totpoints_prv = totpoints;
       }
+      GP_FILL_LOG("CF14 do_frame_fill: outline loop finished");
     }
     else {
       BKE_report(tgpf->reports, RPT_INFO, "Unable to fill unclosed areas");
+      GP_FILL_LOG("CF15 do_frame_fill: unclosed area, no fill");
     }
 
     /* Delete temp image. */
     if ((tgpf->ima) && (!FILL_DEBUG)) {
       BKE_id_free(tgpf->bmain, tgpf->ima);
+      GP_FILL_LOG("CF16 do_frame_fill: temp image freed");
     }
 
+    GP_FILL_LOG("CF17 do_frame_fill: returning true");
     return true;
   }
 
+  GP_FILL_LOG("CF18 do_frame_fill: render_offscreen failed, returning false");
   return false;
 }
 
@@ -2897,6 +2954,8 @@ static int gpencil_fill_modal(bContext *C, wmOperator *op, const wmEvent *event)
           in_bounds = BLI_rcti_isect_pt_v(&region->winrct, event->xy);
 
           if ((in_bounds) && (region->regiontype == RGN_TYPE_WINDOW)) {
+            GP_FILL_LOG("CM99 modal: LEFTMOUSE hit at mval=(%d,%d) persp=%d",
+                        event->mval[0], event->mval[1], tgpf->rv3d->persp);
             tgpf->mouse[0] = event->mval[0];
             tgpf->mouse[1] = event->mval[1];
             tgpf->is_render = true;
@@ -2952,7 +3011,9 @@ static int gpencil_fill_modal(bContext *C, wmOperator *op, const wmEvent *event)
               while ((!tgpf->done) && (loop_limit < 2)) {
                 WM_cursor_time(win, loop_limit + 1);
                 /* Render screen to temp image and do fill. */
+                GP_FILL_LOG("CM00 modal: before gpencil_do_frame_fill loop=%d", loop_limit);
                 gpencil_do_frame_fill(tgpf, is_inverted);
+                GP_FILL_LOG("CM01 modal: after gpencil_do_frame_fill done=%d", tgpf->done);
 
                 /* restore size */
                 tgpf->region->winx = (short)tgpf->bwinx;
