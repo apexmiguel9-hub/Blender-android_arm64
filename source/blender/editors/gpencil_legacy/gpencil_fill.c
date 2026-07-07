@@ -1214,30 +1214,12 @@ static void gpencil_draw_datablock(tGPDfill *tgpf, const float ink[4])
       tgpw.onion = true;
       tgpw.custonion = true;
 
-      /* Normal strokes. */
-      if (ELEM(tgpf->fill_draw_mode, GP_FILL_DMODE_STROKE, GP_FILL_DMODE_BOTH)) {
-        if (gpencil_stroke_is_drawable(tgpf, gps) && ((gps->flag & GP_STROKE_TAG) == 0) &&
-            ((gps->flag & GP_STROKE_HELP) == 0))
-        {
-          ED_gpencil_draw_fill(&tgpw);
-        }
-        /* In stroke mode, still must draw the extend lines. */
-        if (extend_lines && (tgpf->fill_draw_mode == GP_FILL_DMODE_STROKE)) {
-          if ((gps->flag & GP_STROKE_NOFILL) && (gps->flag & GP_STROKE_TAG)) {
-            gpencil_draw_basic_stroke(tgpf,
-                                      gps,
-                                      tgpw.diff_mat,
-                                      gps->flag & GP_STROKE_CYCLIC,
-                                      ink,
-                                      tgpf->flag,
-                                      tgpf->fill_threshold,
-                                      1.0f);
-          }
-        }
-      }
-
-      /* 3D Lines with basic shapes and invisible lines. */
-      if (ELEM(tgpf->fill_draw_mode, GP_FILL_DMODE_CONTROL, GP_FILL_DMODE_BOTH)) {
+      /* Normal strokes - use basic rendering only to avoid geometry shader on Mali.
+       * ED_gpencil_draw_fill uses GPU_SHADER_GPENCIL_STROKE with GPU_PRIM_LINE_STRIP_ADJ
+       * which triggers a GPU hang on Mali. Basic strokes use GPU_SHADER_3D_FLAT_COLOR. */
+      if (gpencil_stroke_is_drawable(tgpf, gps) && ((gps->flag & GP_STROKE_TAG) == 0) &&
+          ((gps->flag & GP_STROKE_HELP) == 0))
+      {
         gpencil_draw_basic_stroke(tgpf,
                                   gps,
                                   tgpw.diff_mat,
