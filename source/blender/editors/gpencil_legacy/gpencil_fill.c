@@ -1306,6 +1306,16 @@ static bool gpencil_render_offscreen(tGPDfill *tgpf)
   GPU_clear_color(0.0f, 0.0f, 0.0f, 0.0f);
   GPU_clear_depth(1.0f);
 
+  /* Save original rv3d matrices to restore after offscreen render. */
+  float saved_winmat[4][4], saved_persmat[4][4], saved_persinv[4][4];
+  float saved_viewcamtexcofac[4];
+  float saved_pixsize;
+  copy_m4_m4(saved_winmat, tgpf->rv3d->winmat);
+  copy_m4_m4(saved_persmat, tgpf->rv3d->persmat);
+  copy_m4_m4(saved_persinv, tgpf->rv3d->persinv);
+  copy_v4_v4(saved_viewcamtexcofac, tgpf->rv3d->viewcamtexcofac);
+  saved_pixsize = tgpf->rv3d->pixsize;
+
   ED_view3d_update_viewmat(
       tgpf->depsgraph, tgpf->scene, tgpf->v3d, tgpf->region, NULL, winmat, NULL, true);
   /* set for opengl */
@@ -1340,6 +1350,14 @@ static bool gpencil_render_offscreen(tGPDfill *tgpf)
   /* Switch back to window-system-provided frame-buffer. */
   GPU_offscreen_unbind(offscreen, true);
   GPU_offscreen_free(offscreen);
+
+  /* Restore original rv3d matrices so subsequent fill processing (coordinate conversion, depth)
+   * uses the correct viewport projection instead of the zoom-scaled offscreen projection. */
+  copy_m4_m4(tgpf->rv3d->winmat, saved_winmat);
+  copy_m4_m4(tgpf->rv3d->persmat, saved_persmat);
+  copy_m4_m4(tgpf->rv3d->persinv, saved_persinv);
+  copy_v4_v4(tgpf->rv3d->viewcamtexcofac, saved_viewcamtexcofac);
+  tgpf->rv3d->pixsize = saved_pixsize;
 
   return true;
 }
