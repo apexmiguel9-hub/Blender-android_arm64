@@ -60,11 +60,11 @@ void GPENCIL_engine_init(void *ved)
   {
     const float *vp = DRW_viewport_size_get();
     float proj[4][4];
-    DRW_view_projection_matrix_get(proj);
+    DRW_view_winmat_get(NULL, proj, false);
     __android_log_print(ANDROID_LOG_DEBUG, "Blender.GP",
                         "ENGINE_INIT: vp_size=(%.0fx%.0f) proj[1][1]=%.4f cfra=%d",
                         vp[0], vp[1], proj[1][1],
-                        (ctx->scene ? CFRA : -1));
+                        (ctx->scene ? ctx->scene->r.cfra : -1));
   }
 
   if (txl->dummy_texture == NULL) {
