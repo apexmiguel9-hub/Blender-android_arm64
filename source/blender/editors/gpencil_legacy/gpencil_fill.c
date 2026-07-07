@@ -7,6 +7,13 @@
 
 #include <stdio.h>
 
+#ifdef __ANDROID__
+#include <android/log.h>
+#define GP_FILL_LOG(...) __android_log_print(ANDROID_LOG_DEBUG, "Blender.GP", __VA_ARGS__)
+#else
+#define GP_FILL_LOG(...) printf(__VA_ARGS__)
+#endif
+
 #include "MEM_guardedalloc.h"
 
 #include "BLI_blenlib.h"
@@ -1239,14 +1246,18 @@ static bool gpencil_render_offscreen(tGPDfill *tgpf)
   tgpf->sizex = (int)tgpf->region->winx;
   tgpf->sizey = (int)tgpf->region->winy;
 
+  GP_FILL_LOG("  render_offscreen: creating %dx%d offscreen, fill_factor=%.2f zoom=%.2f",
+              tgpf->sizex, tgpf->sizey, tgpf->fill_factor, tgpf->zoom);
+
   char err_out[256] = "unknown";
   GPUOffScreen *offscreen = GPU_offscreen_create(
       tgpf->sizex, tgpf->sizey, true, GPU_RGBA8, GPU_TEXTURE_USAGE_HOST_READ, err_out);
   if (offscreen == NULL) {
-    printf("GPencil - Fill - Unable to create fill buffer\n");
+    GP_FILL_LOG("  render_offscreen: FAILED to create offscreen");
     return false;
   }
 
+  GP_FILL_LOG("  render_offscreen: offscreen created, binding...");
   GPU_offscreen_bind(offscreen, true);
   uint flag = IB_rectfloat;
   ImBuf *ibuf = IMB_allocImBuf(tgpf->sizex, tgpf->sizey, 32, flag);
@@ -1263,6 +1274,10 @@ static bool gpencil_render_offscreen(tGPDfill *tgpf)
                                      &clip_start,
                                      &clip_end,
                                      NULL);
+
+  GP_FILL_LOG("  render_offscreen: is_ortho=%d clip=(%.4f,%.4f) viewplane=(%.4f,%.4f,%.4f,%.4f)",
+              is_ortho, clip_start, clip_end,
+              viewplane.xmin, viewplane.ymin, viewplane.xmax, viewplane.ymax);
 
   /* Rescale `viewplane` to fit all strokes. */
   float width = viewplane.xmax - viewplane.xmin;
@@ -1297,6 +1312,9 @@ static bool gpencil_render_offscreen(tGPDfill *tgpf)
                    clip_end);
   }
 
+  GP_FILL_LOG("  render_offscreen: winmat[0][0]=%.4f [3][3]=%.4f",
+              winmat[0][0], winmat[3][3]);
+
   GPU_matrix_push_projection();
   GPU_matrix_identity_projection_set();
   GPU_matrix_push();
@@ -1322,9 +1340,11 @@ static bool gpencil_render_offscreen(tGPDfill *tgpf)
   GPU_matrix_projection_set(tgpf->rv3d->winmat);
   GPU_matrix_set(tgpf->rv3d->viewmat);
 
+  GP_FILL_LOG("  render_offscreen: drawing strokes...");
   /* draw strokes */
   const float ink[4] = {1.0f, 0.0f, 0.0f, 1.0f};
   gpencil_draw_datablock(tgpf, ink);
+  GP_FILL_LOG("  render_offscreen: strokes drawn OK");
 
   GPU_depth_mask(false);
 
@@ -1359,6 +1379,7 @@ static bool gpencil_render_offscreen(tGPDfill *tgpf)
   copy_v4_v4(tgpf->rv3d->viewcamtexcofac, saved_viewcamtexcofac);
   tgpf->rv3d->pixsize = saved_pixsize;
 
+  GP_FILL_LOG("  render_offscreen: matrices restored, returning true");
   return true;
 }
 
@@ -2740,6 +2761,7 @@ static bool gpencil_do_frame_fill(tGPDfill *tgpf, const bool is_inverted)
   /* render screen to temp image */
   int totpoints = 1;
   if (gpencil_render_offscreen(tgpf)) {
+    GP_FILL_LOG("  do_frame_fill: offscreen render OK, processing fill...");
 
     /* Set red borders to create a external limit. */
     gpencil_set_borders(tgpf, true);
@@ -2767,17 +2789,21 @@ static bool gpencil_do_frame_fill(tGPDfill *tgpf, const bool is_inverted)
       int totpoints_prv = 0;
       int loop_limit = 0;
       while (totpoints > 0) {
+        GP_FILL_LOG("  do_frame_fill: loop totpoints=%d", totpoints);
         /* Analyze outline. */
         gpencil_get_outline_points(tgpf, (totpoints == 1) ? true : false);
 
         /* Create array of points from stack. */
         totpoints = gpencil_points_from_stack(tgpf);
+        GP_FILL_LOG("  do_frame_fill: after from_stack totpoints=%d", totpoints);
         if (totpoints > 0) {
           /* Create z-depth array for reproject. */
           gpencil_get_depth_array(tgpf);
 
           /* Create stroke and reproject. */
+          GP_FILL_LOG("  do_frame_fill: calling stroke_from_buffer...");
           gpencil_stroke_from_buffer(tgpf);
+          GP_FILL_LOG("  do_frame_fill: stroke created OK");
         }
         if (is_inverted) {
           gpencil_erase_processed_area(tgpf);
