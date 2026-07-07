@@ -95,6 +95,7 @@ static void gp_sync_log(const char *fmt, ...)
 #include "GPU_immediate.h"
 #include "GPU_matrix.h"
 #include "GPU_state.h"
+#include "GPU_texture.h"
 
 #include "UI_interface.h"
 
@@ -1336,6 +1337,12 @@ static bool gpencil_render_offscreen(tGPDfill *tgpf)
   GPU_matrix_push();
   GPU_matrix_identity_set();
 
+  /* Reset GPU state that might have been left dirty by the GP engine.
+   * Mali GPU can hang if stale buffer texture bindings (from freed sbuffer VBOs)
+   * or stale depth/stencil state are inherited from the previous viewport render pass. */
+  GPU_depth_test(GPU_DEPTH_NONE);
+  GPU_stencil_test(GPU_STENCIL_NONE);
+  GPU_texture_unbind_all();
   GPU_depth_mask(true);
   GPU_clear_color(0.0f, 0.0f, 0.0f, 0.0f);
   GPU_clear_depth(1.0f);
