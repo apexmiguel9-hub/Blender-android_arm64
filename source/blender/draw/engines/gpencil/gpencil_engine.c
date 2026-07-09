@@ -687,14 +687,15 @@ void GPENCIL_cache_finish(void *ved)
 
   /* Create frame-buffers only if needed. */
   if (pd->tobjects.first) {
-    eGPUTextureFormat format = pd->use_signed_fb ? GPU_RGBA16F : GPU_R11F_G11F_B10F;
+    eGPUTextureFormat format = GPU_RGBA16F;
 #ifdef __ANDROID__
-    if (format == GPU_R11F_G11F_B10F &&
-        !epoxy_has_gl_extension("GL_EXT_color_buffer_float")) {
-      format = GPU_RGBA16F;
-      __android_log_print(ANDROID_LOG_WARN, "GPENCIL",
-        "R11F_G11F_B10F not supported as FB attachment, falling back to RGBA16F");
-    }
+    __android_log_print(ANDROID_LOG_INFO, "GPENCIL",
+      "Using RGBA16F for gpencil framebuffer (Android)");
+    __android_log_print(ANDROID_LOG_INFO, "GPENCIL",
+      "GPU vendor: %s renderer: %s version: %s",
+      (const char*)glGetString(GL_VENDOR),
+      (const char*)glGetString(GL_RENDERER),
+      (const char*)glGetString(GL_VERSION));
 #endif
 
     const float *size = DRW_viewport_size_get();
