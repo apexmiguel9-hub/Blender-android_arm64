@@ -2583,6 +2583,12 @@ static void gpencil_fill_exit(bContext *C, wmOperator *op)
 
   WM_main_add_notifier(NC_GEOM | ND_DATA, NULL);
   WM_event_add_notifier(C, NC_GPENCIL | ND_DATA | NA_EDITED, NULL);
+
+  /* Final GPU sync before returning to main loop.
+   * Mali-G52 can crash/hang if the viewport redraw (triggered by the notifiers above)
+   * runs while the GPencil engine still has pending GPU operations from the offscreen fill. */
+  GPU_finish();
+  GP_FILL_LOG("EX01 gpencil_fill_exit: GPU synced before return");
 }
 
 static void gpencil_fill_cancel(bContext *C, wmOperator *op)
