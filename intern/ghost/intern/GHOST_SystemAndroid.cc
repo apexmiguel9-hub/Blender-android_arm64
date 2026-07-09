@@ -1245,6 +1245,11 @@ GHOST_SystemAndroid::getMainDisplayDimensions(uint32_t &width, uint32_t &height)
     struct android_app *app = (struct android_app *) m_nativeWindow;
     width = app->contentRect.right;
     height = app->contentRect.bottom;
+    __android_log_print(ANDROID_LOG_INFO, "OBL.DPI",
+        "getMainDisplayDimensions: contentRect=%d,%d,%d,%d width=%d height=%d",
+        app->contentRect.left, app->contentRect.top,
+        app->contentRect.right, app->contentRect.bottom,
+        width, height);
 }
 
 GHOST_TSuccess GHOST_SystemAndroid::setCursorPosition(int32_t x, int32_t y) {
