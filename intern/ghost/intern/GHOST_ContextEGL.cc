@@ -309,7 +309,6 @@ GHOST_TSuccess GHOST_ContextEGL::releaseDrawingContext()
 
 inline bool GHOST_ContextEGL::bindAPI(EGLenum api)
 {
-    return true;
   if (epoxy_egl_version(m_display) >= 12) {
     return (EGL_CHK(eglBindAPI(api)) == EGL_TRUE);
   }

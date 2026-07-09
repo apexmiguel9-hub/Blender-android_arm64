@@ -97,17 +97,17 @@ public:
     GHOST_IContext *createOffscreenContext(GHOST_GLSettings /*gpuSettings*/) override
     {
         GHOST_Context *context;
-        for (int minor = 6; minor >= 3; --minor) {
+        for (int minor = 2; minor >= 0; --minor) {
             context = new GHOST_ContextEGL((GHOST_System *)this,
                                            false,
                                            EGLNativeWindowType(0),
                                            EGLNativeDisplayType(EGL_DEFAULT_DISPLAY),
-                                           EGL_CONTEXT_OPENGL_CORE_PROFILE_BIT,
-                                           4,
+                                           0,
+                                           3,
                                            minor,
                                            GHOST_OPENGL_EGL_CONTEXT_FLAGS,
                                            GHOST_OPENGL_EGL_RESET_NOTIFICATION_STRATEGY,
-                                           EGL_OPENGL_API);
+                                           EGL_OPENGL_ES_API);
 
             if (context->initializeDrawingContext()) {
                 return context;

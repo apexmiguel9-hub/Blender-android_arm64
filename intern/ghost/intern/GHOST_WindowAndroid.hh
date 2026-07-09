@@ -119,17 +119,18 @@ private:
      */
     GHOST_Context *newDrawingContext(GHOST_TDrawingContextType /*type*/) override {
         GHOST_Context *context;
-        for (int minor = 6; minor >= 3; --minor) {
+        /* Try OpenGL ES 3.2, then 3.1, then 3.0 (Android only supports ES, not full OpenGL). */
+        for (int minor = 2; minor >= 0; --minor) {
             context = new GHOST_ContextEGL((GHOST_System *) m_system,
                                            false,
                                            (EGLNativeWindowType) m_nativeWindow,
                                            EGLNativeDisplayType(EGL_DEFAULT_DISPLAY),
-                                           EGL_CONTEXT_OPENGL_CORE_PROFILE_BIT,
-                                           4,
+                                           0,
+                                           3,
                                            minor,
                                            GHOST_OPENGL_EGL_CONTEXT_FLAGS,
                                            GHOST_OPENGL_EGL_RESET_NOTIFICATION_STRATEGY,
-                                           EGL_OPENGL_API);
+                                           EGL_OPENGL_ES_API);
 
             if (context->initializeDrawingContext()) {
                 return context;

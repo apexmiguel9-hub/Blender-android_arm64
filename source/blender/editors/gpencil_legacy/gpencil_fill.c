@@ -1419,7 +1419,8 @@ static bool gpencil_render_offscreen(tGPDfill *tgpf)
   /* Switch back to window-system-provided frame-buffer. */
   GPU_offscreen_unbind(offscreen, true);
   GPU_offscreen_free(offscreen);
-  GP_FILL_LOG("CP19 render_offscreen: offscreen freed");
+  GPU_finish();
+  GP_FILL_LOG("CP19 render_offscreen: offscreen freed and GPU synced");
 
   /* Restore original rv3d matrices. */
   ED_view3d_mats_rv3d_restore(tgpf->rv3d, saved_mats);
@@ -2903,6 +2904,9 @@ static bool gpencil_do_frame_fill(tGPDfill *tgpf, const bool is_inverted)
       BKE_id_free(tgpf->bmain, tgpf->ima);
       GP_FILL_LOG("CF16 do_frame_fill: temp image freed");
     }
+
+    GPU_finish();
+    GP_FILL_LOG("CF17a do_frame_fill: GPU synced after temp image free");
 
     GP_FILL_LOG("CF17 do_frame_fill: returning true");
     return true;
