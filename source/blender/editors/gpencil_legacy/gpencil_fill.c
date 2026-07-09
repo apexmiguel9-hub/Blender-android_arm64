@@ -14,15 +14,24 @@
 #include <android/log.h>
 
 /* Synchronous file logging to survive device reboot.
- * Writes to /sdcard/gp_crash3.log with fflush+fsync after every line. */
+ * Writes to HOME/gp_crash3.log with fflush+fsync after every line.
+ * HOME is set by the app's native-lib.cpp to getExternalFilesDir("obl"),
+ * which is writable even on Android 11+ scoped storage. */
 static void gp_sync_log(const char *fmt, ...)
 {
   static FILE *fp = NULL;
   if (!fp) {
-    fp = fopen("/sdcard/gp_crash3.log", "ab");
+    char logpath[512];
+    const char *home = getenv("HOME");
+    if (home) {
+      BLI_snprintf(logpath, sizeof(logpath), "%s/gp_crash3.log", home);
+    } else {
+      BLI_strncpy(logpath, "/sdcard/gp_crash3.log", sizeof(logpath));
+    }
+    fp = fopen(logpath, "ab");
     if (!fp) {
       __android_log_print(ANDROID_LOG_ERROR, "Blender.GP",
-                          "gp_sync_log: cannot open /sdcard/gp_crash3.log");
+                          "gp_sync_log: cannot open %s", logpath);
       return;
     }
   }
@@ -2603,6 +2612,7 @@ static int gpencil_fill_init(bContext *C, wmOperator *op)
 /* start of interactive part of operator */
 static int gpencil_fill_invoke(bContext *C, wmOperator *op, const wmEvent *UNUSED(event))
 {
+  GP_FILL_LOG("FI01 gpencil_fill_invoke: entered");
   Object *ob = CTX_data_active_object(C);
   ToolSettings *ts = CTX_data_tool_settings(C);
   Brush *brush = BKE_paint_brush(&ts->gp_paint->paint);
