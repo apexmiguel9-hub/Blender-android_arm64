@@ -2,6 +2,7 @@
 #include "GHOST_SystemAndroid.hh"
 #include "android_native_app_glue.h"
 #include "GHOST_WindowManager.hh"
+#include <android/log.h>
 
 GHOST_WindowAndroid::GHOST_WindowAndroid(int shapeType,void*pSystem,const char *title,
                  int32_t /*left*/,
