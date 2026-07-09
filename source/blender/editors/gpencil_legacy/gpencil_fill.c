@@ -1269,7 +1269,11 @@ static bool gpencil_render_offscreen(tGPDfill *tgpf)
   GP_FILL_LOG("CP02 render_offscreen: region resized to %dx%d fill_factor=%.2f zoom=%.2f",
               tgpf->sizex, tgpf->sizey, tgpf->fill_factor, tgpf->zoom);
 
-  GP_FILL_LOG("CP03 render_offscreen: before GPU_offscreen_create");
+  /* Flush GPU pipeline before switching framebuffers.
+   * Mali-G52 can hang if the GPencil engine's RGBA16F framebuffer operations
+   * overlap with the fill offscreen (RGBA8) creation. */
+  GPU_finish();
+  GP_FILL_LOG("CP03a render_offscreen: GPU flushed before offscreen_create");
   char err_out[256] = "unknown";
   GPUOffScreen *offscreen = GPU_offscreen_create(
       tgpf->sizex, tgpf->sizey, true, GPU_RGBA8, GPU_TEXTURE_USAGE_HOST_READ, err_out);
@@ -1339,9 +1343,12 @@ static bool gpencil_render_offscreen(tGPDfill *tgpf)
 
   /* Reset GPU state that might have been left dirty by the GP engine.
    * Mali GPU can hang if stale buffer texture bindings (from freed sbuffer VBOs)
-   * or stale depth/stencil state are inherited from the previous viewport render pass. */
+   * or stale depth/stencil/blend state are inherited from the previous viewport render pass. */
   GPU_depth_test(GPU_DEPTH_NONE);
   GPU_stencil_test(GPU_STENCIL_NONE);
+  GPU_blend(GPU_BLEND_NONE);
+  GPU_color_mask(true, true, true, true);
+  GPU_scissor_test(false);
   GPU_texture_unbind_all();
   GPU_depth_mask(true);
   GPU_clear_color(0.0f, 0.0f, 0.0f, 0.0f);
@@ -2642,6 +2649,9 @@ static int gpencil_fill_invoke(bContext *C, wmOperator *op, const wmEvent *UNUSE
 
   gpencil_fill_status_indicators(tgpf);
 
+  /* Flush GPU before depsgraph update to prevent Mali hang
+   * when GP engine state is inherited into the next redraw cycle. */
+  GPU_finish();
   DEG_id_tag_update(&tgpf->gpd->id, ID_RECALC_TRANSFORM | ID_RECALC_GEOMETRY);
   WM_event_add_notifier(C, NC_GPENCIL | NA_EDITED, NULL);
 
