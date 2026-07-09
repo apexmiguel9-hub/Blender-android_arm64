@@ -2530,6 +2530,7 @@ static tGPDfill *gpencil_session_init_fill(bContext *C, wmOperator *op)
 /* end operator */
 static void gpencil_fill_exit(bContext *C, wmOperator *op)
 {
+  GP_FILL_LOG("EX00 gpencil_fill_exit: entered");
   Object *ob = CTX_data_active_object(C);
 
   /* clear undo stack */
@@ -3056,6 +3057,7 @@ static int gpencil_fill_modal(bContext *C, wmOperator *op, const wmEvent *event)
             /* Save extend value for next operation. */
             brush_settings->fill_extend_fac = tgpf->fill_extend_fac;
 
+                    GP_FILL_LOG("CM02 modal: setting estate=OPERATOR_FINISHED");
             estate = OPERATOR_FINISHED;
           }
           else {
@@ -3168,15 +3170,21 @@ static int gpencil_fill_modal(bContext *C, wmOperator *op, const wmEvent *event)
   /* process last operations before exiting */
   switch (estate) {
     case OPERATOR_FINISHED:
+      GP_FILL_LOG("CM03 exit: before gpencil_fill_exit (FINISHED)");
       gpencil_fill_exit(C, op);
+      GP_FILL_LOG("CM04 exit: after gpencil_fill_exit, before notifier");
       WM_event_add_notifier(C, NC_GPENCIL | NA_EDITED, NULL);
+      GP_FILL_LOG("CM05 exit: after notifier, returning FINISHED");
       break;
 
     case OPERATOR_CANCELLED:
+      GP_FILL_LOG("CM06 exit: before gpencil_fill_exit (CANCELLED)");
       gpencil_fill_exit(C, op);
+      GP_FILL_LOG("CM07 exit: after gpencil_fill_exit, returning CANCELLED");
       break;
 
     default:
+      GP_FILL_LOG("CM08 exit: returning RUNNING_MODAL");
       break;
   }
 
