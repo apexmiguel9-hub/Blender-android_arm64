@@ -824,8 +824,13 @@ bool processButtonEvent(struct android_app *app, AInputEvent *event) {
     //  消息来源于触摸笔（蓝牙触摸笔）
     float pressure=AMotionEvent_getPressure(event,0);
     float size=AMotionEvent_getSize(event,0);
-    __android_log_print(ANDROID_LOG_INFO, "OBL.TOUCH", "action=%d x=%.0f y=%.0f pressure=%.4f size=%.4f",
-                        motionaction, msgPosX, msgPosY, pressure, size);
+    int32_t toolType = AMotionEvent_getToolType(event, 0);
+    if (toolType != AMOTION_EVENT_TOOL_TYPE_STYLUS &&
+        toolType != AMOTION_EVENT_TOOL_TYPE_ERASER) {
+      pressure = 1.0f;
+    }
+    __android_log_print(ANDROID_LOG_INFO, "OBL.TOUCH", "action=%d x=%.0f y=%.0f pressure=%.4f size=%.4f tool=%d",
+                        motionaction, msgPosX, msgPosY, pressure, size, toolType);
 
     system->m_x = -1;
     system->m_y = -1;
