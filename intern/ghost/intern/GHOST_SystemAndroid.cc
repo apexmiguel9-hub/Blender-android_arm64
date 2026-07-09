@@ -399,6 +399,7 @@ static int conv_utf_16_to_8(const wchar_t *in16, char *out8, size_t size8) {
 void processStylusEvent(struct android_app *app, AInputEvent *event){
     float pressure=AMotionEvent_getPressure(event,0);
     float size=AMotionEvent_getSize(event,0);
+    __android_log_print(ANDROID_LOG_INFO, "OBL.TOUCH", "stylus pressure=%.4f size=%.4f", pressure, size);
 }
 
 //  鼠标事件
@@ -823,6 +824,8 @@ bool processButtonEvent(struct android_app *app, AInputEvent *event) {
     //  消息来源于触摸笔（蓝牙触摸笔）
     float pressure=AMotionEvent_getPressure(event,0);
     float size=AMotionEvent_getSize(event,0);
+    __android_log_print(ANDROID_LOG_INFO, "OBL.TOUCH", "action=%d x=%.0f y=%.0f pressure=%.4f size=%.4f",
+                        motionaction, msgPosX, msgPosY, pressure, size);
 
     system->m_x = -1;
     system->m_y = -1;
