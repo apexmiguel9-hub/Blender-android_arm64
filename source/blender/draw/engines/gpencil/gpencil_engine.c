@@ -29,6 +29,7 @@
 
 #include "GPU_texture.h"
 #include <android/log.h>
+#include <epoxy/gl.h>
 #include "GPU_uniform_buffer.h"
 
 #include "gpencil_engine.h"
@@ -687,6 +688,14 @@ void GPENCIL_cache_finish(void *ved)
   /* Create frame-buffers only if needed. */
   if (pd->tobjects.first) {
     eGPUTextureFormat format = pd->use_signed_fb ? GPU_RGBA16F : GPU_R11F_G11F_B10F;
+#ifdef __ANDROID__
+    if (format == GPU_R11F_G11F_B10F &&
+        !epoxy_has_gl_extension("GL_EXT_color_buffer_float")) {
+      format = GPU_RGBA16F;
+      __android_log_print(ANDROID_LOG_WARN, "GPENCIL",
+        "R11F_G11F_B10F not supported as FB attachment, falling back to RGBA16F");
+    }
+#endif
 
     const float *size = DRW_viewport_size_get();
     pd->depth_tx = DRW_texture_pool_query_2d(
