@@ -6,6 +6,8 @@
  */
 
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 #include <unistd.h>
 #include <sys/time.h>
 #include <stdarg.h>
@@ -24,9 +26,10 @@ static void gp_sync_log(const char *fmt, ...)
     char logpath[512];
     const char *home = getenv("HOME");
     if (home) {
-      BLI_snprintf(logpath, sizeof(logpath), "%s/gp_crash3.log", home);
+      snprintf(logpath, sizeof(logpath), "%s/gp_crash3.log", home);
     } else {
-      BLI_strncpy(logpath, "/sdcard/gp_crash3.log", sizeof(logpath));
+      strncpy(logpath, "/sdcard/gp_crash3.log", sizeof(logpath));
+      logpath[sizeof(logpath) - 1] = '\0';
     }
     fp = fopen(logpath, "ab");
     if (!fp) {
