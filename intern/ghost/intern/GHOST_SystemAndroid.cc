@@ -1126,6 +1126,32 @@ static int32_t engine_handle_input(struct android_app *app, AInputEvent *event) 
                         system->m_mtFirstFingerDownTime = now;
                     }
 
+                    /* Scroll mode: single-finger drag sends wheel events instead of LEFT drag. */
+                    if (system->m_scrollMode) {
+                        GHOST_WindowAndroid *win = (GHOST_WindowAndroid *)system->getWindowManager()->getActiveWindow();
+                        if (win) {
+                            if (actionMasked == AMOTION_EVENT_ACTION_DOWN) {
+                                system->m_scrollLastY = AMotionEvent_getY(event, 0);
+                                return 1;
+                            }
+                            if (actionMasked == AMOTION_EVENT_ACTION_MOVE) {
+                                float y = AMotionEvent_getY(event, 0);
+                                float dy = y - system->m_scrollLastY;
+                                if (dy > 10.0f) {
+                                    system->pushEvent(new GHOST_EventWheel(now, win, -1));
+                                    system->m_scrollLastY = y;
+                                } else if (dy < -10.0f) {
+                                    system->pushEvent(new GHOST_EventWheel(now, win, 1));
+                                    system->m_scrollLastY = y;
+                                }
+                                return 1;
+                            }
+                            if (actionMasked == AMOTION_EVENT_ACTION_UP || actionMasked == AMOTION_EVENT_ACTION_CANCEL) {
+                                return 1;
+                            }
+                        }
+                    }
+
                     /* If orbit mode is active, intercept events to continue orbiting
                        even after the second finger lifted. */
                     if (system->m_mtOrbitMode) {
@@ -1898,6 +1924,9 @@ void GHOST_SystemAndroid::setValue(int values[], int num) {
             pushEvent(new GHOST_EventKey(getMilliSeconds(), GHOST_kEventKeyUp, window, GHOST_kKeyZ, false, utf8_char));
             pushEvent(new GHOST_EventKey(getMilliSeconds(), GHOST_kEventKeyUp, window, GHOST_kKeyLeftControl, false, utf8_char));
             pushEvent(new GHOST_EventKey(getMilliSeconds(), GHOST_kEventKeyUp, window, GHOST_kKeyLeftShift, false, utf8_char));
+        } else if (oblButtonId == 10006) {
+            /* Toggle scroll mode. */
+            m_scrollMode = !m_scrollMode;
         }
     }
 }

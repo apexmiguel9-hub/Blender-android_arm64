@@ -199,6 +199,10 @@ public:
     bool m_mtOrbitMode = false;
     uint64_t m_mtFirstFingerDownTime = 0;
 
+    /* Scroll mode: single-finger drag sends wheel events instead of LEFT drag. */
+    bool m_scrollMode = false;
+    float m_scrollLastY = 0.0f;
+
     /* Pending modifier state (set before pushing key events, cleared after dispatchEvents). */
     bool m_pendingCtrl = false;
     bool m_pendingShift = false;
