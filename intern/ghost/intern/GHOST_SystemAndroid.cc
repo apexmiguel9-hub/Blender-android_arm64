@@ -1065,12 +1065,17 @@ static int32_t engine_handle_input(struct android_app *app, AInputEvent *event) 
                                     system->m_mtGestureHandled = true;  /* Prevent zoom in same event. */
                                 }
 
-                                /* 2-finger drag → Zoom (scroll). */
+                                /* 2-finger drag → Zoom (scroll) — Ctrl+Wheel for smooth zoom. */
                                 if (!system->m_mtGestureHandled && !system->m_mtOrbitMode && moved && pointerCount >= 2) {
                                     float diff = dist - system->m_mtPrevDist;
                                     if (fabs(diff) >= 5.0f) {
                                         int step = (diff > 0) ? 1 : -1;
+                                        char utf8_char[6] = {0};
+                                        system->m_pendingCtrl = true;
+                                        system->pushEvent(new GHOST_EventKey(now, GHOST_kEventKeyDown, win, GHOST_kKeyLeftControl, false, utf8_char));
                                         system->pushEvent(new GHOST_EventWheel(now, win, step));
+                                        system->pushEvent(new GHOST_EventKey(now, GHOST_kEventKeyUp, win, GHOST_kKeyLeftControl, false, utf8_char));
+                                        system->m_pendingCtrl = false;
                                         system->m_mtPrevDist += step * 5.0f;
                                         system->m_mtGestureHandled = true;
                                     }
