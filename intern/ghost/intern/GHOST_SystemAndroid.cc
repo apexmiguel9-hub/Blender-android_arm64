@@ -888,9 +888,9 @@ bool processButtonEvent(struct android_app *app, AInputEvent *event) {
         // CLOG_ERROR(&LOG, "交互processButtonEvent 15");
         system->m_x = msgPosX;
         system->m_y = msgPosY;
-        system->pushEvent(
-                new GHOST_EventCursor(currentTime, GHOST_kEventCursorMove, window, msgPosX,
-                                      msgPosY, td));
+        /* Don't send CURSOR MOVE on UP — the finger lifts at a different
+           position than the last MOVE (finger deforms), causing a "whip" effect
+           in Grease Pencil strokes. The cursor stays at the last MOVE position. */
         if (!checkMove) {
             system->pushEvent(
                     new GHOST_EventButton(currentTime, GHOST_TEventType::GHOST_kEventButtonUp,

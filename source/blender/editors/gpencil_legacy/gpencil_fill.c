@@ -2830,8 +2830,8 @@ static bool gpencil_do_frame_fill(tGPDfill *tgpf, const bool is_inverted)
       void *lock;
       ImBuf *ibuf = BKE_image_acquire_ibuf(tgpf->ima, NULL, &lock);
       if (ibuf) {
-        int mx = (int)(tgpf->mouse[0] / tgpf->zoom);
-        int my = (int)(tgpf->mouse[1] / tgpf->zoom);
+        int mx = (int)(tgpf->mouse[0]);
+        int my = (int)(tgpf->mouse[1]);
         CLAMP(mx, 0, ibuf->x - 1);
         CLAMP(my, 0, ibuf->y - 1);
         int pixel_idx = my * ibuf->x + mx;
