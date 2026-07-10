@@ -1050,16 +1050,18 @@ static int32_t engine_handle_input(struct android_app *app, AInputEvent *event) 
                                     system->m_mtGestureHandled = true;  /* Prevent zoom in same event. */
                                 }
 
-                                /* 2-finger drag → Zoom (scroll). Plain Wheel (no Ctrl modifier). */
+                                /* 2-finger drag → Zoom — Ctrl+Wheel for smooth zoom. */
                                 if (!system->m_mtGestureHandled && !system->m_mtOrbitMode && pointerCount >= 2) {
                                     float diff = dist - system->m_mtPrevDist;
-                                    __android_log_print(ANDROID_LOG_INFO, "OBL.ZOOM",
-                                        "dist=%.1f prevDist=%.1f diff=%.1f", dist, system->m_mtPrevDist, diff);
                                     if (fabs(diff) >= 5.0f) {
                                         int step = (diff > 0) ? 1 : -1;
                                         __android_log_print(ANDROID_LOG_INFO, "OBL.ZOOM",
                                             "ZOOM TRIGGERED! step=%d", step);
+                                        char utf8_char[6] = {0};
+                                        system->m_pendingCtrl = true;
+                                        system->pushEvent(new GHOST_EventKey(now, GHOST_kEventKeyDown, win, GHOST_kKeyLeftControl, false, utf8_char));
                                         system->pushEvent(new GHOST_EventWheel(now, win, step));
+                                        system->pushEvent(new GHOST_EventKey(now, GHOST_kEventKeyUp, win, GHOST_kKeyLeftControl, false, utf8_char));
                                         system->m_mtPrevDist += step * 5.0f;
                                         system->m_mtGestureHandled = true;
                                     }
