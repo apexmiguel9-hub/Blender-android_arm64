@@ -2823,6 +2823,28 @@ static bool gpencil_do_frame_fill(tGPDfill *tgpf, const bool is_inverted)
   bool render_ok = gpencil_render_offscreen(tgpf);
   GP_FILL_LOG("CF02 do_frame_fill: render_offscreen returned %d", render_ok);
   if (render_ok) {
+    /* Place blue seed pixel directly in the ImBuf at the mouse position,
+     * since drawing it as a 3D point (draw_mouse_position) uses the original
+     * viewport projection which may not match the zoomed offscreen projection. */
+    if (tgpf->ima) {
+      void *lock;
+      ImBuf *ibuf = BKE_image_acquire_ibuf(tgpf->ima, NULL, &lock);
+      if (ibuf) {
+        int mx = (int)(tgpf->mouse[0] / tgpf->zoom);
+        int my = (int)(tgpf->mouse[1] / tgpf->zoom);
+        CLAMP(mx, 0, ibuf->x - 1);
+        CLAMP(my, 0, ibuf->y - 1);
+        int pixel_idx = my * ibuf->x + mx;
+        if (pixel_idx >= 0 && pixel_idx < ibuf->x * ibuf->y) {
+          const float blue[4] = {0.0f, 0.0f, 1.0f, 1.0f};
+          set_pixel(ibuf, pixel_idx, blue);
+          GP_FILL_LOG("CF02a do_frame_fill: blue seed set at (%d,%d) idx=%d zoom=%.2f",
+                       mx, my, pixel_idx, tgpf->zoom);
+        }
+        BKE_image_release_ibuf(tgpf->ima, ibuf, lock);
+      }
+    }
+
     GP_FILL_LOG("CF03 do_frame_fill: before gpencil_set_borders(true)");
     /* Set red borders to create a external limit. */
     gpencil_set_borders(tgpf, true);
