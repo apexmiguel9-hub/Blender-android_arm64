@@ -166,6 +166,7 @@ public:
 //    }
     void driveTrackpad();
     void processTrackpad();
+    void dispatchEvents() override;
 
     bool
     generateWindowExposeEvents();
@@ -195,4 +196,10 @@ public:
     float m_mtPrevCenterY = 0.0f;
     bool m_mtDragActive = false;
     bool m_mtCleanupDone = false;
+    bool m_mtOrbitMode = false;
+    uint64_t m_mtFirstFingerDownTime = 0;
+
+    /* Pending modifier state (set before pushing key events, cleared after dispatchEvents). */
+    bool m_pendingCtrl = false;
+    bool m_pendingShift = false;
 };

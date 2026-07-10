@@ -962,7 +962,7 @@ static int32_t engine_handle_input(struct android_app *app, AInputEvent *event) 
 
                     /* ---- Multi-touch gesture interception ---- */
                     if (pointerCount >= 2 || system->m_mtActive) {
-                        /* Initialize gesture state on first multi-touch event. */
+                        /* Initialize state on first multi-touch event. */
                         if (!system->m_mtActive) {
                             system->m_mtActive = true;
                             system->m_mtFingerCount = pointerCount;
@@ -970,10 +970,12 @@ static int32_t engine_handle_input(struct android_app *app, AInputEvent *event) 
                             system->m_mtGestureHandled = false;
                             system->m_mtDragActive = false;
                             system->m_mtCleanupDone = false;
+                            system->m_mtOrbitMode = false;
                             system->m_mtStartDist = 0.0f;
                             system->m_mtPrevDist = 0.0f;
                             system->m_mtPrevCenterX = 0.0f;
                             system->m_mtPrevCenterY = 0.0f;
+
                             if (pointerCount >= 2) {
                                 float x0 = AMotionEvent_getX(event, 0);
                                 float y0 = AMotionEvent_getY(event, 0);
@@ -985,6 +987,25 @@ static int32_t engine_handle_input(struct android_app *app, AInputEvent *event) 
                                 system->m_mtPrevDist = system->m_mtStartDist;
                                 system->m_mtPrevCenterX = (x0 + x1) * 0.5f;
                                 system->m_mtPrevCenterY = (y0 + y1) * 0.5f;
+
+                                /* Detect hold+tap: first finger held >200ms before second finger. */
+                                uint64_t firstFingerElapsed = now - system->m_mtFirstFingerDownTime;
+                                if (firstFingerElapsed > 200) {
+                                    system->m_mtOrbitMode = true;
+                                    system->m_mtDragActive = true;
+                                    GHOST_WindowAndroid *win = (GHOST_WindowAndroid *)system->getWindowManager()->getActiveWindow();
+                                    if (win) {
+                                        GHOST_TabletData td;
+                                        /* Cancel first finger's left mouse DOWN. */
+                                        system->pushEvent(new GHOST_EventCursor(now, GHOST_kEventCursorMove, win, x0, y0, td));
+                                        system->pushEvent(new GHOST_EventButton(now, GHOST_kEventButtonUp, win, GHOST_kButtonMaskLeft, td));
+                                        /* Start middle mouse orbit at centroid. */
+                                        float cx = (x0 + x1) * 0.5f;
+                                        float cy = (y0 + y1) * 0.5f;
+                                        system->pushEvent(new GHOST_EventCursor(now, GHOST_kEventCursorMove, win, cx, cy, td));
+                                        system->pushEvent(new GHOST_EventButton(now, GHOST_kEventButtonDown, win, GHOST_kButtonMaskMiddle, td));
+                                    }
+                                }
                             }
                         }
 
@@ -998,8 +1019,9 @@ static int32_t engine_handle_input(struct android_app *app, AInputEvent *event) 
                         float dist = 0.0f;
 
                         /* Check if any finger moved (using event history). */
-                        if (pointerCount >= 2 && AMotionEvent_getHistorySize(event) > 0) {
-                            for (uint32_t i = 0; i < pointerCount && i < 2; i++) {
+                        if (pointerCount >= 1 && AMotionEvent_getHistorySize(event) > 0) {
+                            uint32_t limit = (pointerCount < 2) ? pointerCount : 2;
+                            for (uint32_t i = 0; i < limit; i++) {
                                 float dx = AMotionEvent_getX(event, i) - AMotionEvent_getHistoricalX(event, i, 0);
                                 float dy = AMotionEvent_getY(event, i) - AMotionEvent_getHistoricalY(event, i, 0);
                                 if (dx * dx + dy * dy > 100.0f) {
@@ -1010,18 +1032,27 @@ static int32_t engine_handle_input(struct android_app *app, AInputEvent *event) 
                         }
 
                         /* Current distance between first two pointers. */
-                        if (pointerCount >= 2) {
+                        if (pointerCount >= 2 && !system->m_mtOrbitMode) {
                             float dx = AMotionEvent_getX(event, 0) - AMotionEvent_getX(event, 1);
                             float dy = AMotionEvent_getY(event, 0) - AMotionEvent_getY(event, 1);
                             dist = sqrtf(dx * dx + dy * dy);
                         }
 
-                        /* ----- GESTURE PROCESSING (only if not yet handled) ----- */
-                        if (!system->m_mtGestureHandled && pointerCount >= 2) {
+                        /* ----- GESTURE PROCESSING ----- */
+                        if (!system->m_mtGestureHandled) {
                             GHOST_WindowAndroid *win = (GHOST_WindowAndroid *)system->getWindowManager()->getActiveWindow();
                             if (win) {
-                                /* 2-finger pinch → Zoom (scroll). */
-                                if (moved) {
+                                /* ORBIT MODE: single/double finger drag → orbit (middle mouse). */
+                                if (system->m_mtOrbitMode && moved && pointerCount >= 1) {
+                                    float fx = AMotionEvent_getX(event, 0);
+                                    float fy = AMotionEvent_getY(event, 0);
+                                    GHOST_TabletData td;
+                                    system->pushEvent(new GHOST_EventCursor(now, GHOST_kEventCursorMove, win, fx, fy, td));
+                                    system->m_mtGestureHandled = true;
+                                }
+
+                                /* 2-finger drag → Zoom (scroll). */
+                                if (!system->m_mtGestureHandled && !system->m_mtOrbitMode && moved && pointerCount >= 2) {
                                     float diff = dist - system->m_mtPrevDist;
                                     if (fabs(diff) >= 20.0f) {
                                         int steps = (int)(fabs(diff) / 20.0f);
@@ -1032,45 +1063,6 @@ static int32_t engine_handle_input(struct android_app *app, AInputEvent *event) 
                                         system->m_mtPrevDist = dist;
                                         system->m_mtGestureHandled = true;
                                     }
-                                }
-
-                                /* 2/3-finger drag → Orbit (middle mouse button). */
-                                if (!system->m_mtGestureHandled && moved) {
-                                    float cx = (AMotionEvent_getX(event, 0) + AMotionEvent_getX(event, 1)) * 0.5f;
-                                    float cy = (AMotionEvent_getY(event, 0) + AMotionEvent_getY(event, 1)) * 0.5f;
-                                    float dx = cx - system->m_mtPrevCenterX;
-                                    float dy = cy - system->m_mtPrevCenterY;
-                                    if (dx * dx + dy * dy >= 100.0f) {
-                                        GHOST_TabletData td;
-                                        system->pushEvent(new GHOST_EventCursor(now, GHOST_kEventCursorMove, win, cx, cy, td));
-                                        if (!system->m_mtDragActive) {
-                                            system->pushEvent(new GHOST_EventButton(now, GHOST_kEventButtonDown, win, GHOST_kButtonMaskMiddle, td));
-                                            system->m_mtDragActive = true;
-                                        }
-                                        system->m_mtPrevCenterX = cx;
-                                        system->m_mtPrevCenterY = cy;
-                                        system->m_mtGestureHandled = true;
-                                    }
-                                }
-
-                                /* 2-finger hold >= 300ms (no movement) → Right-click. */
-                                if (!system->m_mtGestureHandled && system->m_mtFingerCount <= 2 && !moved && elapsed >= 300) {
-                                    GHOST_TabletData td;
-                                    system->pushEvent(new GHOST_EventButton(now, GHOST_kEventButtonDown, win, GHOST_kButtonMaskRight, td));
-                                    system->pushEvent(new GHOST_EventButton(now, GHOST_kEventButtonUp, win, GHOST_kButtonMaskRight, td));
-                                    system->m_mtGestureHandled = true;
-                                }
-
-                                /* 3-finger hold >= 1000ms (no movement) → Redo (Shift+Ctrl+Z). */
-                                if (!system->m_mtGestureHandled && system->m_mtFingerCount >= 3 && !moved && elapsed >= 1000) {
-                                    system->isCtrlPressed = true;
-                                    system->isShiftPressed = true;
-                                    char ch[6] = {0};
-                                    system->pushEvent(new GHOST_EventKey(now, GHOST_kEventKeyDown, win, GHOST_kKeyZ, false, ch));
-                                    system->pushEvent(new GHOST_EventKey(now, GHOST_kEventKeyUp, win, GHOST_kKeyZ, false, ch));
-                                    system->isCtrlPressed = false;
-                                    system->isShiftPressed = false;
-                                    system->m_mtGestureHandled = true;
                                 }
                             }
                         }
@@ -1089,34 +1081,32 @@ static int32_t engine_handle_input(struct android_app *app, AInputEvent *event) 
                                     system->m_mtCleanupDone = true;
                                     GHOST_WindowAndroid *win = (GHOST_WindowAndroid *)system->getWindowManager()->getActiveWindow();
                                     if (win) {
-                                        /* Clean up first finger's pending left mouse DOWN. */
-                                        GHOST_TabletData td;
-                                        system->pushEvent(new GHOST_EventButton(now, GHOST_kEventButtonUp, win, GHOST_kButtonMaskLeft, td));
-                                        /* If orbit drag was active, send middle mouse UP. */
-                                        if (system->m_mtDragActive) {
+                                        if (system->m_mtOrbitMode) {
+                                            /* Orbit mode: send middle UP (left already cancelled). */
+                                            GHOST_TabletData td;
                                             system->pushEvent(new GHOST_EventButton(now, GHOST_kEventButtonUp, win, GHOST_kButtonMaskMiddle, td));
-                                        }
-                                    }
-                                    /* Unhandled 3-finger tap (< 300ms) → Undo (Ctrl+Z). */
-                                    if (!system->m_mtGestureHandled && system->m_mtFingerCount >= 3 && elapsed < 300) {
-                                        GHOST_WindowAndroid *win2 = (GHOST_WindowAndroid *)system->getWindowManager()->getActiveWindow();
-                                        if (win2) {
-                                            system->isCtrlPressed = true;
-                                            char ch[6] = {0};
-                                            system->pushEvent(new GHOST_EventKey(now, GHOST_kEventKeyDown, win2, GHOST_kKeyZ, false, ch));
-                                            system->pushEvent(new GHOST_EventKey(now, GHOST_kEventKeyUp, win2, GHOST_kKeyZ, false, ch));
-                                            system->isCtrlPressed = false;
+                                        } else {
+                                            /* Regular mode: clean up first finger's left DOWN. */
+                                            GHOST_TabletData td;
+                                            system->pushEvent(new GHOST_EventButton(now, GHOST_kEventButtonUp, win, GHOST_kButtonMaskLeft, td));
+                                            /* 2-finger quick tap (no movement, <300ms) → Right-click. */
+                                            if (!system->m_mtGestureHandled && system->m_mtFingerCount <= 2 && !moved && elapsed < 300) {
+                                                system->pushEvent(new GHOST_EventButton(now, GHOST_kEventButtonDown, win, GHOST_kButtonMaskRight, td));
+                                                system->pushEvent(new GHOST_EventButton(now, GHOST_kEventButtonUp, win, GHOST_kButtonMaskRight, td));
+                                            }
                                         }
                                     }
                                 }
-                                /* Fully reset when ALL fingers are up. */
-                                if (actionMasked == AMOTION_EVENT_ACTION_UP ||
+                                /* Reset: orbit mode only on ACTION_UP; regular immediately. */
+                                if (!system->m_mtOrbitMode ||
+                                    actionMasked == AMOTION_EVENT_ACTION_UP ||
                                     actionMasked == AMOTION_EVENT_ACTION_CANCEL) {
                                     system->m_mtActive = false;
                                     system->m_mtFingerCount = 0;
                                     system->m_mtPointerCount = 0;
                                     system->m_mtDragActive = false;
                                     system->m_mtCleanupDone = false;
+                                    system->m_mtOrbitMode = false;
                                 }
                             }
                         }
@@ -1127,6 +1117,9 @@ static int32_t engine_handle_input(struct android_app *app, AInputEvent *event) 
 
                     /* Single-finger: normal processing. */
                     system->m_mtPointerCount = 0;
+                    if (actionMasked == AMOTION_EVENT_ACTION_DOWN) {
+                        system->m_mtFirstFingerDownTime = now;
+                    }
                     bool ret = processButtonEvent(app, event);
                     if (ret){
                         return 1;
@@ -1591,6 +1584,12 @@ static OBLButtonIDGhostKey oBLButtonIDGhostKeys[] = {
         {OBLButtonID_End,          GHOST_kKeyEnd},
 };
 
+void GHOST_SystemAndroid::dispatchEvents() {
+    GHOST_System::dispatchEvents();
+    m_pendingCtrl = false;
+    m_pendingShift = false;
+}
+
 //  快捷键键盘输入
 void GHOST_SystemAndroid::setValueOn(int values[], int num) {
     GHOST_WindowAndroid *window = (GHOST_WindowAndroid *) getWindowManager()->getActiveWindow();
@@ -1600,21 +1599,27 @@ void GHOST_SystemAndroid::setValueOn(int values[], int num) {
         int oblButtonNum = sizeof(oBLButtonIDGhostKeys) / sizeof(oBLButtonIDGhostKeys[0]);
         __android_log_print(ANDROID_LOG_INFO, "OBL.DIAG",
             "setValueOn: ordinal=%d arraySize=%d", (int)oblButtonId, oblButtonNum);
-        for (int i = 0; i < oblButtonNum; i++) {
-            if (oBLButtonIDGhostKeys[i].oblButtonId == oblButtonId) {
-                __android_log_print(ANDROID_LOG_INFO, "OBL.DIAG",
-                    "setValueOn: MATCH at i=%d ghostTKey=%d", i, (int)oBLButtonIDGhostKeys[i].ghostTKey);
-                utf8_char[0] = oBLButtonIDGhostKeys[i].ghostTKey;
-                GHOST_EventKey *eventKeyUp = new GHOST_EventKey(getMilliSeconds(),
-                                                                GHOST_kEventKeyDown,
-                                                                window,
-                                                                oBLButtonIDGhostKeys[i].ghostTKey,
-                                                                false,
-                                                                utf8_char);
-                pushEvent(eventKeyUp);
-                break;
-            }
-        }
+                for (int i = 0; i < oblButtonNum; i++) {
+                    if (oBLButtonIDGhostKeys[i].oblButtonId == oblButtonId) {
+                        __android_log_print(ANDROID_LOG_INFO, "OBL.DIAG",
+                            "setValueOn: MATCH at i=%d ghostTKey=%d", i, (int)oBLButtonIDGhostKeys[i].ghostTKey);
+                        utf8_char[0] = oBLButtonIDGhostKeys[i].ghostTKey;
+                        GHOST_EventKey *eventKeyUp = new GHOST_EventKey(getMilliSeconds(),
+                                                                        GHOST_kEventKeyDown,
+                                                                        window,
+                                                                        oBLButtonIDGhostKeys[i].ghostTKey,
+                                                                        false,
+                                                                        utf8_char);
+                        pushEvent(eventKeyUp);
+                        /* Track pending modifier state for getModifierKeys(). */
+                        if (oBLButtonIDGhostKeys[i].ghostTKey == GHOST_kKeyLeftControl) {
+                            m_pendingCtrl = true;
+                        } else if (oBLButtonIDGhostKeys[i].ghostTKey == GHOST_kKeyLeftShift) {
+                            m_pendingShift = true;
+                        }
+                        break;
+                    }
+                }
         __android_log_print(ANDROID_LOG_INFO, "OBL.DIAG",
             "setValueOn: done (no match if no MATCH above)");
     }
@@ -1751,21 +1756,27 @@ void GHOST_SystemAndroid::setValueOff(int values[], int num) {
         int oblButtonNum = sizeof(oBLButtonIDGhostKeys) / sizeof(oBLButtonIDGhostKeys[0]);
         __android_log_print(ANDROID_LOG_INFO, "OBL.DIAG",
             "setValueOff: ordinal=%d arraySize=%d", (int)oblButtonId, oblButtonNum);
-        for (int i = 0; i < oblButtonNum; i++) {
-            if (oBLButtonIDGhostKeys[i].oblButtonId == oblButtonId) {
-                __android_log_print(ANDROID_LOG_INFO, "OBL.DIAG",
-                    "setValueOff: MATCH at i=%d ghostTKey=%d", i, (int)oBLButtonIDGhostKeys[i].ghostTKey);
-                utf8_char[0] = oBLButtonIDGhostKeys[i].ghostTKey;
-                GHOST_EventKey *eventKeyUp = new GHOST_EventKey(getMilliSeconds(),
-                                                                GHOST_kEventKeyUp,
-                                                                window,
-                                                                oBLButtonIDGhostKeys[i].ghostTKey,
-                                                                false,
-                                                                utf8_char);
-                pushEvent(eventKeyUp);
-                break;
-            }
-        }
+                for (int i = 0; i < oblButtonNum; i++) {
+                    if (oBLButtonIDGhostKeys[i].oblButtonId == oblButtonId) {
+                        __android_log_print(ANDROID_LOG_INFO, "OBL.DIAG",
+                            "setValueOff: MATCH at i=%d ghostTKey=%d", i, (int)oBLButtonIDGhostKeys[i].ghostTKey);
+                        utf8_char[0] = oBLButtonIDGhostKeys[i].ghostTKey;
+                        GHOST_EventKey *eventKeyUp = new GHOST_EventKey(getMilliSeconds(),
+                                                                        GHOST_kEventKeyUp,
+                                                                        window,
+                                                                        oBLButtonIDGhostKeys[i].ghostTKey,
+                                                                        false,
+                                                                        utf8_char);
+                        pushEvent(eventKeyUp);
+                        /* Clear pending modifier state. */
+                        if (oBLButtonIDGhostKeys[i].ghostTKey == GHOST_kKeyLeftControl) {
+                            m_pendingCtrl = false;
+                        } else if (oBLButtonIDGhostKeys[i].ghostTKey == GHOST_kKeyLeftShift) {
+                            m_pendingShift = false;
+                        }
+                        break;
+                    }
+                }
         __android_log_print(ANDROID_LOG_INFO, "OBL.DIAG",
             "setValueOff: done (no match if no MATCH above)");
     }
@@ -1841,31 +1852,22 @@ void GHOST_SystemAndroid::setValue(int values[], int num) {
             GHOST_EventWheel *eventKey = new GHOST_EventWheel(getMilliSeconds(), window, -5);
             pushEvent(eventKey);
         } else if (oblButtonId == 10004) {
-            /* Undo: Ctrl+Z */
-            isCtrlPressed = true;
-            {
-                GHOST_EventKey *eventKeyDown = new GHOST_EventKey(
-                    getMilliSeconds(), GHOST_kEventKeyDown, window, GHOST_kKeyZ, false, utf8_char);
-                pushEvent(eventKeyDown);
-                GHOST_EventKey *eventKeyUp = new GHOST_EventKey(
-                    getMilliSeconds(), GHOST_kEventKeyUp, window, GHOST_kKeyZ, false, utf8_char);
-                pushEvent(eventKeyUp);
-            }
-            isCtrlPressed = false;
+            /* Undo: Ctrl+Z — send real modifier key events. */
+            m_pendingCtrl = true;
+            pushEvent(new GHOST_EventKey(getMilliSeconds(), GHOST_kEventKeyDown, window, GHOST_kKeyLeftControl, false, utf8_char));
+            pushEvent(new GHOST_EventKey(getMilliSeconds(), GHOST_kEventKeyDown, window, GHOST_kKeyZ, false, utf8_char));
+            pushEvent(new GHOST_EventKey(getMilliSeconds(), GHOST_kEventKeyUp, window, GHOST_kKeyZ, false, utf8_char));
+            pushEvent(new GHOST_EventKey(getMilliSeconds(), GHOST_kEventKeyUp, window, GHOST_kKeyLeftControl, false, utf8_char));
         } else if (oblButtonId == 10005) {
-            /* Redo: Shift+Ctrl+Z */
-            isCtrlPressed = true;
-            isShiftPressed = true;
-            {
-                GHOST_EventKey *eventKeyDown = new GHOST_EventKey(
-                    getMilliSeconds(), GHOST_kEventKeyDown, window, GHOST_kKeyZ, false, utf8_char);
-                pushEvent(eventKeyDown);
-                GHOST_EventKey *eventKeyUp = new GHOST_EventKey(
-                    getMilliSeconds(), GHOST_kEventKeyUp, window, GHOST_kKeyZ, false, utf8_char);
-                pushEvent(eventKeyUp);
-            }
-            isCtrlPressed = false;
-            isShiftPressed = false;
+            /* Redo: Shift+Ctrl+Z — send real modifier key events. */
+            m_pendingCtrl = true;
+            m_pendingShift = true;
+            pushEvent(new GHOST_EventKey(getMilliSeconds(), GHOST_kEventKeyDown, window, GHOST_kKeyLeftShift, false, utf8_char));
+            pushEvent(new GHOST_EventKey(getMilliSeconds(), GHOST_kEventKeyDown, window, GHOST_kKeyLeftControl, false, utf8_char));
+            pushEvent(new GHOST_EventKey(getMilliSeconds(), GHOST_kEventKeyDown, window, GHOST_kKeyZ, false, utf8_char));
+            pushEvent(new GHOST_EventKey(getMilliSeconds(), GHOST_kEventKeyUp, window, GHOST_kKeyZ, false, utf8_char));
+            pushEvent(new GHOST_EventKey(getMilliSeconds(), GHOST_kEventKeyUp, window, GHOST_kKeyLeftControl, false, utf8_char));
+            pushEvent(new GHOST_EventKey(getMilliSeconds(), GHOST_kEventKeyUp, window, GHOST_kKeyLeftShift, false, utf8_char));
         }
     }
 }
@@ -1877,7 +1879,7 @@ GHOST_TSuccess GHOST_SystemAndroid::getModifierKeys(GHOST_ModifierKeys &keys) co
 
     struct android_app *app = (struct android_app *) m_nativeWindow;
     bool down = app->GetAsyncKeyState(0);
-    keys.set(GHOST_kModifierKeyLeftShift, down || isShiftPressed);
+    keys.set(GHOST_kModifierKeyLeftShift, down || isShiftPressed || m_pendingShift);
     down = false;//(::GetAsyncKeyState(VK_RSHIFT)) != 0;
     keys.set(GHOST_kModifierKeyRightShift, down);
     bool down1 = down;
@@ -1889,7 +1891,7 @@ GHOST_TSuccess GHOST_SystemAndroid::getModifierKeys(GHOST_ModifierKeys &keys) co
     bool down2 = down;
 
     down = app->GetAsyncKeyState(2);
-    keys.set(GHOST_kModifierKeyLeftControl, down || isCtrlPressed);
+    keys.set(GHOST_kModifierKeyLeftControl, down || isCtrlPressed || m_pendingCtrl);
     down = false;//(::GetAsyncKeyState(VK_RCONTROL)) != 0;
     keys.set(GHOST_kModifierKeyRightControl, down);
     bool down3 = down;
