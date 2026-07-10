@@ -1650,7 +1650,7 @@ void GHOST_SystemAndroid::setValue(int values[], int num) {
                     new GHOST_EventButton(currentTime, GHOST_TEventType::GHOST_kEventButtonUp,
                                           window, GHOST_kButtonMaskLeft, td));
         } else if (oblButtonId == 10001) {
-            /* Right mouse click (from 2-finger long-press gesture). */
+            /* Right mouse click (from 2-finger hold gesture). */
             GHOST_SystemAndroid *system = (GHOST_SystemAndroid *) GHOST_ISystem::getSystem();
             GHOST_TabletData td;
             uint64_t currentTime = system->getMilliSeconds();
@@ -1660,6 +1660,14 @@ void GHOST_SystemAndroid::setValue(int values[], int num) {
             system->pushEvent(
                     new GHOST_EventButton(currentTime, GHOST_TEventType::GHOST_kEventButtonUp,
                                           window, GHOST_kButtonMaskRight, td));
+        } else if (oblButtonId == 10002) {
+            /* Scroll up (pinch-to-zoom in). */
+            GHOST_EventWheel *eventKey = new GHOST_EventWheel(getMilliSeconds(), window, 5);
+            pushEvent(eventKey);
+        } else if (oblButtonId == 10003) {
+            /* Scroll down (pinch-to-zoom out). */
+            GHOST_EventWheel *eventKey = new GHOST_EventWheel(getMilliSeconds(), window, -5);
+            pushEvent(eventKey);
         }
     }
 }
