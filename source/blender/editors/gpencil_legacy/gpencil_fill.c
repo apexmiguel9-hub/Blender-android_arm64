@@ -1283,12 +1283,12 @@ static bool gpencil_render_offscreen(tGPDfill *tgpf)
 
   /* Flush GPU pipeline before switching framebuffers.
    * Mali-G52 can hang if the GPencil engine's RGBA16F framebuffer operations
-   * overlap with the fill offscreen (RGBA8) creation. */
+   * overlap with the fill offscreen creation. Use matching RGBA16F format. */
   GPU_finish();
   GP_FILL_LOG("CP03a render_offscreen: GPU flushed before offscreen_create");
   char err_out[256] = "unknown";
   GPUOffScreen *offscreen = GPU_offscreen_create(
-      tgpf->sizex, tgpf->sizey, false, GPU_RGBA8, GPU_TEXTURE_USAGE_HOST_READ, err_out);
+      tgpf->sizex, tgpf->sizey, true, GPU_RGBA16F, GPU_TEXTURE_USAGE_HOST_READ, err_out);
   if (offscreen == NULL) {
     GP_FILL_LOG("CP03a render_offscreen: FAILED to create offscreen: %s", err_out);
     return false;
