@@ -1155,9 +1155,9 @@ static void gpencil_draw_datablock(tGPDfill *tgpf, const float ink[4])
   const int gpl_active_index = BLI_findindex(&gpd->layers, gpl_active);
   BLI_assert(gpl_active_index >= 0);
 
-  /* Draw blue point where click with mouse. */
-  draw_mouse_position(tgpf);
-
+  /* Blue seed pixel is set directly in the ImBuf after gpencil_render_offscreen
+   * returns (see gpencil_do_frame_fill), instead of drawing it here, because the
+   * 3D projection may not match the zoomed offscreen projection. */
   LISTBASE_FOREACH (bGPDlayer *, gpl, &gpd->layers) {
     /* do not draw layer if hidden */
     if (gpl->flag & GP_LAYER_HIDE) {
@@ -2830,8 +2830,8 @@ static bool gpencil_do_frame_fill(tGPDfill *tgpf, const bool is_inverted)
       void *lock;
       ImBuf *ibuf = BKE_image_acquire_ibuf(tgpf->ima, NULL, &lock);
       if (ibuf) {
-        int mx = (int)(tgpf->mouse[0] / tgpf->zoom);
-        int my = (int)(tgpf->mouse[1] / tgpf->zoom);
+        int mx = (int)(tgpf->mval[0] / tgpf->zoom);
+        int my = (int)(tgpf->mval[1] / tgpf->zoom);
         CLAMP(mx, 0, ibuf->x - 1);
         CLAMP(my, 0, ibuf->y - 1);
         int pixel_idx = my * ibuf->x + mx;
