@@ -14,7 +14,7 @@
 
 #ifdef __ANDROID__
 #include <android/log.h>
-#include <epoxy/gl.h>
+#include <GLES3/gl3.h>
 
 /* Synchronous file logging to survive device reboot.
  * Writes to HOME/gp_crash3.log with fflush+fsync after every line.
