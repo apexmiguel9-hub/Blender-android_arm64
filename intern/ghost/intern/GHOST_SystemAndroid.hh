@@ -191,4 +191,8 @@ public:
     float m_mtPrevDist = 0.0f;
     bool m_mtGestureHandled = false;
     bool m_mtActive = false;
+    float m_mtPrevCenterX = 0.0f;
+    float m_mtPrevCenterY = 0.0f;
+    bool m_mtDragActive = false;
+    bool m_mtCleanupDone = false;
 };
