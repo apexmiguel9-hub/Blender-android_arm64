@@ -1088,12 +1088,15 @@ static int32_t engine_handle_input(struct android_app *app, AInputEvent *event) 
                                 if (idx < (int)pointerCount) remaining = pointerCount - 1;
                             }
                             if (remaining < 2) {
-                                if (!system->m_mtCleanupDone) {
+                                /* In orbit mode on POINTER_UP: don't cleanup yet.
+                                   The second finger may lift while the first continues orbiting. */
+                                bool doCleanup = !(system->m_mtOrbitMode && actionMasked == AMOTION_EVENT_ACTION_POINTER_UP);
+                                if (doCleanup && !system->m_mtCleanupDone) {
                                     system->m_mtCleanupDone = true;
                                     GHOST_WindowAndroid *win = (GHOST_WindowAndroid *)system->getWindowManager()->getActiveWindow();
                                     if (win) {
                                         if (system->m_mtOrbitMode) {
-                                            /* Orbit mode: send middle UP (left already cancelled). */
+                                            /* All fingers lifted: end orbit. */
                                             GHOST_TabletData td;
                                             system->pushEvent(new GHOST_EventButton(now, GHOST_kEventButtonUp, win, GHOST_kButtonMaskMiddle, td));
                                         } else {
@@ -1109,10 +1112,7 @@ static int32_t engine_handle_input(struct android_app *app, AInputEvent *event) 
                                         }
                                     }
                                 }
-                                /* Reset: orbit mode only on ACTION_UP; regular immediately. */
-                                if (!system->m_mtOrbitMode ||
-                                    actionMasked == AMOTION_EVENT_ACTION_UP ||
-                                    actionMasked == AMOTION_EVENT_ACTION_CANCEL) {
+                                if (doCleanup) {
                                     system->m_mtActive = false;
                                     system->m_mtFingerCount = 0;
                                     system->m_mtPointerCount = 0;
@@ -1132,6 +1132,31 @@ static int32_t engine_handle_input(struct android_app *app, AInputEvent *event) 
                     if (actionMasked == AMOTION_EVENT_ACTION_DOWN) {
                         system->m_mtFirstFingerDownTime = now;
                     }
+
+                    /* If orbit mode is active, intercept events to continue orbiting
+                       even after the second finger lifted. */
+                    if (system->m_mtOrbitMode) {
+                        GHOST_WindowAndroid *win = (GHOST_WindowAndroid *)system->getWindowManager()->getActiveWindow();
+                        if (win) {
+                            GHOST_TabletData td;
+                            if (actionMasked == AMOTION_EVENT_ACTION_MOVE) {
+                                float fx = AMotionEvent_getX(event, 0);
+                                float fy = AMotionEvent_getY(event, 0);
+                                system->pushEvent(new GHOST_EventCursor(now, GHOST_kEventCursorMove, win, fx, fy, td));
+                                return 1;
+                            }
+                            if (actionMasked == AMOTION_EVENT_ACTION_UP || actionMasked == AMOTION_EVENT_ACTION_CANCEL) {
+                                system->pushEvent(new GHOST_EventButton(now, GHOST_kEventButtonUp, win, GHOST_kButtonMaskMiddle, td));
+                                system->m_mtOrbitMode = false;
+                                system->m_mtActive = false;
+                                system->m_mtFingerCount = 0;
+                                system->m_mtDragActive = false;
+                                system->m_mtCleanupDone = false;
+                                return 1;
+                            }
+                        }
+                    }
+
                     bool ret = processButtonEvent(app, event);
                     if (ret){
                         return 1;
