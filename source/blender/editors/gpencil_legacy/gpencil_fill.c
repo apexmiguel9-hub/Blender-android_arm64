@@ -1288,7 +1288,7 @@ static bool gpencil_render_offscreen(tGPDfill *tgpf)
   GP_FILL_LOG("CP03a render_offscreen: GPU flushed before offscreen_create");
   char err_out[256] = "unknown";
   GPUOffScreen *offscreen = GPU_offscreen_create(
-      tgpf->sizex, tgpf->sizey, true, GPU_RGBA8, GPU_TEXTURE_USAGE_HOST_READ, err_out);
+      tgpf->sizex, tgpf->sizey, false, GPU_RGBA8, GPU_TEXTURE_USAGE_HOST_READ, err_out);
   if (offscreen == NULL) {
     GP_FILL_LOG("CP03a render_offscreen: FAILED to create offscreen: %s", err_out);
     return false;
@@ -1353,20 +1353,6 @@ static bool gpencil_render_offscreen(tGPDfill *tgpf)
   GPU_matrix_push();
   GPU_matrix_identity_set();
 
-  /* Reset GPU state that might have been left dirty by the GP engine.
-   * Mali GPU can hang if stale buffer texture bindings (from freed sbuffer VBOs)
-   * or stale depth/stencil/blend state are inherited from the previous viewport render pass. */
-  GPU_depth_test(GPU_DEPTH_NONE);
-  GPU_stencil_test(GPU_STENCIL_NONE);
-  GPU_blend(GPU_BLEND_NONE);
-  GPU_color_mask(true, true, true, true);
-  GPU_scissor_test(false);
-  GPU_texture_unbind_all();
-  GPU_depth_mask(true);
-  GPU_clear_color(0.0f, 0.0f, 0.0f, 0.0f);
-  GPU_clear_depth(1.0f);
-  GP_FILL_LOG("CP09 render_offscreen: cleared, saving rv3d matrices");
-
   /* Save original rv3d matrices to restore after offscreen render. */
   struct RV3DMatrixStore *saved_mats = ED_view3d_mats_rv3d_backup(tgpf->rv3d);
 
@@ -1392,16 +1378,6 @@ static bool gpencil_render_offscreen(tGPDfill *tgpf)
   GPU_matrix_pop();
   GP_FILL_LOG("CP14 render_offscreen: GPU matrices popped");
 
-  /* Flush draw commands and reset GPU state before readback.
-   * Mali G52 can hang if read_color runs while draw state from
-   * gpencil_draw_datablock is still partially in-flight or
-   * stale texture bindings remain. */
-  GPU_finish();
-  GPU_blend(GPU_BLEND_NONE);
-  GPU_texture_unbind_all();
-  GPU_depth_test(GPU_DEPTH_NONE);
-  GPU_stencil_test(GPU_STENCIL_NONE);
-  GP_FILL_LOG("CP14a render_offscreen: GPU flushed and state reset for readback");
 
   /* create a image to see result of template */
   if (ibuf->rect_float) {

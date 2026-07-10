@@ -1058,10 +1058,7 @@ static int32_t engine_handle_input(struct android_app *app, AInputEvent *event) 
                                         __android_log_print(ANDROID_LOG_INFO, "OBL.ZOOM",
                                             "ZOOM TRIGGERED! step=%d", step);
                                         char utf8_char[6] = {0};
-                                        system->m_pendingCtrl = true;
-                                        system->pushEvent(new GHOST_EventKey(now, GHOST_kEventKeyDown, win, GHOST_kKeyLeftControl, false, utf8_char));
                                         system->pushEvent(new GHOST_EventWheel(now, win, step));
-                                        system->pushEvent(new GHOST_EventKey(now, GHOST_kEventKeyUp, win, GHOST_kKeyLeftControl, false, utf8_char));
                                         system->m_mtPrevDist += step * 5.0f;
                                         system->m_mtGestureHandled = true;
                                     }
