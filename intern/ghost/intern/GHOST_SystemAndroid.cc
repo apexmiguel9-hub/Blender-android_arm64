@@ -1006,8 +1006,8 @@ static int32_t engine_handle_input(struct android_app *app, AInputEvent *event) 
                                         system->pushEvent(new GHOST_EventButton(now, GHOST_kEventButtonDown, win, GHOST_kButtonMaskMiddle, td));
                                     }
                                 } else {
-                                    /* Quick 2-finger gesture: cancel the first finger's pending LEFT DOWN
-                                       so zoom works cleanly (LEFT held + scroll = brush in Sculpt). */
+                                    /* Cancel the first finger's pending LEFT DOWN so zoom works cleanly
+                                       (LEFT held + scroll = brush in Sculpt). Right-click is via floating button only. */
                                     uint64_t firstFingerAge = now - system->m_mtFirstFingerDownTime;
                                     if (firstFingerAge < 5000 && firstFingerAge > 5) {
                                         GHOST_WindowAndroid *win = (GHOST_WindowAndroid *)system->getWindowManager()->getActiveWindow();
@@ -1100,15 +1100,8 @@ static int32_t engine_handle_input(struct android_app *app, AInputEvent *event) 
                                             GHOST_TabletData td;
                                             system->pushEvent(new GHOST_EventButton(now, GHOST_kEventButtonUp, win, GHOST_kButtonMaskMiddle, td));
                                         } else {
-                                            GHOST_TabletData td;
-                                            /* 2-finger tap (<300ms) or hold (≥1000ms) with no movement → Right-click.
-                                               LEFT was already cancelled on multi-touch start (so zoom works in
-                                               Sculpt), thus right-click fires with left cleanly released. */
-                                            if (!system->m_mtGestureHandled && system->m_mtFingerCount <= 2 && !moved &&
-                                                (elapsed < 300 || elapsed >= 1000)) {
-                                                system->pushEvent(new GHOST_EventButton(now, GHOST_kEventButtonDown, win, GHOST_kButtonMaskRight, td));
-                                                system->pushEvent(new GHOST_EventButton(now, GHOST_kEventButtonUp, win, GHOST_kButtonMaskRight, td));
-                                            }
+                                            /* 2-finger gestures only handled in gesture processing
+                                               (zoom/orbit). Right-click is via the floating button only. */
                                         }
                                     }
                                 }
