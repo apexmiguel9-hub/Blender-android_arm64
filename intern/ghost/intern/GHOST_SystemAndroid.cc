@@ -1668,6 +1668,32 @@ void GHOST_SystemAndroid::setValue(int values[], int num) {
             /* Scroll down (pinch-to-zoom out). */
             GHOST_EventWheel *eventKey = new GHOST_EventWheel(getMilliSeconds(), window, -5);
             pushEvent(eventKey);
+        } else if (oblButtonId == 10004) {
+            /* Undo: Ctrl+Z */
+            isCtrlPressed = true;
+            {
+                GHOST_EventKey *eventKeyDown = new GHOST_EventKey(
+                    getMilliSeconds(), GHOST_kEventKeyDown, window, GHOST_kKeyZ, false, utf8_char);
+                pushEvent(eventKeyDown);
+                GHOST_EventKey *eventKeyUp = new GHOST_EventKey(
+                    getMilliSeconds(), GHOST_kEventKeyUp, window, GHOST_kKeyZ, false, utf8_char);
+                pushEvent(eventKeyUp);
+            }
+            isCtrlPressed = false;
+        } else if (oblButtonId == 10005) {
+            /* Redo: Shift+Ctrl+Z */
+            isCtrlPressed = true;
+            isShiftPressed = true;
+            {
+                GHOST_EventKey *eventKeyDown = new GHOST_EventKey(
+                    getMilliSeconds(), GHOST_kEventKeyDown, window, GHOST_kKeyZ, false, utf8_char);
+                pushEvent(eventKeyDown);
+                GHOST_EventKey *eventKeyUp = new GHOST_EventKey(
+                    getMilliSeconds(), GHOST_kEventKeyUp, window, GHOST_kKeyZ, false, utf8_char);
+                pushEvent(eventKeyUp);
+            }
+            isCtrlPressed = false;
+            isShiftPressed = false;
         }
     }
 }
