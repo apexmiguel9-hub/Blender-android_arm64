@@ -182,4 +182,13 @@ public:
     static GHOST_TButton currentButton(android_app *app);
 
     std::queue<KeyEventStatus> m_keyEventStatus;
+
+    /* Multi-touch gesture state (tracked across input events). */
+    int m_mtFingerCount = 0;
+    int m_mtPointerCount = 0;
+    uint64_t m_mtStartTime = 0;
+    float m_mtStartDist = 0.0f;
+    float m_mtPrevDist = 0.0f;
+    bool m_mtGestureHandled = false;
+    bool m_mtActive = false;
 };

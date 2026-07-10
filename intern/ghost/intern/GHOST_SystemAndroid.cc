@@ -14,6 +14,7 @@
 #include <zconf.h>
 #include <android/native_window.h>
 #include <android/native_window_jni.h>
+#include <cmath>
 
 static CLG_LogRef LOG = {"Ghost.wm"};
 
@@ -953,8 +954,147 @@ static int32_t engine_handle_input(struct android_app *app, AInputEvent *event) 
                 }
                     break;
                 case AINPUT_SOURCE_TOUCHSCREEN: {
-                    // CLOG_ERROR(&LOG, "交互engine_handle_input 5");
-                    //  消息来源于触摸屏
+                    GHOST_SystemAndroid *system = (GHOST_SystemAndroid *) GHOST_ISystem::getSystem();
+                    int32_t action = AMotionEvent_getAction(event);
+                    int32_t actionMasked = action & AMOTION_EVENT_ACTION_MASK;
+                    uint32_t pointerCount = AMotionEvent_getPointerCount(event);
+                    uint64_t now = system ? system->getMilliSeconds() : 0;
+
+                    /* ---- Multi-touch gesture interception ---- */
+                    if (pointerCount >= 2 || system->m_mtActive) {
+                        /* If transitioning from 1→2 fingers, cancel any pending mouse stroke. */
+                        if (!system->m_mtActive && system->m_mtPointerCount == 0) {
+                            GHOST_WindowAndroid *win = (GHOST_WindowAndroid *)system->getWindowManager()->getActiveWindow();
+                            if (win) {
+                                GHOST_TabletData td;
+                                system->pushEvent(new GHOST_EventButton(now, GHOST_kEventButtonUp, win, GHOST_kButtonMaskLeft, td));
+                            }
+                        }
+
+                        /* Set up gesture state on first multi-touch event. */
+                        if (!system->m_mtActive) {
+                            system->m_mtActive = true;
+                            system->m_mtFingerCount = pointerCount;
+                            system->m_mtStartTime = now;
+                            system->m_mtGestureHandled = false;
+                            system->m_mtStartDist = 0.0f;
+                            system->m_mtPrevDist = 0.0f;
+                            if (pointerCount >= 2) {
+                                float dx = AMotionEvent_getX(event, 0) - AMotionEvent_getX(event, 1);
+                                float dy = AMotionEvent_getY(event, 0) - AMotionEvent_getY(event, 1);
+                                system->m_mtStartDist = sqrtf(dx * dx + dy * dy);
+                                system->m_mtPrevDist = system->m_mtStartDist;
+                            }
+                        }
+
+                        system->m_mtPointerCount = pointerCount;
+                        if (pointerCount > system->m_mtFingerCount) {
+                            system->m_mtFingerCount = pointerCount;
+                        }
+
+                        uint64_t elapsed = now - system->m_mtStartTime;
+                        bool moved = false;
+                        float dist = 0.0f;
+
+                        /* Check if fingers have moved (using history). */
+                        if (pointerCount >= 2 && AMotionEvent_getHistorySize(event) > 0) {
+                            for (uint32_t i = 0; i < pointerCount; i++) {
+                                float dx = AMotionEvent_getX(event, i) - AMotionEvent_getHistoricalX(event, i, 0);
+                                float dy = AMotionEvent_getY(event, i) - AMotionEvent_getHistoricalY(event, i, 0);
+                                if (dx * dx + dy * dy > 100.0f) {
+                                    moved = true;
+                                    break;
+                                }
+                            }
+                        }
+
+                        /* Calculate current distance between first two pointers. */
+                        if (pointerCount >= 2) {
+                            float dx = AMotionEvent_getX(event, 0) - AMotionEvent_getX(event, 1);
+                            float dy = AMotionEvent_getY(event, 0) - AMotionEvent_getY(event, 1);
+                            dist = sqrtf(dx * dx + dy * dy);
+                        }
+
+                        /* 2-finger pinch → zoom (scroll). */
+                        if (system->m_mtFingerCount == 2 && moved && pointerCount >= 2) {
+                            float diff = dist - system->m_mtPrevDist;
+                            if (fabs(diff) >= 30.0f) {
+                                int steps = (int)(fabs(diff) / 30.0f);
+                                if (steps > 3) steps = 3;
+                                GHOST_WindowAndroid *win = (GHOST_WindowAndroid *)system->getWindowManager()->getActiveWindow();
+                                if (win) {
+                                    for (int i = 0; i < steps; i++) {
+                                        int wheelVal = (diff > 0) ? 5 : -5;
+                                        system->pushEvent(new GHOST_EventWheel(now, win, wheelVal));
+                                    }
+                                }
+                                system->m_mtPrevDist = dist;
+                            }
+                            system->m_mtGestureHandled = true;
+                        }
+
+                        /* 2-finger hold >= 300ms (no movement) → right-click. */
+                        if (system->m_mtFingerCount == 2 && !moved && elapsed >= 300 && !system->m_mtGestureHandled) {
+                            GHOST_WindowAndroid *win = (GHOST_WindowAndroid *)system->getWindowManager()->getActiveWindow();
+                            if (win) {
+                                GHOST_TabletData td;
+                                system->pushEvent(new GHOST_EventButton(now, GHOST_kEventButtonDown, win, GHOST_kButtonMaskRight, td));
+                                system->pushEvent(new GHOST_EventButton(now, GHOST_kEventButtonUp, win, GHOST_kButtonMaskRight, td));
+                            }
+                            system->m_mtGestureHandled = true;
+                        }
+
+                        /* 3-finger hold >= 1000ms (no movement) → redo (Shift+Ctrl+Z). */
+                        if (system->m_mtFingerCount >= 3 && !moved && elapsed >= 1000 && !system->m_mtGestureHandled) {
+                            system->isCtrlPressed = true;
+                            system->isShiftPressed = true;
+                            GHOST_WindowAndroid *win = (GHOST_WindowAndroid *)system->getWindowManager()->getActiveWindow();
+                            if (win) {
+                                char ch[6] = {0};
+                                system->pushEvent(new GHOST_EventKey(now, GHOST_kEventKeyDown, win, GHOST_kKeyZ, false, ch));
+                                system->pushEvent(new GHOST_EventKey(now, GHOST_kEventKeyUp, win, GHOST_kKeyZ, false, ch));
+                            }
+                            system->isCtrlPressed = false;
+                            system->isShiftPressed = false;
+                            system->m_mtGestureHandled = true;
+                        }
+
+                        /* Finger lifted: check if gesture ended. */
+                        if (actionMasked == AMOTION_EVENT_ACTION_UP ||
+                            actionMasked == AMOTION_EVENT_ACTION_POINTER_UP ||
+                            actionMasked == AMOTION_EVENT_ACTION_CANCEL) {
+                            uint32_t remaining = pointerCount;
+                            if (actionMasked == AMOTION_EVENT_ACTION_POINTER_UP) {
+                                int idx = (action & AMOTION_EVENT_ACTION_POINTER_INDEX_MASK) >> AMOTION_EVENT_ACTION_POINTER_INDEX_SHIFT;
+                                if (idx < (int)pointerCount) remaining = pointerCount - 1;
+                            }
+                            if (remaining < 2) {
+                                if (!system->m_mtGestureHandled) {
+                                    /* Quick 3-finger tap (< 300ms) → Undo (Ctrl+Z). */
+                                    if (system->m_mtFingerCount >= 3 && elapsed < 300) {
+                                        system->isCtrlPressed = true;
+                                        GHOST_WindowAndroid *win = (GHOST_WindowAndroid *)system->getWindowManager()->getActiveWindow();
+                                        if (win) {
+                                            char ch[6] = {0};
+                                            system->pushEvent(new GHOST_EventKey(now, GHOST_kEventKeyDown, win, GHOST_kKeyZ, false, ch));
+                                            system->pushEvent(new GHOST_EventKey(now, GHOST_kEventKeyUp, win, GHOST_kKeyZ, false, ch));
+                                        }
+                                        system->isCtrlPressed = false;
+                                    }
+                                }
+                                /* Reset gesture state. */
+                                system->m_mtActive = false;
+                                system->m_mtFingerCount = 0;
+                                system->m_mtPointerCount = 0;
+                            }
+                        }
+
+                        /* Always consume multi-touch events. */
+                        return 1;
+                    }
+
+                    /* Single-finger: normal processing. */
+                    system->m_mtPointerCount = 0;
                     bool ret = processButtonEvent(app, event);
                     if (ret){
                         return 1;
