@@ -1026,22 +1026,7 @@ static int32_t engine_handle_input(struct android_app *app, AInputEvent *event) 
                             system->m_mtFingerCount = pointerCount;
                         }
 
-                        uint64_t elapsed = now - system->m_mtStartTime;
-                        bool moved = false;
                         float dist = 0.0f;
-
-                        /* Check if any finger moved (using event history). */
-                        if (pointerCount >= 1 && AMotionEvent_getHistorySize(event) > 0) {
-                            uint32_t limit = (pointerCount < 2) ? pointerCount : 2;
-                            for (uint32_t i = 0; i < limit; i++) {
-                                float dx = AMotionEvent_getX(event, i) - AMotionEvent_getHistoricalX(event, i, 0);
-                                float dy = AMotionEvent_getY(event, i) - AMotionEvent_getHistoricalY(event, i, 0);
-                                if (dx * dx + dy * dy > 100.0f) {
-                                    moved = true;
-                                    break;
-                                }
-                            }
-                        }
 
                         /* Current distance between first two pointers. */
                         if (pointerCount >= 2 && !system->m_mtOrbitMode) {
@@ -1065,8 +1050,11 @@ static int32_t engine_handle_input(struct android_app *app, AInputEvent *event) 
                                     system->m_mtGestureHandled = true;  /* Prevent zoom in same event. */
                                 }
 
-                                /* 2-finger drag → Zoom (scroll) — Ctrl+Wheel for smooth zoom. */
-                                if (!system->m_mtGestureHandled && !system->m_mtOrbitMode && moved && pointerCount >= 2) {
+                                /* 2-finger drag → Zoom (scroll) — Ctrl+Wheel for smooth zoom.
+                                 * NOTE: NOT gated on `moved` because individual finger displacement
+                                 * can be <10px even when pinch distance change is >=5px (each finger
+                                 * moves ~3px in opposite directions = ~6px total distance delta). */
+                                if (!system->m_mtGestureHandled && !system->m_mtOrbitMode && pointerCount >= 2) {
                                     float diff = dist - system->m_mtPrevDist;
                                     if (fabs(diff) >= 5.0f) {
                                         int step = (diff > 0) ? 1 : -1;
