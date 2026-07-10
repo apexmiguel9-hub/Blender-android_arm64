@@ -1069,7 +1069,7 @@ static int32_t engine_handle_input(struct android_app *app, AInputEvent *event) 
                                 if (!system->m_mtGestureHandled && !system->m_mtOrbitMode && moved && pointerCount >= 2) {
                                     float diff = dist - system->m_mtPrevDist;
                                     if (fabs(diff) >= 5.0f) {
-                                        int step = (diff > 0) ? -1 : 1;
+                                        int step = (diff > 0) ? 1 : -1;
                                         system->pushEvent(new GHOST_EventWheel(now, win, step));
                                         system->m_mtPrevDist += step * 5.0f;
                                         system->m_mtGestureHandled = true;
@@ -1102,18 +1102,12 @@ static int32_t engine_handle_input(struct android_app *app, AInputEvent *event) 
                                         } else {
                                             GHOST_TabletData td;
                                             /* 2-finger tap (<300ms) or hold (≥1000ms) with no movement → Right-click.
-                                               Re-select at the original first-finger position BEFORE right-clicking,
-                                               so the object is selected when the context menu appears. */
+                                               LEFT was already cancelled on multi-touch start (so zoom works in
+                                               Sculpt), thus right-click fires with left cleanly released. */
                                             if (!system->m_mtGestureHandled && system->m_mtFingerCount <= 2 && !moved &&
                                                 (elapsed < 300 || elapsed >= 1000)) {
-                                                /* Re-select at original touch position. */
-                                                system->pushEvent(new GHOST_EventCursor(now, GHOST_kEventCursorMove, win, system->m_mtFirstDownX, system->m_mtFirstDownY, td));
-                                                system->pushEvent(new GHOST_EventButton(now, GHOST_kEventButtonDown, win, GHOST_kButtonMaskLeft, td));
-                                                /* Right-click. */
                                                 system->pushEvent(new GHOST_EventButton(now, GHOST_kEventButtonDown, win, GHOST_kButtonMaskRight, td));
                                                 system->pushEvent(new GHOST_EventButton(now, GHOST_kEventButtonUp, win, GHOST_kButtonMaskRight, td));
-                                                /* Release re-select. */
-                                                system->pushEvent(new GHOST_EventButton(now, GHOST_kEventButtonUp, win, GHOST_kButtonMaskLeft, td));
                                             }
                                         }
                                     }
@@ -1137,8 +1131,6 @@ static int32_t engine_handle_input(struct android_app *app, AInputEvent *event) 
                     system->m_mtPointerCount = 0;
                     if (actionMasked == AMOTION_EVENT_ACTION_DOWN) {
                         system->m_mtFirstFingerDownTime = now;
-                        system->m_mtFirstDownX = AMotionEvent_getX(event, 0);
-                        system->m_mtFirstDownY = AMotionEvent_getY(event, 0);
                     }
 
                     /* If orbit mode is active, intercept events to continue orbiting
