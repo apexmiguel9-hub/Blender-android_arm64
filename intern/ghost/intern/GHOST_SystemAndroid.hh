@@ -198,6 +198,8 @@ public:
     bool m_mtCleanupDone = false;
     bool m_mtOrbitMode = false;
     uint64_t m_mtFirstFingerDownTime = 0;
+    float m_mtFirstDownX = 0.0f;
+    float m_mtFirstDownY = 0.0f;
 
     /* Pending modifier state (set before pushing key events, cleared after dispatchEvents). */
     bool m_pendingCtrl = false;
