@@ -1006,9 +1006,17 @@ static int32_t engine_handle_input(struct android_app *app, AInputEvent *event) 
                                         system->pushEvent(new GHOST_EventButton(now, GHOST_kEventButtonDown, win, GHOST_kButtonMaskMiddle, td));
                                     }
                                 } else {
-                                    /* Quick 2-finger gesture: nothing to cancel here. LEFT stays down
-                                       throughout the gesture so the object remains selected. RIGHT will be
-                                       sent BEFORE LEFT UP at gesture end. */
+                                    /* Quick 2-finger gesture: cancel the first finger's pending LEFT DOWN
+                                       so zoom works cleanly (LEFT held + scroll = brush in Sculpt). */
+                                    uint64_t firstFingerAge = now - system->m_mtFirstFingerDownTime;
+                                    if (firstFingerAge < 5000 && firstFingerAge > 5) {
+                                        GHOST_WindowAndroid *win = (GHOST_WindowAndroid *)system->getWindowManager()->getActiveWindow();
+                                        if (win) {
+                                            GHOST_TabletData td;
+                                            system->pushEvent(new GHOST_EventCursor(now, GHOST_kEventCursorMove, win, x0, y0, td));
+                                            system->pushEvent(new GHOST_EventButton(now, GHOST_kEventButtonUp, win, GHOST_kButtonMaskLeft, td));
+                                        }
+                                    }
                                 }
                             }
                         }
@@ -1090,13 +1098,13 @@ static int32_t engine_handle_input(struct android_app *app, AInputEvent *event) 
                                             system->pushEvent(new GHOST_EventButton(now, GHOST_kEventButtonUp, win, GHOST_kButtonMaskMiddle, td));
                                         } else {
                                             GHOST_TabletData td;
-                                            /* 2-finger quick tap (no movement, <300ms) → Right-click.
-                                               RIGHT fires BEFORE LEFT UP so the context menu appears
-                                               while the object is still selected (LEFT still held). */
-                                            if (!system->m_mtGestureHandled && system->m_mtFingerCount <= 2 && !moved && elapsed < 300) {
+                                            /* 2-finger tap (<300ms) or hold (≥1000ms) with no movement → Right-click.
+                                               LEFT was already cancelled on multi-touch start, so right-click
+                                               fires with left cleanly released → context menu works. */
+                                            if (!system->m_mtGestureHandled && system->m_mtFingerCount <= 2 && !moved &&
+                                                (elapsed < 300 || elapsed >= 1000)) {
                                                 system->pushEvent(new GHOST_EventButton(now, GHOST_kEventButtonDown, win, GHOST_kButtonMaskRight, td));
                                                 system->pushEvent(new GHOST_EventButton(now, GHOST_kEventButtonUp, win, GHOST_kButtonMaskRight, td));
-                                                system->pushEvent(new GHOST_EventButton(now, GHOST_kEventButtonUp, win, GHOST_kButtonMaskLeft, td));
                                             }
                                         }
                                     }
