@@ -1005,6 +1005,19 @@ static int32_t engine_handle_input(struct android_app *app, AInputEvent *event) 
                                         system->pushEvent(new GHOST_EventCursor(now, GHOST_kEventCursorMove, win, cx, cy, td));
                                         system->pushEvent(new GHOST_EventButton(now, GHOST_kEventButtonDown, win, GHOST_kButtonMaskMiddle, td));
                                     }
+                                } else {
+                                    /* Quick 2-finger gesture: cancel the first finger's pending LEFT DOWN
+                                       to avoid phantom select/deselect and allow right-click to work
+                                       while left is up. */
+                                    uint64_t firstFingerAge = now - system->m_mtFirstFingerDownTime;
+                                    if (firstFingerAge < 5000 && firstFingerAge > 5) {
+                                        GHOST_WindowAndroid *win = (GHOST_WindowAndroid *)system->getWindowManager()->getActiveWindow();
+                                        if (win) {
+                                            GHOST_TabletData td;
+                                            system->pushEvent(new GHOST_EventCursor(now, GHOST_kEventCursorMove, win, x0, y0, td));
+                                            system->pushEvent(new GHOST_EventButton(now, GHOST_kEventButtonUp, win, GHOST_kButtonMaskLeft, td));
+                                        }
+                                    }
                                 }
                             }
                         }
@@ -1039,16 +1052,18 @@ static int32_t engine_handle_input(struct android_app *app, AInputEvent *event) 
                         }
 
                         /* ----- GESTURE PROCESSING ----- */
-                        if (!system->m_mtGestureHandled) {
+                        system->m_mtGestureHandled = false;  /* Allow new gesture per event. */
+
+                        {
                             GHOST_WindowAndroid *win = (GHOST_WindowAndroid *)system->getWindowManager()->getActiveWindow();
                             if (win) {
-                                /* ORBIT MODE: single/double finger drag → orbit (middle mouse). */
-                                if (system->m_mtOrbitMode && moved && pointerCount >= 1) {
+                                /* ORBIT MODE: send cursor on every move event for smooth rotation. */
+                                if (system->m_mtOrbitMode && pointerCount >= 1 && actionMasked == AMOTION_EVENT_ACTION_MOVE) {
                                     float fx = AMotionEvent_getX(event, 0);
                                     float fy = AMotionEvent_getY(event, 0);
                                     GHOST_TabletData td;
                                     system->pushEvent(new GHOST_EventCursor(now, GHOST_kEventCursorMove, win, fx, fy, td));
-                                    /* Don't set m_mtGestureHandled − orbit needs continuous moves. */
+                                    system->m_mtGestureHandled = true;  /* Prevent zoom in same event. */
                                 }
 
                                 /* 2-finger drag → Zoom (scroll). */
@@ -1084,13 +1099,13 @@ static int32_t engine_handle_input(struct android_app *app, AInputEvent *event) 
                                             system->pushEvent(new GHOST_EventButton(now, GHOST_kEventButtonUp, win, GHOST_kButtonMaskMiddle, td));
                                         } else {
                                             GHOST_TabletData td;
-                                            /* 2-finger quick tap (no movement, <300ms) → Right-click (BEFORE left UP to preserve selection). */
+                                            /* 2-finger quick tap (no movement, <300ms) → Right-click.
+                                               LEFT was already cancelled on multi-touch start, so right-click
+                                               fires with left cleanly released → context menu works. */
                                             if (!system->m_mtGestureHandled && system->m_mtFingerCount <= 2 && !moved && elapsed < 300) {
                                                 system->pushEvent(new GHOST_EventButton(now, GHOST_kEventButtonDown, win, GHOST_kButtonMaskRight, td));
                                                 system->pushEvent(new GHOST_EventButton(now, GHOST_kEventButtonUp, win, GHOST_kButtonMaskRight, td));
                                             }
-                                            /* Then clean up first finger's left DOWN. */
-                                            system->pushEvent(new GHOST_EventButton(now, GHOST_kEventButtonUp, win, GHOST_kButtonMaskLeft, td));
                                         }
                                     }
                                 }
