@@ -1392,6 +1392,17 @@ static bool gpencil_render_offscreen(tGPDfill *tgpf)
   GPU_matrix_pop();
   GP_FILL_LOG("CP14 render_offscreen: GPU matrices popped");
 
+  /* Flush draw commands and reset GPU state before readback.
+   * Mali G52 can hang if read_color runs while draw state from
+   * gpencil_draw_datablock is still partially in-flight or
+   * stale texture bindings remain. */
+  GPU_finish();
+  GPU_blend(GPU_BLEND_NONE);
+  GPU_texture_unbind_all();
+  GPU_depth_test(GPU_DEPTH_NONE);
+  GPU_stencil_test(GPU_STENCIL_NONE);
+  GP_FILL_LOG("CP14a render_offscreen: GPU flushed and state reset for readback");
+
   /* create a image to see result of template */
   if (ibuf->rect_float) {
     GPU_offscreen_read_color(offscreen, GPU_DATA_FLOAT, ibuf->rect_float);
