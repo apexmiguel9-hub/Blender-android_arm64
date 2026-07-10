@@ -1048,19 +1048,16 @@ static int32_t engine_handle_input(struct android_app *app, AInputEvent *event) 
                                     float fy = AMotionEvent_getY(event, 0);
                                     GHOST_TabletData td;
                                     system->pushEvent(new GHOST_EventCursor(now, GHOST_kEventCursorMove, win, fx, fy, td));
-                                    system->m_mtGestureHandled = true;
+                                    /* Don't set m_mtGestureHandled − orbit needs continuous moves. */
                                 }
 
                                 /* 2-finger drag → Zoom (scroll). */
                                 if (!system->m_mtGestureHandled && !system->m_mtOrbitMode && moved && pointerCount >= 2) {
                                     float diff = dist - system->m_mtPrevDist;
-                                    if (fabs(diff) >= 20.0f) {
-                                        int steps = (int)(fabs(diff) / 20.0f);
-                                        if (steps > 3) steps = 3;
-                                        for (int i = 0; i < steps; i++) {
-                                            system->pushEvent(new GHOST_EventWheel(now, win, (diff > 0) ? 5 : -5));
-                                        }
-                                        system->m_mtPrevDist = dist;
+                                    if (fabs(diff) >= 5.0f) {
+                                        int step = (diff > 0) ? 1 : -1;
+                                        system->pushEvent(new GHOST_EventWheel(now, win, step));
+                                        system->m_mtPrevDist += step * 5.0f;
                                         system->m_mtGestureHandled = true;
                                     }
                                 }
@@ -1086,14 +1083,14 @@ static int32_t engine_handle_input(struct android_app *app, AInputEvent *event) 
                                             GHOST_TabletData td;
                                             system->pushEvent(new GHOST_EventButton(now, GHOST_kEventButtonUp, win, GHOST_kButtonMaskMiddle, td));
                                         } else {
-                                            /* Regular mode: clean up first finger's left DOWN. */
                                             GHOST_TabletData td;
-                                            system->pushEvent(new GHOST_EventButton(now, GHOST_kEventButtonUp, win, GHOST_kButtonMaskLeft, td));
-                                            /* 2-finger quick tap (no movement, <300ms) → Right-click. */
+                                            /* 2-finger quick tap (no movement, <300ms) → Right-click (BEFORE left UP to preserve selection). */
                                             if (!system->m_mtGestureHandled && system->m_mtFingerCount <= 2 && !moved && elapsed < 300) {
                                                 system->pushEvent(new GHOST_EventButton(now, GHOST_kEventButtonDown, win, GHOST_kButtonMaskRight, td));
                                                 system->pushEvent(new GHOST_EventButton(now, GHOST_kEventButtonUp, win, GHOST_kButtonMaskRight, td));
                                             }
+                                            /* Then clean up first finger's left DOWN. */
+                                            system->pushEvent(new GHOST_EventButton(now, GHOST_kEventButtonUp, win, GHOST_kButtonMaskLeft, td));
                                         }
                                     }
                                 }
