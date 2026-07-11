@@ -14,7 +14,9 @@
 
 #ifdef __ANDROID__
 #include <android/log.h>
-#include "GHOST_SystemAndroid.hh"
+
+/* Centralized crash logger defined in GHOST_SystemAndroid.cc. */
+extern void OBL_log(const char *tag, const char *fmt, ...);
 
 #define GP_FILL_LOG(...) \
   do { \
