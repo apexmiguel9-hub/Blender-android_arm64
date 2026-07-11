@@ -7,6 +7,7 @@
 #include "GHOST_TimerManager.hh"
 #include "GHOST_EventKey.hh"
 #include "GHOST_EventWheel.hh"
+#include "GHOST_EventTrackpad.hh"
 #include "OBLButtonID.h"
 #include <android/input.h>
 #include <android/log.h>
@@ -1050,15 +1051,24 @@ static int32_t engine_handle_input(struct android_app *app, AInputEvent *event) 
                                     system->m_mtGestureHandled = true;  /* Prevent zoom in same event. */
                                 }
 
-                                /* 2-finger drag → Zoom — Ctrl+Wheel for smooth zoom. */
+                                /* 2-finger pinch → Trackpad Zoom (smooth).
+                                 * Uses GHOST_kEventTrackpad with Magnify, which gets coalesced
+                                 * by WM's wm_event_add_trackpad and processed as MOUSEZOOM
+                                 * (smooth zoom via view3d.zoom or view3d.dolly). */
                                 if (!system->m_mtGestureHandled && !system->m_mtOrbitMode && pointerCount >= 2) {
                                     float diff = dist - system->m_mtPrevDist;
                                     if (fabs(diff) >= 5.0f) {
                                         int step = (diff > 0) ? 1 : -1;
                                         __android_log_print(ANDROID_LOG_INFO, "OBL.ZOOM",
-                                            "ZOOM TRIGGERED! step=%d", step);
-                                        char utf8_char[6] = {0};
-                                        system->pushEvent(new GHOST_EventWheel(now, win, step));
+                                            "ZOOM TRIGGERED via Trackpad! step=%d", step);
+                                        system->pushEvent(new GHOST_EventTrackpad(
+                                            now, win,
+                                            GHOST_kTrackpadEventMagnify,
+                                            (int)AMotionEvent_getX(event, 0),
+                                            (int)AMotionEvent_getY(event, 0),
+                                            step * 10, /* deltaX: zoom amount */
+                                            0,          /* deltaY: unused for magnify */
+                                            false));    /* isDirectionInverted */
                                         system->m_mtPrevDist += step * 5.0f;
                                         system->m_mtGestureHandled = true;
                                     }

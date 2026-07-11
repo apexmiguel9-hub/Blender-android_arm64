@@ -14,7 +14,6 @@
 
 #ifdef __ANDROID__
 #include <android/log.h>
-#include <GLES3/gl3.h>
 
 /* Synchronous file logging to survive device reboot.
  * Writes to HOME/gp_crash3.log with fflush+fsync after every line.
@@ -1286,13 +1285,6 @@ static bool gpencil_render_offscreen(tGPDfill *tgpf)
    * Mali-G52 can hang if the GPencil engine's RGBA16F framebuffer operations
    * overlap with the fill offscreen creation. Use matching RGBA16F format. */
   GPU_finish();
-
-  /* Unbind any stale VAO left by the DRW engine's GPencil batch rendering.
-   * When strokes have fill geometry (GP_STROKE_NOFILL unset), the batch's VAO
-   * contains an IBO with triangle indices. If left bound when immediate mode
-   * draws LINE_STRIP, Mali G52 hangs and reboots the device. */
-  glBindVertexArray(0);
-
   GP_FILL_LOG("CP03a render_offscreen: GPU flushed before offscreen_create");
   char err_out[256] = "unknown";
   GPUOffScreen *offscreen = GPU_offscreen_create(
