@@ -7,6 +7,10 @@
 
 #include <string.h>
 
+#ifdef __ANDROID__
+#  include <unistd.h>
+#endif
+
 #include "MEM_guardedalloc.h"
 
 #include "CLG_log.h"
@@ -133,8 +137,24 @@ void ED_undo_push(bContext *C, const char *str)
   /* Only apply limit if this is the last undo step. */
   if (wm->undo_stack->step_active && (wm->undo_stack->step_active->next == nullptr)) {
 #ifdef __ANDROID__
-    /* Limit steps on Android to save RAM. */
-    BKE_undosys_stack_limit_steps_and_memory(wm->undo_stack, 10, 0);
+    {
+      /* Dynamic undo steps based on physical RAM. */
+      long pages = sysconf(_SC_PHYS_PAGES);
+      long page_size = sysconf(_SC_PAGE_SIZE);
+      int64_t total_mb = 0;
+      int max_steps = 10; /* fallback for 4 GB */
+      if (pages > 0 && page_size > 0) {
+        total_mb = ((int64_t)pages * page_size) / (1024 * 1024);
+        if (total_mb >= 14000) {
+          max_steps = 35; /* 16+ GB */
+        } else if (total_mb >= 7000) {
+          max_steps = 25; /* 8 GB */
+        } else if (total_mb >= 3500) {
+          max_steps = 15; /* 4 GB */
+        }
+      }
+      BKE_undosys_stack_limit_steps_and_memory(wm->undo_stack, max_steps, 0);
+    }
 #else
     BKE_undosys_stack_limit_steps_and_memory(wm->undo_stack, steps - 1, 0);
 #endif
@@ -148,8 +168,19 @@ void ED_undo_push(bContext *C, const char *str)
   }
 #ifdef __ANDROID__
   else {
-    /* On Android, cap undo to 256 MB by default to prevent OOM. */
-    BKE_undosys_stack_limit_steps_and_memory(wm->undo_stack, -1, 256 * 1024 * 1024);
+    /* Dynamic undo memory cap based on physical RAM. */
+    long pages = sysconf(_SC_PHYS_PAGES);
+    long page_size = sysconf(_SC_PAGE_SIZE);
+    size_t mem_cap = 128 * 1024 * 1024;
+    if (pages > 0 && page_size > 0) {
+      int64_t total_mb = ((int64_t)pages * page_size) / (1024 * 1024);
+      if (total_mb >= 14000) {
+        mem_cap = 512 * 1024 * 1024;
+      } else if (total_mb >= 7000) {
+        mem_cap = 256 * 1024 * 1024;
+      }
+    }
+    BKE_undosys_stack_limit_steps_and_memory(wm->undo_stack, -1, mem_cap);
   }
 #endif
 
