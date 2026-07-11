@@ -21,6 +21,9 @@
 #endif
 #include "intern/GHOST_CallbackEventConsumer.hh"
 #include "intern/GHOST_XrException.hh"
+#ifdef __ANDROID__
+#  include "GHOST_SystemAndroid.hh"
+#endif
 
 void* g_NativeWindow=nullptr;
 void setNativeWindow(void*nativeWindow){
@@ -1014,6 +1017,18 @@ void GHOST_EndIME(GHOST_WindowHandle windowhandle)
 }
 
 #endif /* WITH_INPUT_IME */
+
+void GHOST_SetAndroidViewportBounds(
+    int32_t xmin, int32_t ymin, int32_t xmax, int32_t ymax)
+{
+#ifdef __ANDROID__
+  GHOST_ISystem *system = GHOST_ISystem::getSystem();
+  GHOST_SystemAndroid *sys = static_cast<GHOST_SystemAndroid *>(system);
+  sys->setViewportBounds(xmin, ymin, xmax, ymax);
+#else
+  (void)xmin; (void)ymin; (void)xmax; (void)ymax;
+#endif
+}
 
 #ifdef WITH_XR_OPENXR
 

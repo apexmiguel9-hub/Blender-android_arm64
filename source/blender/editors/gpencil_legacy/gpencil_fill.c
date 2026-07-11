@@ -1353,6 +1353,19 @@ static bool gpencil_render_offscreen(tGPDfill *tgpf)
   GPU_matrix_push();
   GPU_matrix_identity_set();
 
+  /* Reset GPU state from the viewport render pass. Mali G52 can hang if
+   * stale blend/texture/depth/stencil state is inherited when rendering
+   * into the offscreen FBO. */
+  GPU_depth_test(GPU_DEPTH_NONE);
+  GPU_stencil_test(GPU_STENCIL_NONE);
+  GPU_blend(GPU_BLEND_NONE);
+  GPU_color_mask(true, true, true, true);
+  GPU_scissor_test(false);
+  GPU_texture_unbind_all();
+  GPU_depth_mask(true);
+  GPU_clear_color(0.0f, 0.0f, 0.0f, 0.0f);
+  GPU_clear_depth(1.0f);
+
   /* Save original rv3d matrices to restore after offscreen render. */
   struct RV3DMatrixStore *saved_mats = ED_view3d_mats_rv3d_backup(tgpf->rv3d);
 
@@ -1373,6 +1386,14 @@ static bool gpencil_render_offscreen(tGPDfill *tgpf)
   GP_FILL_LOG("CP13 render_offscreen: gpencil_draw_datablock returned OK");
 
   GPU_depth_mask(false);
+
+  /* Flush and reset GPU state before readback. Mali G52 can hang if
+   * stale draw state from gpencil_draw_datablock is in-flight. */
+  GPU_finish();
+  GPU_blend(GPU_BLEND_NONE);
+  GPU_texture_unbind_all();
+  GPU_depth_test(GPU_DEPTH_NONE);
+  GPU_stencil_test(GPU_STENCIL_NONE);
 
   GPU_matrix_pop_projection();
   GPU_matrix_pop();

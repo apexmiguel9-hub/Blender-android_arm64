@@ -1011,6 +1011,9 @@ extern void GHOST_BeginIME(
  */
 extern void GHOST_EndIME(GHOST_WindowHandle windowhandle);
 
+extern void GHOST_SetAndroidViewportBounds(
+    int32_t xmin, int32_t ymin, int32_t xmax, int32_t ymax);
+
 #ifdef WITH_XR_OPENXR
 
 /* XR-context */

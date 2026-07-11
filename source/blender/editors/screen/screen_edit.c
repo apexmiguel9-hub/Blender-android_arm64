@@ -12,6 +12,8 @@
 
 #include "DNA_object_types.h"
 #include "DNA_scene_types.h"
+#include "DNA_screen_types.h"
+#include "DNA_space_types.h"
 #include "DNA_userdef_types.h"
 #include "DNA_workspace_types.h"
 
@@ -44,6 +46,8 @@
 #include "WM_toolsystem.h"
 
 #include "DEG_depsgraph_query.h"
+
+#include "../../../../intern/ghost/GHOST_C-api.h"
 
 #include "screen_intern.h" /* own module include */
 
@@ -693,6 +697,19 @@ void ED_screen_refresh(wmWindowManager *wm, wmWindow *win)
   screen->winid = win->winid;
 
   screen->context = ed_screen_context;
+
+#ifdef __ANDROID__
+  /* Notify GHOST of the 3D viewport bounds so single-finger drags outside
+   * the viewport can be interpreted as scroll events instead of clicks. */
+  if (win->ghostwin) {
+    ScrArea *v3d_area = BKE_screen_find_big_area(screen, SPACE_VIEW3D, 0);
+    if (v3d_area) {
+      GHOST_SetAndroidViewportBounds(
+          v3d_area->totrct.xmin, v3d_area->totrct.ymin,
+          v3d_area->totrct.xmax, v3d_area->totrct.ymax);
+    }
+  }
+#endif
 }
 
 void ED_screens_init(Main *bmain, wmWindowManager *wm)

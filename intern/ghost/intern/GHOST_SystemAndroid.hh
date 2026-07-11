@@ -199,11 +199,26 @@ public:
     bool m_mtOrbitMode = false;
     uint64_t m_mtFirstFingerDownTime = 0;
 
-    /* Scroll mode: single-finger drag sends wheel events instead of LEFT drag. */
-    bool m_scrollMode = false;
-    float m_scrollLastY = 0.0f;
+  /* Scroll mode: single-finger drag sends wheel events instead of LEFT drag. */
+  bool m_scrollMode = false;
+  float m_scrollLastY = 0.0f;
 
-    /* Pending modifier state (set before pushing key events, cleared after dispatchEvents). */
+  /* Viewport bounds (screen coords). Only the 3D viewport area; everything else is UI/menus. */
+  int32_t m_viewportXMin = 0;
+  int32_t m_viewportYMin = 0;
+  int32_t m_viewportXMax = 600;
+  int32_t m_viewportYMax = 800;
+
+  void setViewportBounds(int32_t xmin, int32_t ymin, int32_t xmax, int32_t ymax);
+
+  /* UI Scroll: single-finger drag outside viewport = wheel events. */
+  bool m_uiScrollActive = false;
+  bool m_uiScrollConsumed = false;
+  float m_uiScrollStartX = 0;
+  float m_uiScrollStartY = 0;
+  float m_uiScrollLastY = 0;
+
+  /* Pending modifier state (set before pushing key events, cleared after dispatchEvents). */
     bool m_pendingCtrl = false;
     bool m_pendingShift = false;
 };
