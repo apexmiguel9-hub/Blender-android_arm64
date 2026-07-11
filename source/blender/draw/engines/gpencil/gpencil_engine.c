@@ -688,11 +688,6 @@ void GPENCIL_cache_finish(void *ved)
   /* Create frame-buffers only if needed. */
   if (pd->tobjects.first) {
     eGPUTextureFormat format = GPU_RGBA16F;
-#ifdef __ANDROID__
-    /* RGBA8 saves ~50% GPU memory vs RGBA16F with no visible quality loss
-     * for GPencil (solid colors, no HDR blending needed). */
-    format = GPU_RGBA8;
-#endif
 
     const float *size = DRW_viewport_size_get();
     pd->depth_tx = DRW_texture_pool_query_2d(

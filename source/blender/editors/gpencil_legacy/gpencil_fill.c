@@ -1288,14 +1288,8 @@ static bool gpencil_render_offscreen(tGPDfill *tgpf)
   GPU_vao_unbind_all();
   GP_FILL_LOG("CP03a render_offscreen: GPU flushed and VAO unbound before offscreen_create");
   char err_out[256] = "unknown";
-#ifdef __ANDROID__
-  /* RGBA8 + no depth saves ~60% GPU memory vs RGBA16F + depth. Half res via fill_factor. */
-  GPUOffScreen *offscreen = GPU_offscreen_create(
-      tgpf->sizex, tgpf->sizey, false, GPU_RGBA8, GPU_TEXTURE_USAGE_HOST_READ, err_out);
-#else
   GPUOffScreen *offscreen = GPU_offscreen_create(
       tgpf->sizex, tgpf->sizey, true, GPU_RGBA16F, GPU_TEXTURE_USAGE_HOST_READ, err_out);
-#endif
   if (offscreen == NULL) {
     GP_FILL_LOG("CP03a render_offscreen: FAILED to create offscreen: %s", err_out);
     return false;
@@ -1304,9 +1298,6 @@ static bool gpencil_render_offscreen(tGPDfill *tgpf)
 
   GPU_offscreen_bind(offscreen, true);
   uint flag = IB_rectfloat;
-#ifdef __ANDROID__
-  flag = IB_rect;
-#endif
   ImBuf *ibuf = IMB_allocImBuf(tgpf->sizex, tgpf->sizey, 32, flag);
 
   rctf viewplane;

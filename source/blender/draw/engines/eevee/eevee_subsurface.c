@@ -142,6 +142,12 @@ void EEVEE_subsurface_cache_init(EEVEE_ViewLayerData *sldata, EEVEE_Data *vedata
   const Scene *scene_eval = DEG_get_evaluated_scene(draw_ctx->depsgraph);
 
   effects->sss_sample_count = 1 + scene_eval->eevee.sss_samples * 2;
+#ifdef __ANDROID__
+  /* Clamp to avoid complex GLSL shaders that Mali G52 cannot compile. */
+  if (effects->sss_sample_count > 5) {
+    effects->sss_sample_count = 5;
+  }
+#endif
   effects->sss_surface_count = 0;
   common_data->sss_jitter_threshold = scene_eval->eevee.sss_jitter_threshold;
 
