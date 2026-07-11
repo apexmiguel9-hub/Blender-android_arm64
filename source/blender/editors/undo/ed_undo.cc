@@ -132,7 +132,12 @@ void ED_undo_push(bContext *C, const char *str)
 
   /* Only apply limit if this is the last undo step. */
   if (wm->undo_stack->step_active && (wm->undo_stack->step_active->next == nullptr)) {
+#ifdef __ANDROID__
+    /* Limit steps on Android to save RAM. */
+    BKE_undosys_stack_limit_steps_and_memory(wm->undo_stack, 10, 0);
+#else
     BKE_undosys_stack_limit_steps_and_memory(wm->undo_stack, steps - 1, 0);
+#endif
   }
 
   push_retval = BKE_undosys_step_push(wm->undo_stack, C, str);
@@ -141,6 +146,12 @@ void ED_undo_push(bContext *C, const char *str)
     const size_t memory_limit = size_t(U.undomemory) * 1024 * 1024;
     BKE_undosys_stack_limit_steps_and_memory(wm->undo_stack, -1, memory_limit);
   }
+#ifdef __ANDROID__
+  else {
+    /* On Android, cap undo to 256 MB by default to prevent OOM. */
+    BKE_undosys_stack_limit_steps_and_memory(wm->undo_stack, -1, 256 * 1024 * 1024);
+  }
+#endif
 
   if (CLOG_CHECK(&LOG, 1)) {
     BKE_undosys_print(wm->undo_stack);

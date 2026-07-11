@@ -2150,6 +2150,19 @@ Scene *BKE_scene_add(Main *bmain, const char *name)
   id_us_min(&sce->id);
   id_us_ensure_real(&sce->id);
 
+#ifdef __ANDROID__
+  /* Reduce Eevee quality defaults for Mali G52 to avoid GLSL compiler
+   * crashes on complex shaders (SSS, volumetrics) and save GPU memory. */
+  sce->eevee.sss_samples = 2;
+  sce->eevee.shadow_cube_size = 128;
+  sce->eevee.shadow_cascade_size = 256;
+  sce->eevee.volumetric_tile_size = 16;
+  sce->eevee.volumetric_samples = 32;
+  sce->eevee.gtao_quality = 0.5f;
+  sce->eevee.taa_samples = 8;
+  sce->eevee.taa_render_samples = 16;
+#endif
+
   return sce;
 }
 
