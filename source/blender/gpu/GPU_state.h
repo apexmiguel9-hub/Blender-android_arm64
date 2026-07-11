@@ -207,6 +207,7 @@ float GPU_line_width_get(void);
 void GPU_flush(void);
 void GPU_finish(void);
 void GPU_apply_state(void);
+void GPU_vao_unbind_all(void);
 
 void GPU_bgl_start(void);
 

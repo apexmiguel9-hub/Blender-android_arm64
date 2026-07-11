@@ -304,6 +304,11 @@ void GPU_apply_state()
   Context::get()->state_manager->apply_state();
 }
 
+void GPU_vao_unbind_all()
+{
+  Context::get()->state_manager->vao_unbind_all();
+}
+
 /** \} */
 
 /* -------------------------------------------------------------------- */

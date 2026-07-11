@@ -1285,7 +1285,8 @@ static bool gpencil_render_offscreen(tGPDfill *tgpf)
    * Mali-G52 can hang if the GPencil engine's RGBA16F framebuffer operations
    * overlap with the fill offscreen creation. Use matching RGBA16F format. */
   GPU_finish();
-  GP_FILL_LOG("CP03a render_offscreen: GPU flushed before offscreen_create");
+  GPU_vao_unbind_all();
+  GP_FILL_LOG("CP03a render_offscreen: GPU flushed and VAO unbound before offscreen_create");
   char err_out[256] = "unknown";
   GPUOffScreen *offscreen = GPU_offscreen_create(
       tgpf->sizex, tgpf->sizey, true, GPU_RGBA16F, GPU_TEXTURE_USAGE_HOST_READ, err_out);

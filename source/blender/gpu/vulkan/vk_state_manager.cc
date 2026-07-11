@@ -102,6 +102,11 @@ void VKStateManager::texture_unbind_all()
   }
 }
 
+void VKStateManager::vao_unbind_all()
+{
+  /* No-op: Vulkan manages vertex buffers through the command buffer, not VAOs. */
+}
+
 void VKStateManager::image_bind(Texture *tex, int binding)
 {
   VKTexture *texture = unwrap(tex);

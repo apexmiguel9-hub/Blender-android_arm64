@@ -158,6 +158,8 @@ class StateManager {
   virtual void image_unbind_all() = 0;
 
   virtual void texture_unpack_row_length_set(uint len) = 0;
+
+  virtual void vao_unbind_all() = 0;
 };
 
 /**

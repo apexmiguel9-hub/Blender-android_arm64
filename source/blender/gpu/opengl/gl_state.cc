@@ -507,6 +507,11 @@ void GLStateManager::texture_unbind_all()
   this->texture_bind_apply();
 }
 
+void GLStateManager::vao_unbind_all()
+{
+  glBindVertexArray(0);
+}
+
 void GLStateManager::texture_bind_apply()
 {
   if (dirty_texture_binds_ == 0) {

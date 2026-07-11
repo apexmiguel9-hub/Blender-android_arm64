@@ -667,6 +667,11 @@ void MTLStateManager::texture_unbind_all()
   ctx->texture_unbind_all(false);
 }
 
+void MTLStateManager::vao_unbind_all()
+{
+  /* No-op: Metal has no vertex array objects. */
+}
+
 /** \} */
 
 /* -------------------------------------------------------------------- */

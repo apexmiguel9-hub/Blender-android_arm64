@@ -326,9 +326,6 @@ void GLBatch::draw(int v_first, int v_count, int i_first, int i_count)
     glEnable(GL_PRIMITIVE_RESTART);
 #endif
   }
-  /* Unbind VAO to prevent stale VAO (with stale IBO) from causing GPU crashes
-   * on subsequent non-batch draws (e.g., GPencil fill offscreen immediate mode). */
-  glBindVertexArray(0);
 }
 
 void GLBatch::draw_indirect(GPUStorageBuf *indirect_buf, intptr_t offset)
@@ -353,7 +350,6 @@ void GLBatch::draw_indirect(GPUStorageBuf *indirect_buf, intptr_t offset)
   }
   /* Unbind. */
   glBindBuffer(GL_DRAW_INDIRECT_BUFFER, 0);
-  glBindVertexArray(0);
 }
 
 void GLBatch::multi_draw_indirect(GPUStorageBuf *indirect_buf,
@@ -381,7 +377,6 @@ void GLBatch::multi_draw_indirect(GPUStorageBuf *indirect_buf,
   }
   /* Unbind. */
   glBindBuffer(GL_DRAW_INDIRECT_BUFFER, 0);
-  glBindVertexArray(0);
 }
 
 /** \} */

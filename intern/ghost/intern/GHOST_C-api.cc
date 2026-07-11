@@ -1023,8 +1023,10 @@ void GHOST_SetAndroidViewportBounds(
 {
 #ifdef __ANDROID__
   GHOST_ISystem *system = GHOST_ISystem::getSystem();
-  GHOST_SystemAndroid *sys = static_cast<GHOST_SystemAndroid *>(system);
-  sys->setViewportBounds(xmin, ymin, xmax, ymax);
+  if (system) {
+    GHOST_SystemAndroid *sys = static_cast<GHOST_SystemAndroid *>(system);
+    sys->setViewportBounds(xmin, ymin, xmax, ymax);
+  }
 #else
   (void)xmin; (void)ymin; (void)xmax; (void)ymax;
 #endif
