@@ -1391,6 +1391,7 @@ static bool gpencil_render_offscreen(tGPDfill *tgpf)
   /* Flush and reset GPU state before readback. Mali G52 can hang if
    * stale draw state from gpencil_draw_datablock is in-flight. */
   GPU_finish();
+  GPU_vao_unbind_all();
   GPU_blend(GPU_BLEND_NONE);
   GPU_texture_unbind_all();
   GPU_depth_test(GPU_DEPTH_NONE);

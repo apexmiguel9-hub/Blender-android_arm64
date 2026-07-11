@@ -1203,10 +1203,13 @@ static int32_t engine_handle_input(struct android_app *app, AInputEvent *event) 
                             GHOST_WindowAndroid *win = (GHOST_WindowAndroid *)system->getWindowManager()->getActiveWindow();
                             if (win) {
                                 if (actionMasked == AMOTION_EVENT_ACTION_MOVE) {
+                                    uint64_t elapsed = now - system->m_mtFirstFingerDownTime;
                                     float dx = x - system->m_uiScrollStartX;
                                     float dy = y - system->m_uiScrollStartY;
                                     float dist = sqrtf(dx * dx + dy * dy);
-                                    if (dist > 10.0f && !system->m_uiScrollConsumed) {
+                                    /* Require both movement AND hold ≥1s to start scroll.
+                                     * Tap (quick lift) = normal click even if finger moves slightly. */
+                                    if (dist > 10.0f && elapsed > 1000 && !system->m_uiScrollConsumed) {
                                         /* Cancel pending LEFT DOWN so we don't get a click+drag. */
                                         GHOST_TabletData td;
                                         system->pushEvent(new GHOST_EventCursor(now, GHOST_kEventCursorMove, win, x, y, td));
