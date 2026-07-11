@@ -224,4 +224,10 @@ public:
   /* Pending modifier state (set before pushing key events, cleared after dispatchEvents). */
     bool m_pendingCtrl = false;
     bool m_pendingShift = false;
+
+  /* Persistent toggle modifier state (set by setValueOn, cleared by setValueOff; NOT cleared by
+   * dispatchEvents). Used by toggle-mode shortcuts (e.g. Shift held via grid). */
+  bool m_heldShift = false;
+  bool m_heldCtrl = false;
+  bool m_heldAlt = false;
 };

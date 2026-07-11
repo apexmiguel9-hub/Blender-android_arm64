@@ -1781,11 +1781,15 @@ void GHOST_SystemAndroid::setValueOn(int values[], int num) {
                                                                         false,
                                                                         utf8_char);
                         pushEvent(eventKeyUp);
-                        /* Track pending modifier state for getModifierKeys(). */
+                        /* Track modifier state for getModifierKeys(). */
                         if (oBLButtonIDGhostKeys[i].ghostTKey == GHOST_kKeyLeftControl) {
                             m_pendingCtrl = true;
+                            m_heldCtrl = true;
                         } else if (oBLButtonIDGhostKeys[i].ghostTKey == GHOST_kKeyLeftShift) {
                             m_pendingShift = true;
+                            m_heldShift = true;
+                        } else if (oblButtonId == OBLButtonID_Alt) {
+                            m_heldAlt = true;
                         }
                         break;
                     }
@@ -1938,11 +1942,15 @@ void GHOST_SystemAndroid::setValueOff(int values[], int num) {
                                                                         false,
                                                                         utf8_char);
                         pushEvent(eventKeyUp);
-                        /* Clear pending modifier state. */
+                        /* Clear pending and persistent modifier state. */
                         if (oBLButtonIDGhostKeys[i].ghostTKey == GHOST_kKeyLeftControl) {
                             m_pendingCtrl = false;
+                            m_heldCtrl = false;
                         } else if (oBLButtonIDGhostKeys[i].ghostTKey == GHOST_kKeyLeftShift) {
                             m_pendingShift = false;
+                            m_heldShift = false;
+                        } else if (oblButtonId == OBLButtonID_Alt) {
+                            m_heldAlt = false;
                         }
                         break;
                     }
@@ -2060,19 +2068,19 @@ GHOST_TSuccess GHOST_SystemAndroid::getModifierKeys(GHOST_ModifierKeys &keys) co
 
     struct android_app *app = (struct android_app *) m_nativeWindow;
     bool down = app->GetAsyncKeyState(0);
-    keys.set(GHOST_kModifierKeyLeftShift, down || isShiftPressed || m_pendingShift);
+    keys.set(GHOST_kModifierKeyLeftShift, down || isShiftPressed || m_pendingShift || m_heldShift);
     down = false;//(::GetAsyncKeyState(VK_RSHIFT)) != 0;
     keys.set(GHOST_kModifierKeyRightShift, down);
     bool down1 = down;
 
     down = app->GetAsyncKeyState(1);
-    keys.set(GHOST_kModifierKeyLeftAlt, down || isAltPressed);
+    keys.set(GHOST_kModifierKeyLeftAlt, down || isAltPressed || m_heldAlt);
     down = false;//(::GetAsyncKeyState(VK_RMENU)) != 0;
     keys.set(GHOST_kModifierKeyRightAlt, down);
     bool down2 = down;
 
     down = app->GetAsyncKeyState(2);
-    keys.set(GHOST_kModifierKeyLeftControl, down || isCtrlPressed || m_pendingCtrl);
+    keys.set(GHOST_kModifierKeyLeftControl, down || isCtrlPressed || m_pendingCtrl || m_heldCtrl);
     down = false;//(::GetAsyncKeyState(VK_RCONTROL)) != 0;
     keys.set(GHOST_kModifierKeyRightControl, down);
     bool down3 = down;
