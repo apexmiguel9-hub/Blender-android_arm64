@@ -18,6 +18,9 @@
 
 #include <queue>
 
+/* Centralized Android crash logger. Writes to logcat + device file. */
+extern "C" void OBL_log(const char *tag, const char *fmt, ...);
+
 class GHOST_WindowAndroid;
 
 struct KeyEventStatus{

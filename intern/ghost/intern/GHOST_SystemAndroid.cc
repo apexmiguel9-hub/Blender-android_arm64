@@ -16,6 +16,122 @@
 #include <android/native_window.h>
 #include <android/native_window_jni.h>
 #include <cmath>
+#include <signal.h>
+#include <stdio.h>
+#include <sys/time.h>
+#include <stdarg.h>
+#include <unistd.h>
+#include <pthread.h>
+
+/* -------------------------------------------------------------------- */
+/** \name Centralized Android Crash & Log System
+ * \{ */
+
+/**
+ * Single-file crash logger with signal handlers.
+ * Writes to /sdcard/com.epai.oblender/blender_crash.log (or HOME/blender_crash.log).
+ * Automatically installed when the shared library loads.
+ */
+
+#define OBL_LOG_TAG "Blender.OBL"
+
+static FILE *obl_log_fp = NULL;
+static pthread_mutex_t obl_log_mutex = PTHREAD_MUTEX_INITIALIZER;
+
+static void obl_open_log(void)
+{
+  if (obl_log_fp) return;
+  char logpath[512];
+  const char *home = getenv("HOME");
+  if (home) {
+    snprintf(logpath, sizeof(logpath), "%s/blender_crash.log", home);
+  } else {
+    snprintf(logpath, sizeof(logpath), "/sdcard/com.epai.oblender/blender_crash.log");
+  }
+  obl_log_fp = fopen(logpath, "ab");
+  if (obl_log_fp) {
+    struct timeval tv;
+    gettimeofday(&tv, NULL);
+    fprintf(obl_log_fp, "\n=== OBL log opened [%ld.%06ld] ===\n",
+            (long)tv.tv_sec, (long)tv.tv_usec);
+    fflush(obl_log_fp);
+  }
+}
+
+void OBL_log(const char *tag, const char *fmt, ...)
+{
+  pthread_mutex_lock(&obl_log_mutex);
+  obl_open_log();
+
+  struct timeval tv;
+  gettimeofday(&tv, NULL);
+
+  va_list args;
+  va_start(args, fmt);
+  __android_log_vprint(ANDROID_LOG_INFO, tag ? tag : OBL_LOG_TAG, fmt, args);
+  va_end(args);
+
+  if (obl_log_fp) {
+    fprintf(obl_log_fp, "[%ld.%06ld] [%s] ", (long)tv.tv_sec, (long)tv.tv_usec, tag ? tag : OBL_LOG_TAG);
+    va_start(args, fmt);
+    vfprintf(obl_log_fp, fmt, args);
+    va_end(args);
+    fputc('\n', obl_log_fp);
+    fflush(obl_log_fp);
+    fsync(fileno(obl_log_fp));
+  }
+  pthread_mutex_unlock(&obl_log_mutex);
+}
+
+/* Crash signal handler: writes backtrace to log, then re-raises. */
+static void obl_crash_handler(int sig)
+{
+  /* Try to flush any buffered logs. */
+  if (obl_log_fp) {
+    fflush(obl_log_fp);
+  }
+
+  /* Re-open log (in case of fork/early crash). */
+  obl_open_log();
+
+  if (obl_log_fp) {
+    struct timeval tv;
+    gettimeofday(&tv, NULL);
+    fprintf(obl_log_fp, "\n=== CRASH signal=%d [%ld.%06ld] ===\n",
+            sig, (long)tv.tv_sec, (long)tv.tv_usec);
+    fprintf(obl_log_fp, "Android PID: %d\n", getpid());
+    fprintf(obl_log_fp, "=== END CRASH ===\n");
+    fflush(obl_log_fp);
+    fsync(fileno(obl_log_fp));
+  }
+
+  /* Re-raise with default handler. */
+  signal(sig, SIG_DFL);
+  raise(sig);
+}
+
+static void obl_install_crash_handler(void)
+{
+  struct sigaction sa;
+  sa.sa_handler = obl_crash_handler;
+  sigemptyset(&sa.sa_mask);
+  sa.sa_flags = SA_RESETHAND; /* prevent infinite loops */
+  sigaction(SIGSEGV, &sa, NULL);
+  sigaction(SIGABRT, &sa, NULL);
+  sigaction(SIGFPE,  &sa, NULL);
+  sigaction(SIGBUS,  &sa, NULL);
+
+  OBL_log("OBL.INIT", "crash handler installed");
+}
+
+__attribute__((constructor))
+static void obl_auto_init(void)
+{
+  obl_open_log();
+  obl_install_crash_handler();
+}
+
+/** \} */
 
 static CLG_LogRef LOG = {"Ghost.wm"};
 
@@ -401,7 +517,7 @@ static int conv_utf_16_to_8(const wchar_t *in16, char *out8, size_t size8) {
 void processStylusEvent(struct android_app *app, AInputEvent *event){
     float pressure=AMotionEvent_getPressure(event,0);
     float size=AMotionEvent_getSize(event,0);
-    __android_log_print(ANDROID_LOG_INFO, "OBL.TOUCH", "stylus pressure=%.4f size=%.4f", pressure, size);
+    OBL_log("OBL.TOUCH", "stylus pressure=%.4f size=%.4f", pressure, size);
 }
 
 //  鼠标事件
@@ -831,7 +947,7 @@ bool processButtonEvent(struct android_app *app, AInputEvent *event) {
         toolType != AMOTION_EVENT_TOOL_TYPE_ERASER) {
       pressure = 1.0f;
     }
-    __android_log_print(ANDROID_LOG_INFO, "OBL.TOUCH", "action=%d x=%.0f y=%.0f pressure=%.4f size=%.4f tool=%d",
+    OBL_log("OBL.TOUCH", "action=%d x=%.0f y=%.0f pressure=%.4f size=%.4f tool=%d",
                         motionaction, msgPosX, msgPosY, pressure, size, toolType);
 
     system->m_x = -1;
@@ -1062,7 +1178,7 @@ static int32_t engine_handle_input(struct android_app *app, AInputEvent *event) 
                                     float diff = dist - system->m_mtPrevDist;
                                     if (fabs(diff) >= 5.0f) {
                                         int step = (diff > 0) ? 1 : -1;
-                                        __android_log_print(ANDROID_LOG_INFO, "OBL.ZOOM",
+                                        OBL_log("OBL.ZOOM",
                                             "ZOOM TRIGGERED via Trackpad! step=%d", step);
                                         system->pushEvent(new GHOST_EventTrackpad(
                                             now, win,
@@ -1536,7 +1652,7 @@ GHOST_SystemAndroid::getMainDisplayDimensions(uint32_t &width, uint32_t &height)
     struct android_app *app = (struct android_app *) m_nativeWindow;
     width = app->contentRect.right;
     height = app->contentRect.bottom;
-    __android_log_print(ANDROID_LOG_INFO, "OBL.DPI",
+    OBL_log("OBL.DPI",
         "getMainDisplayDimensions: contentRect=%d,%d,%d,%d width=%d height=%d",
         app->contentRect.left, app->contentRect.top,
         app->contentRect.right, app->contentRect.bottom,
@@ -1715,11 +1831,11 @@ void GHOST_SystemAndroid::setValueOn(int values[], int num) {
     if (num == 1) {
         OBLButtonID oblButtonId = (OBLButtonID) values[0];
         int oblButtonNum = sizeof(oBLButtonIDGhostKeys) / sizeof(oBLButtonIDGhostKeys[0]);
-        __android_log_print(ANDROID_LOG_INFO, "OBL.DIAG",
+        OBL_log("OBL.DIAG",
             "setValueOn: ordinal=%d arraySize=%d", (int)oblButtonId, oblButtonNum);
                 for (int i = 0; i < oblButtonNum; i++) {
                     if (oBLButtonIDGhostKeys[i].oblButtonId == oblButtonId) {
-                        __android_log_print(ANDROID_LOG_INFO, "OBL.DIAG",
+                        OBL_log("OBL.DIAG",
                             "setValueOn: MATCH at i=%d ghostTKey=%d", i, (int)oBLButtonIDGhostKeys[i].ghostTKey);
                         utf8_char[0] = oBLButtonIDGhostKeys[i].ghostTKey;
                         GHOST_EventKey *eventKeyUp = new GHOST_EventKey(getMilliSeconds(),
@@ -1738,7 +1854,7 @@ void GHOST_SystemAndroid::setValueOn(int values[], int num) {
                         break;
                     }
                 }
-        __android_log_print(ANDROID_LOG_INFO, "OBL.DIAG",
+        OBL_log("OBL.DIAG",
             "setValueOn: done (no match if no MATCH above)");
     }
 }
@@ -1771,7 +1887,7 @@ void GHOST_SystemAndroid::wmInitReInit() {
         int32_t newWidth = ANativeWindow_getWidth(newWin);
         int32_t newHeight = ANativeWindow_getHeight(newWin);
         int32_t newFormat = ANativeWindow_getFormat(newWin);
-        __android_log_print(ANDROID_LOG_INFO, "Blender.EGL",
+        OBL_log("Blender.EGL",
             "wmInitReInit: new ANativeWindow width=%d height=%d format=%d",
             newWidth, newHeight, newFormat);
     }
@@ -1784,7 +1900,7 @@ void GHOST_SystemAndroid::wmInitReInit() {
             EGLContext curCtx = eglGetCurrentContext();
             EGLSurface curDraw = eglGetCurrentSurface(EGL_DRAW);
             EGLSurface curRead = eglGetCurrentSurface(EGL_READ);
-            __android_log_print(ANDROID_LOG_INFO, "Blender.EGL",
+            OBL_log("Blender.EGL",
                 "wmInitReInit: BEFORE destruction — current context=0x%p draw=0x%p read=0x%p",
                 (void *)curCtx, (void *)curDraw, (void *)curRead);
         }
@@ -1793,7 +1909,7 @@ void GHOST_SystemAndroid::wmInitReInit() {
             EGLDisplay dpy = oldCtx->getDisplay();
             EGLConfig cfg = oldCtx->getConfig();
             EGLSurface oldSfc = oldCtx->getSurface();
-            __android_log_print(ANDROID_LOG_INFO, "Blender.EGL",
+            OBL_log("Blender.EGL",
                 "wmInitReInit: OLD surface=0x%p config=0x%p display=0x%p context=0x%p",
                 (void *)oldSfc, (void *)cfg, (void *)dpy, (void *)oldCtx->getContext());
             if (dpy != EGL_NO_DISPLAY && cfg) {
@@ -1814,7 +1930,7 @@ void GHOST_SystemAndroid::wmInitReInit() {
                 EGLint bufs = v;
                 eglGetConfigAttrib(dpy, cfg, EGL_SURFACE_TYPE, &v);
                 EGLint st = v;
-                __android_log_print(ANDROID_LOG_INFO, "Blender.EGL",
+                OBL_log("Blender.EGL",
                     "wmInitReInit: OLD config id=%d nativeVisualID=0x%x "
                     "R%dG%dB%dA%d bufSize=%d surfType=0x%x",
                     cid, nid, rs, gs, bs, as, bufs, st);
@@ -1832,10 +1948,10 @@ void GHOST_SystemAndroid::wmInitReInit() {
         {
             EGLint err = eglGetError();
             if (err != EGL_SUCCESS) {
-                __android_log_print(ANDROID_LOG_INFO, "Blender.EGL",
+                OBL_log("Blender.EGL",
                     "wmInitReInit: eglError AFTER ~GHOST_ContextEGL destructor = 0x%x", err);
             } else {
-                __android_log_print(ANDROID_LOG_INFO, "Blender.EGL",
+                OBL_log("Blender.EGL",
                     "wmInitReInit: eglDestroySurface+eglDestroyContext OK (no error)");
             }
         }
@@ -1848,7 +1964,7 @@ void GHOST_SystemAndroid::wmInitReInit() {
             EGLConfig cfg = newCtx->getConfig();
             EGLSurface sfc = newCtx->getSurface();
             EGLSurface currentSfc = eglGetCurrentSurface(EGL_DRAW);
-            __android_log_print(ANDROID_LOG_INFO, "Blender.EGL",
+            OBL_log("Blender.EGL",
                 "wmInitReInit: NEW surface=0x%p (current draw=0x%p) config=0x%p",
                 (void *)sfc, (void *)currentSfc, (void *)cfg);
             if (dpy != EGL_NO_DISPLAY && sfc != EGL_NO_SURFACE) {
@@ -1857,7 +1973,7 @@ void GHOST_SystemAndroid::wmInitReInit() {
                 eglQuerySurface(dpy, sfc, EGL_HEIGHT, &h);
                 eglQuerySurface(dpy, sfc, EGL_CONFIG_ID, &cid);
                 eglGetConfigAttrib(dpy, cfg, EGL_NATIVE_VISUAL_ID, &nid);
-                __android_log_print(ANDROID_LOG_INFO, "Blender.EGL",
+                OBL_log("Blender.EGL",
                     "wmInitReInit: NEW surface %dx%d configId=%d nativeVisualID=0x%x",
                     w, h, cid, nid);
             }
@@ -1872,11 +1988,11 @@ void GHOST_SystemAndroid::setValueOff(int values[], int num) {
     if (num == 1) {
         OBLButtonID oblButtonId = (OBLButtonID) values[0];
         int oblButtonNum = sizeof(oBLButtonIDGhostKeys) / sizeof(oBLButtonIDGhostKeys[0]);
-        __android_log_print(ANDROID_LOG_INFO, "OBL.DIAG",
+        OBL_log("OBL.DIAG",
             "setValueOff: ordinal=%d arraySize=%d", (int)oblButtonId, oblButtonNum);
                 for (int i = 0; i < oblButtonNum; i++) {
                     if (oBLButtonIDGhostKeys[i].oblButtonId == oblButtonId) {
-                        __android_log_print(ANDROID_LOG_INFO, "OBL.DIAG",
+                        OBL_log("OBL.DIAG",
                             "setValueOff: MATCH at i=%d ghostTKey=%d", i, (int)oBLButtonIDGhostKeys[i].ghostTKey);
                         utf8_char[0] = oBLButtonIDGhostKeys[i].ghostTKey;
                         GHOST_EventKey *eventKeyUp = new GHOST_EventKey(getMilliSeconds(),
@@ -1895,7 +2011,7 @@ void GHOST_SystemAndroid::setValueOff(int values[], int num) {
                         break;
                     }
                 }
-        __android_log_print(ANDROID_LOG_INFO, "OBL.DIAG",
+        OBL_log("OBL.DIAG",
             "setValueOff: done (no match if no MATCH above)");
     }
 }
@@ -1915,11 +2031,11 @@ void GHOST_SystemAndroid::setValue(int values[], int num) {
     if (num == 1) {
         OBLButtonID oblButtonId = (OBLButtonID) values[0];
         int oblButtonNum = sizeof(oBLButtonIDGhostKeys) / sizeof(oBLButtonIDGhostKeys[0]);
-        __android_log_print(ANDROID_LOG_INFO, "OBL.DIAG",
+        OBL_log("OBL.DIAG",
             "setValue: ordinal=%d arraySize=%d", (int)oblButtonId, oblButtonNum);
         for (int i = 0; i < oblButtonNum; i++) {
             if (oBLButtonIDGhostKeys[i].oblButtonId == oblButtonId) {
-                __android_log_print(ANDROID_LOG_INFO, "OBL.DIAG",
+                OBL_log("OBL.DIAG",
                     "setValue: MATCH at i=%d ghostTKey=%d", i, (int)oBLButtonIDGhostKeys[i].ghostTKey);
                 utf8_char[0] = oBLButtonIDGhostKeys[i].ghostTKey;
                 GHOST_EventKey *eventKeyDown = new GHOST_EventKey(getMilliSeconds(),
@@ -1939,7 +2055,7 @@ void GHOST_SystemAndroid::setValue(int values[], int num) {
                 break;
             }
         }
-        __android_log_print(ANDROID_LOG_INFO, "OBL.DIAG",
+        OBL_log("OBL.DIAG",
             "setValue: done (no match if no MATCH above)");
         if (oblButtonId == OBLButtonID_ScrollUp) {
             GHOST_EventWheel *eventKey = new GHOST_EventWheel(getMilliSeconds(), window, 5);

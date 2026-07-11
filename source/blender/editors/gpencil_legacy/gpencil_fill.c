@@ -14,46 +14,11 @@
 
 #ifdef __ANDROID__
 #include <android/log.h>
-
-/* Synchronous file logging to survive device reboot.
- * Writes to HOME/gp_crash3.log with fflush+fsync after every line.
- * HOME is set by the app's native-lib.cpp to getExternalFilesDir("obl"),
- * which is writable even on Android 11+ scoped storage. */
-static void gp_sync_log(const char *fmt, ...)
-{
-  static FILE *fp = NULL;
-  if (!fp) {
-    char logpath[512];
-    const char *home = getenv("HOME");
-    if (home) {
-      snprintf(logpath, sizeof(logpath), "%s/gp_crash3.log", home);
-    } else {
-      strncpy(logpath, "/sdcard/gp_crash3.log", sizeof(logpath));
-      logpath[sizeof(logpath) - 1] = '\0';
-    }
-    fp = fopen(logpath, "ab");
-    if (!fp) {
-      __android_log_print(ANDROID_LOG_ERROR, "Blender.GP",
-                          "gp_sync_log: cannot open %s", logpath);
-      return;
-    }
-  }
-  va_list args;
-  va_start(args, fmt);
-  struct timeval tv;
-  gettimeofday(&tv, NULL);
-  fprintf(fp, "[%ld.%06ld] ", (long)tv.tv_sec, (long)tv.tv_usec);
-  vfprintf(fp, fmt, args);
-  fputc('\n', fp);
-  fflush(fp);
-  fsync(fileno(fp));
-  va_end(args);
-}
+#include "GHOST_SystemAndroid.hh"
 
 #define GP_FILL_LOG(...) \
   do { \
-    __android_log_print(ANDROID_LOG_DEBUG, "Blender.GP", __VA_ARGS__); \
-    gp_sync_log(__VA_ARGS__); \
+    OBL_log("Blender.GP", __VA_ARGS__); \
   } while (0)
 
 #else

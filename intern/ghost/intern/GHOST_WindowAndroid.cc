@@ -40,7 +40,7 @@ void GHOST_WindowAndroid::getClientBounds(GHOST_Rect &bounds) const { /* nothing
     uint32_t height=1200;
     m_system->getMainDisplayDimensions(width,height);
     bounds.set(0,0,width,height);
-    __android_log_print(ANDROID_LOG_INFO, "OBL.DPI",
+    OBL_log("OBL.DPI",
         "getClientBounds: w=%d h=%d", width, height);
 }
 
