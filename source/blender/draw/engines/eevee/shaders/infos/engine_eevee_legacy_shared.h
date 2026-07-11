@@ -176,7 +176,9 @@ struct RenderpassBlock {
 };
 BLI_STATIC_ASSERT_ALIGN(RenderpassBlock, 16)
 
-#define MAX_SSS_SAMPLES 65
+#ifndef MAX_SSS_SAMPLES
+#  define MAX_SSS_SAMPLES 65
+#endif
 #define SSS_LUT_SIZE 64.0
 #define SSS_LUT_SCALE ((SSS_LUT_SIZE - 1.0) / float(SSS_LUT_SIZE))
 #define SSS_LUT_BIAS (0.5 / float(SSS_LUT_SIZE))

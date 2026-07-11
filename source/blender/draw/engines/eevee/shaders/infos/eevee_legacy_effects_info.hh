@@ -253,7 +253,11 @@ GPU_SHADER_CREATE_INFO(eevee_legacy_shader_effect_subsurface_common)
     .sampler(1, ImageType::FLOAT_2D, "sssRadiance")
     .sampler(2, ImageType::FLOAT_2D, "sssData")
     .auto_resource_location(true)
-    .do_static_compilation(true);
+    .do_static_compilation(true)
+#ifdef __ANDROID__
+    .define("MAX_SSS_SAMPLES", "9")
+#endif
+    ;
 
 GPU_SHADER_CREATE_INFO(eevee_legacy_shader_effect_subsurface_common_FIRST_PASS)
     .define("FIRST_PASS")

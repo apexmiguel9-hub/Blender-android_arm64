@@ -1093,10 +1093,7 @@ static int32_t engine_handle_input(struct android_app *app, AInputEvent *event) 
                              system->m_mtPrevCenterX = 0.0f;
                              system->m_mtPrevCenterY = 0.0f;
 
-                             /* Cancel any pending UI scroll when multi-touch starts. */
-                             system->m_uiScrollActive = false;
-
-                            if (pointerCount >= 2) {
+                             if (pointerCount >= 2) {
                                 float x0 = AMotionEvent_getX(event, 0);
                                 float y0 = AMotionEvent_getY(event, 0);
                                 float x1 = AMotionEvent_getX(event, 1);
@@ -1289,67 +1286,6 @@ static int32_t engine_handle_input(struct android_app *app, AInputEvent *event) 
                                 system->m_mtDragActive = false;
                                 system->m_mtCleanupDone = false;
                                 return 1;
-                            }
-                        }
-                    }
-
-                    /* ----- UI Scroll: single-finger drag outside viewport = wheel events.
-                     * Tap in UI = normal click (LEFT DOWN + LEFT UP).
-                     * Drag in UI = cancel click, send WHEEL instead. ---- */
-                    {
-                        int32_t x = AMotionEvent_getX(event, 0);
-                        int32_t y = AMotionEvent_getY(event, 0);
-
-                        if (actionMasked == AMOTION_EVENT_ACTION_DOWN) {
-                            bool inViewport = (x >= system->m_viewportXMin && x <= system->m_viewportXMax &&
-                                               y >= system->m_viewportYMin && y <= system->m_viewportYMax);
-                            if (!inViewport && pointerCount == 1) {
-                                system->m_uiScrollActive = true;
-                                system->m_uiScrollConsumed = false;
-                                system->m_uiScrollStartX = x;
-                                system->m_uiScrollStartY = y;
-                                system->m_uiScrollLastY = y;
-                            }
-                            else {
-                                system->m_uiScrollActive = false;
-                            }
-                        }
-
-                        if (system->m_uiScrollActive) {
-                            GHOST_WindowAndroid *win = (GHOST_WindowAndroid *)system->getWindowManager()->getActiveWindow();
-                            if (win) {
-                                if (actionMasked == AMOTION_EVENT_ACTION_MOVE) {
-                                    uint64_t elapsed = now - system->m_mtFirstFingerDownTime;
-                                    float dx = x - system->m_uiScrollStartX;
-                                    float dy = y - system->m_uiScrollStartY;
-                                    float dist = sqrtf(dx * dx + dy * dy);
-                                    /* Require both movement AND hold ≥1s to start scroll.
-                                     * Tap (quick lift) = normal click even if finger moves slightly. */
-                                    if (dist > 10.0f && elapsed > 1000 && !system->m_uiScrollConsumed) {
-                                        /* Cancel pending LEFT DOWN so we don't get a click+drag. */
-                                        GHOST_TabletData td;
-                                        system->pushEvent(new GHOST_EventCursor(now, GHOST_kEventCursorMove, win, x, y, td));
-                                        system->pushEvent(new GHOST_EventButton(now, GHOST_kEventButtonUp, win, GHOST_kButtonMaskLeft, td));
-                                        system->m_uiScrollConsumed = true;
-                                    }
-                                    if (system->m_uiScrollConsumed) {
-                                        float ddY = y - system->m_uiScrollLastY;
-                                        int step = 0;
-                                        if (ddY > 10.0f) { step = -1; system->m_uiScrollLastY = y; }
-                                        else if (ddY < -10.0f) { step = 1; system->m_uiScrollLastY = y; }
-                                        if (step != 0) {
-                                            system->pushEvent(new GHOST_EventWheel(now, win, step));
-                                        }
-                                        return 1;
-                                    }
-                                }
-                                if (actionMasked == AMOTION_EVENT_ACTION_UP || actionMasked == AMOTION_EVENT_ACTION_CANCEL) {
-                                    system->m_uiScrollActive = false;
-                                    if (system->m_uiScrollConsumed) {
-                                        return 1;  /* LEFT UP already sent at drag start. */
-                                    }
-                                    /* Not consumed: fall through to processButtonEvent for LEFT UP. */
-                                }
                             }
                         }
                     }

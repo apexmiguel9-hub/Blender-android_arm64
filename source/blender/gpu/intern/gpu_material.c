@@ -368,7 +368,11 @@ const ListBase *GPU_material_layer_attributes(const GPUMaterial *material)
 /* Eevee Subsurface scattering. */
 /* Based on Separable SSS. by Jorge Jimenez and Diego Gutierrez */
 
-#  define SSS_SAMPLES 65
+#  ifdef __ANDROID__
+#    define SSS_SAMPLES 9
+#  else
+#    define SSS_SAMPLES 65
+#  endif
 #  define SSS_EXPONENT 2.0f /* Importance sampling exponent */
 
 typedef struct GPUSssKernelData {
