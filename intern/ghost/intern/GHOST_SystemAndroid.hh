@@ -230,14 +230,5 @@ public:
   bool m_heldShift = false;
   bool m_heldCtrl = false;
   bool m_heldAlt = false;
-
-  /* Virtual cursor mode: touch moves cursor, tap = click (like a trackpad). */
-  bool m_virtualCursorMode = false;
-  int32_t m_virtualCursorX = 300;
-  int32_t m_virtualCursorY = 400;
-  float m_vTouchPrevX = 0;
-  float m_vTouchPrevY = 0;
-  float m_vTouchDownX = 0;
-  float m_vTouchDownY = 0;
-  bool m_vButtonHeld = false;
+};
 };
