@@ -965,6 +965,61 @@ bool processButtonEvent(struct android_app *app, AInputEvent *event) {
     td.Pressure=pressure;
     td.Active=GHOST_TTabletMode::GHOST_kTabletModeStylus;
     uint64_t currentTime = system->getMilliSeconds();
+
+    /* Virtual cursor mode: touch moves cursor, tap = click. */
+    if (system->m_virtualCursorMode) {
+      if (motionaction == AMOTION_EVENT_ACTION_DOWN) {
+        system->m_lastDownx = msgPosX;
+        system->m_lastDowny = msgPosY;
+        if (checkClickPos(width, height, msgPosX, msgPosY) && (21 != window->m_shpeType)) {
+          if (app->GetAsyncKeyState(100) == 0) {
+            system->m_lastClickTopLeftBtn = true;
+            app->showWindow(app, 0, 0, 0, 0, 1001, "");
+            return 0;
+          }
+        }
+        system->m_x = msgPosX;
+        system->m_y = msgPosY;
+        system->pushEvent(
+            new GHOST_EventCursor(currentTime, GHOST_kEventCursorMove, window, msgPosX,
+                                  msgPosY, td));
+        return 1;
+      }
+      else if (motionaction == AMOTION_EVENT_ACTION_UP) {
+        if (checkClickPos(width, height, system->m_lastDownx, system->m_lastDowny) &&
+            (system->m_lastClickTopLeftBtn)) {
+          return 0;
+        }
+        /* If finger barely moved from down position, it's a tap → send click. */
+        float dx = msgPosX - system->m_lastDownx;
+        float dy = msgPosY - system->m_lastDowny;
+        float dist = sqrtf(dx * dx + dy * dy);
+        if (dist < 30.0f) {
+          system->pushEvent(
+              new GHOST_EventButton(currentTime, GHOST_TEventType::GHOST_kEventButtonDown,
+                                    window, GHOST_SystemAndroid::currentButton(app), td));
+          system->pushEvent(
+              new GHOST_EventButton(currentTime, GHOST_TEventType::GHOST_kEventButtonUp,
+                                    window, GHOST_SystemAndroid::currentButton(app), td));
+        }
+        for (int i = 3; i < 5; i++) {
+          bool check = app->GetAsyncKeyState(i) == 1;
+          if (check) {
+            app->setValue(i, 0);
+          }
+        }
+        return 1;
+      }
+      else if (motionaction == AMOTION_EVENT_ACTION_MOVE) {
+        system->m_x = msgPosX;
+        system->m_y = msgPosY;
+        system->pushEvent(
+            new GHOST_EventCursor(currentTime, GHOST_kEventCursorMove, window, msgPosX,
+                                  msgPosY, td));
+        return 1;
+      }
+    }
+
     if (motionaction == AMOTION_EVENT_ACTION_DOWN) {
         system->m_lastDownx = msgPosX;
         system->m_lastDowny = msgPosY;
@@ -2057,6 +2112,9 @@ void GHOST_SystemAndroid::setValue(int values[], int num) {
         } else if (oblButtonId == 10006) {
             /* Toggle scroll mode. */
             m_scrollMode = !m_scrollMode;
+        } else if (oblButtonId == 10007) {
+            /* Toggle virtual cursor mode. */
+            m_virtualCursorMode = !m_virtualCursorMode;
         }
     }
 }

@@ -230,4 +230,7 @@ public:
   bool m_heldShift = false;
   bool m_heldCtrl = false;
   bool m_heldAlt = false;
+
+  /* Virtual cursor mode: touch moves cursor, tap = click (like a trackpad). */
+  bool m_virtualCursorMode = false;
 };
