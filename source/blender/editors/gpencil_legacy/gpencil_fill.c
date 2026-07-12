@@ -88,7 +88,11 @@ extern void OBL_log(const char *tag, const char *fmt, ...);
 
 #define LEAK_HORZ 0
 #define LEAK_VERT 1
-#define FILL_LEAK 3.0f
+#ifdef __ANDROID__
+#  define FILL_LEAK 8.0f
+#else
+#  define FILL_LEAK 3.0f
+#endif
 #define MIN_WINDOW_SIZE 128
 
 /* Set to 1 to debug filling internal image. By default, the value must be 0. */
@@ -1200,6 +1204,7 @@ static void gpencil_draw_datablock(tGPDfill *tgpf, const float ink[4])
       if (gpencil_stroke_is_drawable(tgpf, gps) && ((gps->flag & GP_STROKE_TAG) == 0) &&
           ((gps->flag & GP_STROKE_HELP) == 0))
       {
+        float fill_lw = max_ff(1.0f, tgpf->fill_factor * 1.5f);
         gpencil_draw_basic_stroke(tgpf,
                                   gps,
                                   tgpw.diff_mat,
@@ -1207,7 +1212,7 @@ static void gpencil_draw_datablock(tGPDfill *tgpf, const float ink[4])
                                   ink,
                                   tgpf->flag,
                                   tgpf->fill_threshold,
-                                  1.0f);
+                                  fill_lw);
       }
     }
   }
@@ -1629,6 +1634,53 @@ static bool gpencil_boundaryfill_area(tGPDfill *tgpf)
   BLI_stack_free(stack);
 
   return border_contact;
+}
+
+/* Dilate red pixels by 1 pixel to close micro-gaps in stroke walls.
+ * Each red pixel expands into its 4-connected neighbors. This ensures
+ * thin 1-pixel lines from GL_LINE_STRIP rendering form a solid barrier
+ * for the boundary fill that follows. */
+static void gpencil_dilate_red(ImBuf *ibuf)
+{
+  BLI_Stack *stack = BLI_stack_new(sizeof(int), __func__);
+  const float red[4] = {1.0f, 0.0f, 0.0f, 1.0f};
+  const int maxpixel = (ibuf->x * ibuf->y) - 1;
+
+  for (int v = 0; v <= maxpixel; v++) {
+    float col[4];
+    get_pixel(ibuf, v, col);
+    if (col[0] == 1.0f) {
+      continue;
+    }
+    /* Check 4-connected neighbors for red pixels. */
+    bool has_red = false;
+    if (v - 1 >= 0) {
+      get_pixel(ibuf, v - 1, col);
+      if (col[0] == 1.0f) has_red = true;
+    }
+    if (!has_red && v + 1 <= maxpixel) {
+      get_pixel(ibuf, v + 1, col);
+      if (col[0] == 1.0f) has_red = true;
+    }
+    if (!has_red && v + ibuf->x <= maxpixel) {
+      get_pixel(ibuf, v + ibuf->x, col);
+      if (col[0] == 1.0f) has_red = true;
+    }
+    if (!has_red && v - ibuf->x >= 0) {
+      get_pixel(ibuf, v - ibuf->x, col);
+      if (col[0] == 1.0f) has_red = true;
+    }
+    if (has_red) {
+      BLI_stack_push(stack, &v);
+    }
+  }
+
+  while (!BLI_stack_is_empty(stack)) {
+    int v;
+    BLI_stack_pop(stack, &v);
+    set_pixel(ibuf, v, red);
+  }
+  BLI_stack_free(stack);
 }
 
 /* Set a border to create image limits. */
@@ -2825,6 +2877,18 @@ static bool gpencil_do_frame_fill(tGPDfill *tgpf, const bool is_inverted)
     GP_FILL_LOG("CF03 do_frame_fill: before gpencil_set_borders(true)");
     /* Set red borders to create a external limit. */
     gpencil_set_borders(tgpf, true);
+
+    /* Pre-dilate red pixels by 1 pass to close micro-gaps in stroke walls
+     * caused by line strip rendering (especially on mobile GPUs). */
+    {
+      void *dil_lock;
+      ImBuf *dilbuf = BKE_image_acquire_ibuf(tgpf->ima, NULL, &dil_lock);
+      if (dilbuf) {
+        gpencil_dilate_red(dilbuf);
+        BKE_image_release_ibuf(tgpf->ima, dilbuf, dil_lock);
+      }
+    }
+
     GP_FILL_LOG("CF04 do_frame_fill: set_borders OK, before gpencil_boundaryfill_area");
 
     /* apply boundary fill */

@@ -468,7 +468,10 @@ static void gpencil_stroke_convertcoords(tGPsdata *p,
       sub_v3_v3v3(out, rvec, dvec);
     }
     else {
-      zero_v3(out);
+      /* Fallback when reference can't be projected to screen (behind camera, etc.).
+       * Project screen point onto a plane at the reference depth instead of zero. */
+      View3D *v3d = (View3D *)p->area->spacedata.first;
+      ED_view3d_win_to_3d(v3d, p->region, rvec, mval, out);
     }
   }
 }
