@@ -688,7 +688,6 @@ static void gpencil_sbuffer_stroke_ensure(bGPdata *gpd, bool do_fill)
     gpd->runtime.sbuffer_color_buf = vbo_col;
     gpd->runtime.sbuffer_batch = batch;
 
-    MEM_freeN(gps->points);
   }
 }
 
@@ -726,6 +725,7 @@ void DRW_cache_gpencil_sbuffer_clear(Object *ob)
     (void*)gpd->runtime.sbuffer_batch,
     (void*)gpd->runtime.sbuffer_position_buf,
     gpd->runtime.sbuffer_used);
+  MEM_SAFE_FREE(gpd->runtime.sbuffer_gps->points);
   MEM_SAFE_FREE(gpd->runtime.sbuffer_gps);
   GPU_BATCH_DISCARD_SAFE(gpd->runtime.sbuffer_batch);
   GPU_VERTBUF_DISCARD_SAFE(gpd->runtime.sbuffer_position_buf);
