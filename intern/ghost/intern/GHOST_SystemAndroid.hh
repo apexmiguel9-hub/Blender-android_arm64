@@ -231,4 +231,3 @@ public:
   bool m_heldCtrl = false;
   bool m_heldAlt = false;
 };
-};
