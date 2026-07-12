@@ -239,4 +239,5 @@ public:
   float m_vTouchPrevY = 0;
   float m_vTouchDownX = 0;
   float m_vTouchDownY = 0;
+  bool m_vButtonHeld = false;
 };

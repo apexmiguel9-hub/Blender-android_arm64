@@ -967,7 +967,8 @@ bool processButtonEvent(struct android_app *app, AInputEvent *event) {
     uint64_t currentTime = system->getMilliSeconds();
 
     /* Virtual cursor mode: RELATIVE trackpad-style. Touch drag moves cursor
-     * relative to finger delta, not absolute position. Tap = click. */
+     * relative to finger delta AND holds left button (draws strokes).
+     * Quick tap (minimal movement) = click for UI buttons. */
     if (system->m_virtualCursorMode) {
       if (motionaction == AMOTION_EVENT_ACTION_DOWN) {
         if (checkClickPos(width, height, msgPosX, msgPosY) && (21 != window->m_shpeType)) {
@@ -977,11 +978,12 @@ bool processButtonEvent(struct android_app *app, AInputEvent *event) {
             return 0;
           }
         }
-        /* Store initial touch position; don't move cursor (stays at current position). */
+        /* Store initial touch position; don't move cursor yet. */
         system->m_vTouchDownX = msgPosX;
         system->m_vTouchDownY = msgPosY;
         system->m_vTouchPrevX = msgPosX;
         system->m_vTouchPrevY = msgPosY;
+        system->m_vButtonHeld = false;
         return 1;
       }
       else if (motionaction == AMOTION_EVENT_ACTION_UP) {
@@ -989,12 +991,11 @@ bool processButtonEvent(struct android_app *app, AInputEvent *event) {
             (system->m_lastClickTopLeftBtn)) {
           return 0;
         }
-        /* Check if it was a tap (finger barely moved from down position). */
         float dx = msgPosX - system->m_vTouchDownX;
         float dy = msgPosY - system->m_vTouchDownY;
         float dist = sqrtf(dx * dx + dy * dy);
-        if (dist < 25.0f) {
-          /* Tap: send click at current virtual cursor position. */
+        if (dist < 25.0f && !system->m_vButtonHeld) {
+          /* Tap: send click at current virtual cursor position (for UI buttons). */
           GHOST_TabletData td;
           td.Pressure = 1.0f;
           td.Active = GHOST_kTabletModeStylus;
@@ -1008,6 +1009,16 @@ bool processButtonEvent(struct android_app *app, AInputEvent *event) {
               new GHOST_EventButton(currentTime, GHOST_TEventType::GHOST_kEventButtonUp,
                                     window, GHOST_kButtonMaskLeft, td));
         }
+        else if (system->m_vButtonHeld) {
+          /* Dragged: release left button (ends drawing stroke). */
+          GHOST_TabletData td;
+          td.Pressure = 0.0f;
+          td.Active = GHOST_kTabletModeStylus;
+          system->pushEvent(
+              new GHOST_EventButton(currentTime, GHOST_TEventType::GHOST_kEventButtonUp,
+                                    window, GHOST_kButtonMaskLeft, td));
+          system->m_vButtonHeld = false;
+        }
         for (int i = 3; i < 5; i++) {
           bool check = app->GetAsyncKeyState(i) == 1;
           if (check) {
@@ -1017,15 +1028,12 @@ bool processButtonEvent(struct android_app *app, AInputEvent *event) {
         return 1;
       }
       else if (motionaction == AMOTION_EVENT_ACTION_MOVE) {
-        /* Compute finger delta from previous position. */
         float dx = msgPosX - system->m_vTouchPrevX;
         float dy = msgPosY - system->m_vTouchPrevY;
         system->m_vTouchPrevX = msgPosX;
         system->m_vTouchPrevY = msgPosY;
-        /* Apply delta to virtual cursor position. */
         system->m_virtualCursorX += (int32_t)dx;
         system->m_virtualCursorY += (int32_t)dy;
-        /* Clamp to screen bounds. */
         if (system->m_virtualCursorX < 0) system->m_virtualCursorX = 0;
         if (system->m_virtualCursorX >= width) system->m_virtualCursorX = width - 1;
         if (system->m_virtualCursorY < 0) system->m_virtualCursorY = 0;
@@ -1033,11 +1041,17 @@ bool processButtonEvent(struct android_app *app, AInputEvent *event) {
         system->m_x = system->m_virtualCursorX;
         system->m_y = system->m_virtualCursorY;
         GHOST_TabletData td;
-        td.Pressure = 0.0f;
+        td.Pressure = 1.0f;
         td.Active = GHOST_kTabletModeStylus;
         system->pushEvent(
             new GHOST_EventCursor(currentTime, GHOST_kEventCursorMove, window,
                                   system->m_virtualCursorX, system->m_virtualCursorY, td));
+        if (!system->m_vButtonHeld) {
+          system->pushEvent(
+              new GHOST_EventButton(currentTime, GHOST_TEventType::GHOST_kEventButtonDown,
+                                    window, GHOST_kButtonMaskLeft, td));
+          system->m_vButtonHeld = true;
+        }
         return 1;
       }
     }
