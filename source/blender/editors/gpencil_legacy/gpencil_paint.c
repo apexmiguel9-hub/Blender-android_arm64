@@ -466,12 +466,29 @@ static void gpencil_stroke_convertcoords(tGPsdata *p,
       sub_v2_v2v2(xy_delta, mval_prj, mval);
       ED_view3d_win_to_delta(p->region, xy_delta, zfac, dvec);
       sub_v3_v3v3(out, rvec, dvec);
+      OBL_log("Blender.GP.COORD",
+        "paint_convert: mval=(%.1f,%.1f) rvec=(%.3f,%.3f,%.3f) "
+        "mval_prj=(%.1f,%.1f) xy_delta=(%.1f,%.1f) zfac=%.3f dvec=(%.3f,%.3f,%.3f) out=(%.3f,%.3f,%.3f) win=%dx%d",
+        mval[0], mval[1],
+        rvec[0], rvec[1], rvec[2],
+        mval_prj[0], mval_prj[1],
+        xy_delta[0], xy_delta[1],
+        zfac,
+        dvec[0], dvec[1], dvec[2],
+        out[0], out[1], out[2],
+        p->region->winx, p->region->winy);
     }
     else {
       /* Fallback when reference can't be projected to screen (behind camera, etc.).
        * Project screen point onto a plane at the reference depth instead of zero. */
       View3D *v3d = (View3D *)p->area->spacedata.first;
       ED_view3d_win_to_3d(v3d, p->region, rvec, mval, out);
+      OBL_log("Blender.GP.COORD",
+        "paint_convert: FALLBACK mval=(%.1f,%.1f) rvec=(%.3f,%.3f,%.3f) out=(%.3f,%.3f,%.3f) win=%dx%d",
+        mval[0], mval[1],
+        rvec[0], rvec[1], rvec[2],
+        out[0], out[1], out[2],
+        p->region->winx, p->region->winy);
     }
   }
 }

@@ -2101,9 +2101,27 @@ static void gpencil_stroke_convertcoords(ARegion *region,
     sub_v2_v2v2(xy_delta, mval_prj, point2D->m_xy);
     ED_view3d_win_to_delta(region, xy_delta, zfac, dvec);
     sub_v3_v3v3(out, rvec, dvec);
+    OBL_log("Blender.GP.COORD",
+      "utils_convert: pt2D=(%d,%d) origin=(%.3f,%.3f,%.3f) rvec=(%.3f,%.3f,%.3f) "
+      "mval_prj=(%.1f,%.1f) xy_delta=(%.1f,%.1f) zfac=%.3f dvec=(%.3f,%.3f,%.3f) out=(%.3f,%.3f,%.3f) win=%dx%d",
+      point2D->m_xy[0], point2D->m_xy[1],
+      origin[0], origin[1], origin[2],
+      rvec[0], rvec[1], rvec[2],
+      mval_prj[0], mval_prj[1],
+      xy_delta[0], xy_delta[1],
+      zfac,
+      dvec[0], dvec[1], dvec[2],
+      out[0], out[1], out[2],
+      region->winx, region->winy);
   }
   else {
     zero_v3(out);
+    OBL_log("Blender.GP.COORD",
+      "utils_convert: PROJECT_FAILED pt2D=(%d,%d) origin=(%.3f,%.3f,%.3f) rvec=(%.3f,%.3f,%.3f) win=%dx%d",
+      point2D->m_xy[0], point2D->m_xy[1],
+      origin[0], origin[1], origin[2],
+      rvec[0], rvec[1], rvec[2],
+      region->winx, region->winy);
   }
 }
 
