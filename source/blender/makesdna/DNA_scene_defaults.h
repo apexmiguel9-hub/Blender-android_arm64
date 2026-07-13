@@ -360,7 +360,7 @@
     .annotate_thickness = 3, \
  \
     /* GP Stroke Placement */ \
-    .gpencil_v3d_align = GP_PROJECT_VIEWSPACE | GP_PROJECT_DEPTH_STROKE, \
+    .gpencil_v3d_align = GP_PROJECT_VIEWSPACE, \
     .gpencil_v2d_align = GP_PROJECT_VIEWSPACE, \
  \
     /* UV painting */ \
