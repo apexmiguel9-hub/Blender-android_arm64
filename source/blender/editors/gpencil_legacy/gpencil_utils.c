@@ -2086,39 +2086,26 @@ void ED_gpencil_setup_modes(bContext *C, bGPdata *gpd, int newmode)
 /**
  * Helper to convert 2d to 3d for simple drawing buffer.
  */
-static void gpencil_stroke_convertcoords(ARegion *region,
+static void gpencil_stroke_convertcoords(const View3D *v3d,
+                                         ARegion *region,
                                          const tGPspoint *point2D,
                                          const float origin[3],
                                          float out[3])
 {
-  float mval_prj[2];
   float rvec[3];
-
   copy_v3_v3(rvec, origin);
-
-  const float zfac = ED_view3d_calc_zfac(region->regiondata, rvec);
-
-  if (ED_view3d_project_float_global(region, rvec, mval_prj, V3D_PROJ_TEST_NOP) == V3D_PROJ_RET_OK)
-  {
-    float dvec[3];
-    float xy_delta[2];
-    sub_v2_v2v2(xy_delta, mval_prj, point2D->m_xy);
-    ED_view3d_win_to_delta(region, xy_delta, zfac, dvec);
-    sub_v3_v3v3(out, rvec, dvec);
-  }
-  else {
-    zero_v3(out);
-  }
+  ED_view3d_win_to_3d(v3d, region, rvec, point2D->m_xy, out);
 }
 
-void ED_gpencil_tpoint_to_point(ARegion *region,
+void ED_gpencil_tpoint_to_point(const View3D *v3d,
+                                ARegion *region,
                                 float origin[3],
                                 const tGPspoint *tpt,
                                 bGPDspoint *pt)
 {
   float p3d[3];
   /* conversion to 3d format */
-  gpencil_stroke_convertcoords(region, tpt, origin, p3d);
+  gpencil_stroke_convertcoords(v3d, region, tpt, origin, p3d);
   copy_v3_v3(&pt->x, p3d);
   zero_v4(pt->vert_color);
 

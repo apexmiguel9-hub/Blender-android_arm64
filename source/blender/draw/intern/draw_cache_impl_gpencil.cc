@@ -626,7 +626,7 @@ static void gpencil_sbuffer_stroke_ensure(bGPdata *gpd, bool do_fill)
     ED_gpencil_drawing_reference_get(scene, ob, ts->gpencil_v3d_align, origin);
 
     for (int i = 0; i < vert_len; i++) {
-      ED_gpencil_tpoint_to_point(region, origin, &tpoints[i], &gps->points[i]);
+      ED_gpencil_tpoint_to_point(draw_ctx->v3d, region, origin, &tpoints[i], &gps->points[i]);
       mul_m4_v3(ob->world_to_object, &gps->points[i].x);
       bGPDspoint *pt = &gps->points[i];
       copy_v4_v4(pt->vert_color, tpoints[i].vert_color);

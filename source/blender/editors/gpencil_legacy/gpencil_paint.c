@@ -448,31 +448,11 @@ static void gpencil_stroke_convertcoords(tGPsdata *p,
       }
     }
 
-    float mval_prj[2];
     float rvec[3];
 
-    /* Current method just converts each point in screen-coordinates to
-     * 3D-coordinates using the 3D-cursor as reference. In general, this
-     * works OK, but it could of course be improved. */
-
+    View3D *v3d = (View3D *)p->area->spacedata.first;
     gpencil_get_3d_reference(p, rvec);
-    const float zfac = ED_view3d_calc_zfac(p->region->regiondata, rvec);
-
-    if (ED_view3d_project_float_global(p->region, rvec, mval_prj, V3D_PROJ_TEST_NOP) ==
-        V3D_PROJ_RET_OK)
-    {
-      float dvec[3];
-      float xy_delta[2];
-      sub_v2_v2v2(xy_delta, mval_prj, mval);
-      ED_view3d_win_to_delta(p->region, xy_delta, zfac, dvec);
-      sub_v3_v3v3(out, rvec, dvec);
-    }
-    else {
-      /* Fallback when reference can't be projected to screen (behind camera, etc.).
-       * Project screen point onto a plane at the reference depth instead of zero. */
-      View3D *v3d = (View3D *)p->area->spacedata.first;
-      ED_view3d_win_to_3d(v3d, p->region, rvec, mval, out);
-    }
+    ED_view3d_win_to_3d(v3d, p->region, rvec, mval, out);
   }
 }
 
@@ -873,12 +853,13 @@ static short gpencil_stroke_addpoint(tGPsdata *p,
       float origin[3];
       gpencil_get_3d_reference(p, origin);
       /* reproject current */
-      ED_gpencil_tpoint_to_point(p->region, origin, pt, &spt);
+      View3D *v3d = (View3D *)p->area->spacedata.first;
+      ED_gpencil_tpoint_to_point(v3d, p->region, origin, pt, &spt);
       ED_gpencil_project_point_to_plane(
           p->scene, obact, p->gpl, rv3d, origin, p->lock_axis - 1, &spt);
 
       /* reproject previous */
-      ED_gpencil_tpoint_to_point(p->region, origin, ptb, &spt2);
+      ED_gpencil_tpoint_to_point(v3d, p->region, origin, ptb, &spt2);
       ED_gpencil_project_point_to_plane(
           p->scene, obact, p->gpl, rv3d, origin, p->lock_axis - 1, &spt2);
       p->totpixlen += len_v3v3(&spt.x, &spt2.x);

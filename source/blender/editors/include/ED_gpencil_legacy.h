@@ -514,7 +514,8 @@ int ED_gpencil_join_objects_exec(struct bContext *C, struct wmOperator *op);
 /**
  * Convert 2d #tGPspoint to 3d #bGPDspoint.
  */
-void ED_gpencil_tpoint_to_point(struct ARegion *region,
+void ED_gpencil_tpoint_to_point(const struct View3D *v3d,
+                                struct ARegion *region,
                                 float origin[3],
                                 const struct tGPspoint *tpt,
                                 struct bGPDspoint *pt);

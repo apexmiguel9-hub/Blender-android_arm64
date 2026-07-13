@@ -324,33 +324,11 @@ static void annotation_stroke_convertcoords(tGPsdata *p,
        */
     }
     else {
-      float mval_prj[2];
       float rvec[3];
 
-      /* Current method just converts each point in screen-coordinates to
-       * 3D-coordinates using the 3D-cursor as reference. In general, this
-       * works OK, but it could of course be improved.
-       *
-       * TODO:
-       * - investigate using nearest point(s) on a previous stroke as
-       *   reference point instead or as offset, for easier stroke matching
-       */
-
+      View3D *v3d = (View3D *)p->area->spacedata.first;
       annotation_get_3d_reference(p, rvec);
-      const float zfac = ED_view3d_calc_zfac(p->region->regiondata, rvec);
-
-      if (ED_view3d_project_float_global(p->region, rvec, mval_prj, V3D_PROJ_TEST_NOP) ==
-          V3D_PROJ_RET_OK)
-      {
-        float dvec[3];
-        float xy_delta[2];
-        sub_v2_v2v2(xy_delta, mval_prj, mval);
-        ED_view3d_win_to_delta(p->region, xy_delta, zfac, dvec);
-        sub_v3_v3v3(out, rvec, dvec);
-      }
-      else {
-        zero_v3(out);
-      }
+      ED_view3d_win_to_3d(v3d, p->region, rvec, mval, out);
     }
   }
 
