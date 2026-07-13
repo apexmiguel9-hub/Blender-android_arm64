@@ -206,6 +206,12 @@ public:
   bool m_scrollMode = false;
   float m_scrollLastY = 0.0f;
 
+  /* Tap detection: single-finger touch to distinguish tap from drag. */
+  float m_tapDownX = 0.0f;
+  float m_tapDownY = 0.0f;
+  uint64_t m_tapDownTime = 0;
+  bool m_tapDragging = false;
+
   /* Viewport bounds (screen coords). Only the 3D viewport area; everything else is UI/menus. */
   int32_t m_viewportXMin = 0;
   int32_t m_viewportYMin = 0;

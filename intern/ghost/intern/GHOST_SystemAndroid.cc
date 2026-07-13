@@ -985,20 +985,21 @@ bool processButtonEvent(struct android_app *app, AInputEvent *event) {
         // CLOG_ERROR(&LOG, "交互processButtonEvent 11 %s", strInfo.c_str());
         system->m_x = msgPosX;
         system->m_y = msgPosY;
-        //  按下
+        //  Record tap start — don't send button yet, wait to see if it's a tap or drag.
+        system->m_tapDownX = msgPosX;
+        system->m_tapDownY = msgPosY;
+        system->m_tapDownTime = currentTime;
+        system->m_tapDragging = false;
+        //  Send cursor move immediately.
         system->pushEvent(
                 new GHOST_EventCursor(currentTime, GHOST_kEventCursorMove, window, msgPosX,
                                       msgPosY, td));
-        if (!checkMove) {
-            system->pushEvent(
-                    new GHOST_EventButton(currentTime, GHOST_TEventType::GHOST_kEventButtonDown,
-                                          window, GHOST_SystemAndroid::currentButton(app), td));
-        }
         // CLOG_ERROR(&LOG, "交互processButtonEvent 12 %s", strInfo.c_str());
     } else if (motionaction == AMOTION_EVENT_ACTION_UP) {
         // CLOG_ERROR(&LOG, "交互processButtonEvent 13");
         if (checkClickPos(width, height, system->m_lastDownx, system->m_lastDowny) &&
             (system->m_lastClickTopLeftBtn)) {
+            system->m_tapDragging = false;
             // CLOG_ERROR(&LOG, "交互processButtonEvent 14");
             return 0;
         }
@@ -1009,10 +1010,30 @@ bool processButtonEvent(struct android_app *app, AInputEvent *event) {
            position than the last MOVE (finger deforms), causing a "whip" effect
            in Grease Pencil strokes. The cursor stays at the last MOVE position. */
         if (!checkMove) {
-            system->pushEvent(
+            if (system->m_tapDragging) {
+                /* Drag finished: send left button UP. */
+                system->pushEvent(
                     new GHOST_EventButton(currentTime, GHOST_TEventType::GHOST_kEventButtonUp,
                                           window, GHOST_SystemAndroid::currentButton(app), td));
+            } else {
+                /* Tap (no significant movement): place 3D cursor = Shift + Right click. */
+                char utf8_null[6] = {0};
+                system->m_pendingShift = true;
+                system->pushEvent(
+                    new GHOST_EventKey(currentTime, GHOST_kEventKeyDown, window,
+                                       GHOST_kKeyLeftShift, false, utf8_null));
+                system->pushEvent(
+                    new GHOST_EventButton(currentTime, GHOST_kEventButtonDown,
+                                          window, GHOST_kButtonMaskRight, td));
+                system->pushEvent(
+                    new GHOST_EventButton(currentTime, GHOST_kEventButtonUp,
+                                          window, GHOST_kButtonMaskRight, td));
+                system->pushEvent(
+                    new GHOST_EventKey(currentTime, GHOST_kEventKeyUp, window,
+                                       GHOST_kKeyLeftShift, false, utf8_null));
+            }
         }
+        system->m_tapDragging = false;
         for (int i = 3; i < 5; i++) {
             bool check = app->GetAsyncKeyState(i) == 1;
             if (check) {
@@ -1028,6 +1049,19 @@ bool processButtonEvent(struct android_app *app, AInputEvent *event) {
         }
         system->m_x = msgPosX;
         system->m_y = msgPosY;
+        //  Check drag threshold: if moved more than 10px, start drag.
+        if (!system->m_tapDragging) {
+            float dx = msgPosX - system->m_tapDownX;
+            float dy = msgPosY - system->m_tapDownY;
+            if ((dx * dx + dy * dy) > 100.0f) { /* 10px threshold. */
+                system->m_tapDragging = true;
+                if (!checkMove) {
+                    system->pushEvent(
+                        new GHOST_EventButton(currentTime, GHOST_kEventButtonDown,
+                                              window, GHOST_SystemAndroid::currentButton(app), td));
+                }
+            }
+        }
         //  移动
         system->pushEvent(
                 new GHOST_EventCursor(currentTime, GHOST_kEventCursorMove, window, msgPosX,
