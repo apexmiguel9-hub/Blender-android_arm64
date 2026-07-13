@@ -211,6 +211,9 @@ void VIEW3D_GGT_cursor3d(wmGizmoGroupType *gzgt)
                  WM_GIZMOGROUPTYPE_DEPTH_3D);
 
   gzgt->poll = WIDGETGROUP_cursor3d_poll;
+
+  gzgt->gzmap_params.spaceid = SPACE_VIEW3D;
+  gzgt->gzmap_params.regionid = RGN_TYPE_WINDOW;
   gzgt->setup = WIDGETGROUP_cursor3d_setup;
   gzgt->setup_keymap = WM_gizmogroup_setup_keymap_generic_maybe_drag;
   gzgt->refresh = WIDGETGROUP_cursor3d_refresh;
