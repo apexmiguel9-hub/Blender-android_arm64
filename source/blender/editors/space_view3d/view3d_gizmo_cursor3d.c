@@ -19,6 +19,7 @@
 #include "DNA_windowmanager_types.h"
 
 #include "ED_gizmo_library.h"
+#include "ED_gizmo_utils.h"
 #include "ED_screen.h"
 
 #include "UI_resources.h"
