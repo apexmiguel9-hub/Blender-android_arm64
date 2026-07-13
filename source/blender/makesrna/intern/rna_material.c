@@ -7,6 +7,10 @@
 #include <float.h>
 #include <stdlib.h>
 
+#ifdef __ANDROID__
+#  include <android/log.h>
+#endif
+
 #include "DNA_material_types.h"
 #include "DNA_mesh_types.h"
 #include "DNA_texture_types.h"
@@ -85,9 +89,17 @@ const EnumPropertyItem rna_enum_ramp_blend_items[] = {
 static void rna_Material_update(Main *UNUSED(bmain), Scene *UNUSED(scene), PointerRNA *ptr)
 {
   Material *ma = (Material *)ptr->owner_id;
+#ifdef __ANDROID__
+  __android_log_print(ANDROID_LOG_DEBUG, "Blender.GP.Crash",
+      "rna_Material_update: ma=%p", (void*)ma);
+#endif
 
   DEG_id_tag_update(&ma->id, ID_RECALC_SHADING);
   WM_main_add_notifier(NC_MATERIAL | ND_SHADING, ma);
+#ifdef __ANDROID__
+  __android_log_print(ANDROID_LOG_DEBUG, "Blender.GP.Crash",
+      "rna_Material_update EXIT OK");
+#endif
 }
 
 static void rna_Material_update_previews(Main *UNUSED(bmain),
@@ -106,7 +118,15 @@ static void rna_Material_update_previews(Main *UNUSED(bmain),
 static void rna_MaterialGpencil_update(Main *bmain, Scene *scene, PointerRNA *ptr)
 {
   Material *ma = (Material *)ptr->owner_id;
+#ifdef __ANDROID__
+  __android_log_print(ANDROID_LOG_DEBUG, "Blender.GP.Crash",
+      "rna_MaterialGpencil_update ENTER: ma=%p owner_id=%p", (void*)ma, (void*)ptr->owner_id);
+#endif
   rna_Material_update(bmain, scene, ptr);
+#ifdef __ANDROID__
+  __android_log_print(ANDROID_LOG_DEBUG, "Blender.GP.Crash",
+      "rna_MaterialGpencil_update AFTER rna_Material_update");
+#endif
 
   /* Need set all caches as dirty. */
   for (Object *ob = bmain->objects.first; ob; ob = ob->id.next) {
@@ -119,7 +139,15 @@ static void rna_MaterialGpencil_update(Main *bmain, Scene *scene, PointerRNA *pt
     }
   }
 
+#ifdef __ANDROID__
+  __android_log_print(ANDROID_LOG_DEBUG, "Blender.GP.Crash",
+      "rna_MaterialGpencil_update BEFORE notifier: ma=%p", (void*)ma);
+#endif
   WM_main_add_notifier(NC_GPENCIL | ND_DATA, ma);
+#ifdef __ANDROID__
+  __android_log_print(ANDROID_LOG_DEBUG, "Blender.GP.Crash",
+      "rna_MaterialGpencil_update EXIT OK");
+#endif
 }
 
 static void rna_MaterialLineArt_update(Main *UNUSED(bmain), Scene *UNUSED(scene), PointerRNA *ptr)
