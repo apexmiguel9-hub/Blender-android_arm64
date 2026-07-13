@@ -207,8 +207,8 @@ void VIEW3D_GGT_cursor3d(wmGizmoGroupType *gzgt)
   gzgt->name = "3D Cursor Gizmo";
   gzgt->idname = "VIEW3D_GGT_cursor3d";
 
-  gzgt->flag = WM_GIZMOGROUPTYPE_3D | WM_GIZMOGROUPTYPE_SCALE |
-               WM_GIZMOGROUPTYPE_DEPTH_3D;
+  gzgt->flag |= (WM_GIZMOGROUPTYPE_3D | WM_GIZMOGROUPTYPE_SCALE |
+                 WM_GIZMOGROUPTYPE_DEPTH_3D);
 
   gzgt->poll = WIDGETGROUP_cursor3d_poll;
 
