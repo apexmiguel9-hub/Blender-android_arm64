@@ -11,6 +11,10 @@
 #include <stdlib.h>
 #include <string.h>
 
+#ifdef __ANDROID__
+#  include <android/log.h>
+#endif
+
 #include "MEM_guardedalloc.h"
 
 #include "BLI_blenlib.h"
