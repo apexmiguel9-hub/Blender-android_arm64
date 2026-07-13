@@ -392,6 +392,9 @@ static void rna_GPencil_update(Main *UNUSED(bmain), Scene *UNUSED(scene), Pointe
   Object *ob = (Object *)ptr->owner_id;
   if (ob && ob->type == OB_GPENCIL_LEGACY) {
     bGPdata *gpd = (bGPdata *)ob->data;
+    if (gpd == NULL) {
+      return;
+    }
     DEG_id_tag_update(&gpd->id, ID_RECALC_GEOMETRY);
     WM_main_add_notifier(NC_GPENCIL | NA_EDITED, NULL);
   }
