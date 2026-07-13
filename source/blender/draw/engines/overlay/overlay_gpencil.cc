@@ -7,6 +7,10 @@
 
 #include "DRW_render.h"
 
+#ifdef __ANDROID__
+#  include <android/log.h>
+#endif
+
 #include "BKE_gpencil_legacy.h"
 
 #include "UI_resources.h"
@@ -226,6 +230,10 @@ void OVERLAY_gpencil_cache_init(OVERLAY_Data *vedata)
   pd->edit_curve.handle_display = v3d->overlay.handle_display;
 
   if (gpd == nullptr || ob->type != OB_GPENCIL_LEGACY) {
+#ifdef __ANDROID__
+    __android_log_print(ANDROID_LOG_DEBUG, "Blender.GP.Crash",
+        "OVERLAY_gpencil_cache_init EARLY RET: gpd=%p ob_type=%d", (void*)gpd, ob ? ob->type : -1);
+#endif
     return;
   }
 
@@ -234,6 +242,11 @@ void OVERLAY_gpencil_cache_init(OVERLAY_Data *vedata)
                          ((ts->gpencil_v3d_align &
                            (GP_PROJECT_DEPTH_VIEW | GP_PROJECT_DEPTH_STROKE)) == 0);
   const bool grid_xray = (v3d->gp_flag & V3D_GP_SHOW_GRID_XRAY);
+#ifdef __ANDROID__
+  __android_log_print(ANDROID_LOG_DEBUG, "Blender.GP.Crash",
+      "OVERLAY_gpencil_cache_init: gpd=%p show_overlays=%d gp_flag=0x%x align=0x%x show_grid=%d grid_xray=%d",
+      (void*)gpd, show_overlays, v3d->gp_flag, ts->gpencil_v3d_align, show_grid, grid_xray);
+#endif
 
   if (show_grid && show_overlays) {
     const char *grid_unit = nullptr;
