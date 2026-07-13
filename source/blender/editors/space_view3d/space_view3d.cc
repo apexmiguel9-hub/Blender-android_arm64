@@ -1050,7 +1050,6 @@ static void view3d_widgets()
   WM_gizmogrouptype_append(VIEW3D_GGT_ruler);
   WM_gizmotype_append(VIEW3D_GT_ruler_item);
 
-  WM_gizmogrouptype_append(VIEW3D_GGT_cursor3d);
   WM_gizmogrouptype_append(VIEW3D_GGT_placement);
 
   WM_gizmogrouptype_append_and_link(gzmap_type, VIEW3D_GGT_navigate);
