@@ -2802,6 +2802,12 @@ void ED_gpencil_point_vertex_color_set(ToolSettings *ts,
                                        bGPDspoint *pt,
                                        tGPspoint *tpt)
 {
+  if (brush == NULL || brush->gpencil_settings == NULL) {
+    __android_log_print(ANDROID_LOG_ERROR, "Blender.GP.Fill",
+      "point_vertex_color_set: brush=%p gpencil_settings=%p", (void*)brush,
+      (void*)(brush ? brush->gpencil_settings : NULL));
+    return;
+  }
   const bool is_vertex = (GPENCIL_USE_VERTEX_COLOR_STROKE(ts, brush) &&
                           (brush->gpencil_settings->brush_draw_mode != GP_BRUSH_MODE_MATERIAL)) ||
                          (!GPENCIL_USE_VERTEX_COLOR_STROKE(ts, brush) &&
