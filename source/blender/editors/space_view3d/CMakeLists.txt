@@ -39,6 +39,7 @@ set(SRC
   view3d_gizmo_armature.c
   view3d_gizmo_camera.c
   view3d_gizmo_empty.c
+  view3d_gizmo_cursor3d.c
   view3d_gizmo_forcefield.c
   view3d_gizmo_light.c
   view3d_gizmo_navigate.c

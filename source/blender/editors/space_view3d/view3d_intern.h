@@ -233,6 +233,7 @@ void VIEW3D_OT_ruler_remove(struct wmOperatorType *ot);
 
 void VIEW3D_GT_navigate_rotate(struct wmGizmoType *gzt);
 
+void VIEW3D_GGT_cursor3d(struct wmGizmoGroupType *gzgt);
 void VIEW3D_GGT_placement(struct wmGizmoGroupType *gzgt);
 
 /* workaround for trivial but noticeable camera bug caused by imprecision
