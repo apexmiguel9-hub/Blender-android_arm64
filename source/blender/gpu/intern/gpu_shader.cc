@@ -475,13 +475,11 @@ void GPU_shader_bind(GPUShader *gpu_shader)
 
 void GPU_shader_unbind()
 {
-#ifndef NDEBUG
   Context *ctx = Context::get();
   if (ctx->shader) {
     ctx->shader->unbind();
   }
   ctx->shader = nullptr;
-#endif
 }
 
 GPUShader *GPU_shader_get_bound()
