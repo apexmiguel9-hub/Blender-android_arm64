@@ -34,6 +34,37 @@
 
 #include "gpencil_engine.h"
 
+#include <stdio.h>
+#include <fcntl.h>
+#include <unistd.h>
+#include <stdarg.h>
+
+/* Crash-surviving heartbeat log. A Mali G52 kernel panic freezes the I/O stack,
+ * so normal logging is lost. Writing the marker to stable storage and fsync()-ing
+ * it BEFORE the offending GPU command lets us read the last attempted step after
+ * reboot via: adb shell cat /sdcard/com.epai.oblender/gp_crash.log */
+static void gp_crash_log(const char *fmt, ...)
+{
+  static int gp_crash_fd = -2;
+  if (gp_crash_fd == -2) {
+    gp_crash_fd = open("/sdcard/com.epai.oblender/gp_crash.log",
+                       O_WRONLY | O_CREAT | O_APPEND, 0644);
+  }
+  if (gp_crash_fd < 0) {
+    return;
+  }
+  char buf[768];
+  va_list ap;
+  va_start(ap, fmt);
+  int n = vsnprintf(buf, sizeof(buf), fmt, ap);
+  va_end(ap);
+  if (n > 0) {
+    write(gp_crash_fd, buf, n);
+  }
+  write(gp_crash_fd, "\n", 1);
+  fsync(gp_crash_fd);
+}
+
 #include "DEG_depsgraph_query.h"
 
 #include "ED_screen.h"
@@ -539,6 +570,8 @@ static void gpencil_stroke_cache_populate(bGPDlayer *gpl,
   if (show_fill) {
     int vfirst = gps->runtime.fill_start * 3;
     int vcount = gps->tot_triangles * 3;
+    __android_log_print(ANDROID_LOG_DEBUG, "Blender.GP",
+        "  DRAWCALL fill: mat_nr=%d vfirst=%d vcount=%d", gps->mat_nr, vfirst, vcount);
     gpencil_drawcall_add(iter, geom, vfirst, vcount);
   }
 
@@ -546,6 +579,9 @@ static void gpencil_stroke_cache_populate(bGPDlayer *gpl,
     int vfirst = gps->runtime.stroke_start * 3;
     bool is_cyclic = ((gps->flag & GP_STROKE_CYCLIC) != 0) && (gps->totpoints > 2);
     int vcount = (gps->totpoints + (int)is_cyclic) * 2 * 3;
+    __android_log_print(ANDROID_LOG_DEBUG, "Blender.GP",
+        "  DRAWCALL stroke: mat_nr=%d vfirst=%d vcount=%d cyclic=%d",
+        gps->mat_nr, vfirst, vcount, is_cyclic);
     gpencil_drawcall_add(iter, geom, vfirst, vcount);
   }
 
@@ -766,7 +802,14 @@ static void GPENCIL_draw_scene_depth_only(void *ved)
 
   LISTBASE_FOREACH (GPENCIL_tObject *, ob, &pd->tobjects) {
     LISTBASE_FOREACH (GPENCIL_tLayer *, layer, &ob->layers) {
-      DRW_draw_pass(layer->geom_ps);
+    gp_crash_log("ABOUT geom_ps ob=%p layer=%d", (void *)ob, layer_count);
+    __android_log_print(ANDROID_LOG_DEBUG, "Blender.GP",
+        "  >> geom_ps draw start (layer %d)", layer_count);
+    DRW_draw_pass(layer->geom_ps);
+    GPU_flush();
+    gp_crash_log("DONE geom_ps ob=%p layer=%d", (void *)ob, layer_count);
+    __android_log_print(ANDROID_LOG_DEBUG, "Blender.GP",
+        "  << geom_ps draw end (layer %d)", layer_count);
     }
   }
 
@@ -948,6 +991,8 @@ void GPENCIL_draw_scene(void *ved)
       "GPENCIL_draw_scene #%d: tobjects=%d do_fast=%d sbuffer_used=%d",
       draw_count, BLI_listbase_count(&pd->tobjects),
       pd->do_fast_drawing, sbuf_used);
+  gp_crash_log("==== DRAW_SCENE #%d start tobjects=%d sbuf=%d ====",
+      draw_count, BLI_listbase_count(&pd->tobjects), sbuf_used);
 
   /* Fade 3D objects. */
   if ((!pd->is_render) && (pd->fade_3d_object_opacity > -1.0f) && (pd->obact != NULL) &&
@@ -989,10 +1034,14 @@ void GPENCIL_draw_scene(void *ved)
 
   if (pd->scene_fb) {
     GPU_memory_barrier(GPU_BARRIER_TEXTURE_FETCH | GPU_BARRIER_FRAMEBUFFER);
+    gp_crash_log("ABOUT antialiasing_draw");
     GPENCIL_antialiasing_draw(vedata);
+    gp_crash_log("DONE antialiasing_draw");
   }
 
   pd->gp_object_pool = pd->gp_layer_pool = pd->gp_vfx_pool = pd->gp_maskbit_pool = NULL;
+
+  gp_crash_log("==== DRAW_SCENE #%d done ====", draw_count);
 
   /* Free temp stroke buffers. */
   if (pd->sbuffer_gpd) {

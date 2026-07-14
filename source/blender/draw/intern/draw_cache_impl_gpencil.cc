@@ -21,6 +21,35 @@
 #include "GPU_batch.h"
 
 #include <android/log.h>
+#include <stdio.h>
+#include <fcntl.h>
+#include <unistd.h>
+#include <stdarg.h>
+
+/* Crash-surviving heartbeat log (see gp_crash_log in gpencil_engine.c). Writing
+ * with fsync BEFORE the offending GPU command lets the marker survive a Mali
+ * kernel panic. Read after reboot: adb shell cat /sdcard/com.epai.oblender/gp_crash.log */
+static void gp_crash_log(const char *fmt, ...)
+{
+  static int gp_crash_fd = -2;
+  if (gp_crash_fd == -2) {
+    gp_crash_fd = open("/sdcard/com.epai.oblender/gp_crash.log",
+                       O_WRONLY | O_CREAT | O_APPEND, 0644);
+  }
+  if (gp_crash_fd < 0) {
+    return;
+  }
+  char buf[768];
+  va_list ap;
+  va_start(ap, fmt);
+  int n = vsnprintf(buf, sizeof(buf), fmt, ap);
+  va_end(ap);
+  if (n > 0) {
+    write(gp_crash_fd, buf, n);
+  }
+  write(gp_crash_fd, "\n", 1);
+  fsync(gp_crash_fd);
+}
 
 #include "DEG_depsgraph_query.h"
 
@@ -388,11 +417,25 @@ static void gpencil_buffer_add_fill(GPUIndexBufBuilder *ibo, const bGPDstroke *g
 }
 
 static void gpencil_stroke_iter_cb(bGPDlayer * /*gpl*/,
-                                   bGPDframe * /*gpf*/,
-                                   bGPDstroke *gps,
-                                   void *thunk)
+                                    bGPDframe * /*gpf*/,
+                                    bGPDstroke *gps,
+                                    void *thunk)
 {
   gpIterData *iter = (gpIterData *)thunk;
+  /* ORDER DEBUG: dump each stroke's position in the buffer. The stroke/fill
+   * creation order changes the layout and is the key repro variable for the
+   * Mali G52 kernel panic (stroke-first-then-fill crashes, fill-first safe). */
+  __android_log_print(ANDROID_LOG_DEBUG, "Blender.GP",
+      "CACHE stroke: order_vstart=%d fill_start=%d stroke_start=%d mat_nr=%d "
+      "totpoints=%d tot_triangles=%d thickness=%.2f has_fill=%d",
+      gps->runtime.vertex_start, gps->runtime.fill_start, gps->runtime.stroke_start,
+      gps->mat_nr, gps->totpoints, gps->tot_triangles, (float)gps->thickness,
+      (gps->tot_triangles > 0) ? 1 : 0);
+  gp_crash_log("CACHE stroke vstart=%d fill_start=%d stroke_start=%d mat_nr=%d "
+      "totpoints=%d tot_triangles=%d thickness=%.2f has_fill=%d",
+      gps->runtime.vertex_start, gps->runtime.fill_start, gps->runtime.stroke_start,
+      gps->mat_nr, gps->totpoints, gps->tot_triangles, (float)gps->thickness,
+      (gps->tot_triangles > 0) ? 1 : 0);
   if (gps->tot_triangles > 0) {
     gpencil_buffer_add_fill(&iter->ibo, gps);
   }
