@@ -801,7 +801,9 @@ static void GPENCIL_draw_scene_depth_only(void *ved)
   }
 
   LISTBASE_FOREACH (GPENCIL_tObject *, ob, &pd->tobjects) {
+    int layer_count = 0;
     LISTBASE_FOREACH (GPENCIL_tLayer *, layer, &ob->layers) {
+    layer_count++;
     gp_crash_log("ABOUT geom_ps ob=%p layer=%d", (void *)ob, layer_count);
     __android_log_print(ANDROID_LOG_DEBUG, "Blender.GP",
         "  >> geom_ps draw start (layer %d)", layer_count);
@@ -909,7 +911,10 @@ static void GPENCIL_draw_object(GPENCIL_Data *vedata, GPENCIL_tObject *ob)
       GPU_framebuffer_bind(fb_object);
     }
 
+    gp_crash_log("ABOUT geom_ps ob=%p layer=%d", (void *)ob, layer_count);
     DRW_draw_pass(layer->geom_ps);
+    GPU_flush();
+    gp_crash_log("DONE geom_ps ob=%p layer=%d", (void *)ob, layer_count);
 
     if (layer->blend_ps) {
       GPU_framebuffer_bind(fb_object);
