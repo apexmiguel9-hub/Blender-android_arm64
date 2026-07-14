@@ -468,12 +468,17 @@ jobs:
           # makesdna, makesrna (host tool libs), and draco.
           # Excludes the 'blender' final link target explicitly.
           echo "=== Enumerating library targets ==="
-          LIB_TARGETS=$(ninja -t targets all 2>/dev/null | grep -E '^(bf_|extern_|cycles_|audaspace|makesdna|makesrna|draco)' | sed 's/:.*//' | sort -u)
-          TARGET_COUNT=$(echo "$LIB_TARGETS" | wc -l)
+          # Static-lib outputs are listed in the ninja graph as e.g.
+          # "lib/libbf_draw.a: <deps>". Match any target ending in .a and strip
+          # the trailing ": deps". (The previous prefix-based grep matched
+          # nothing because the targets carry a path prefix, so only prebuilt
+          # leftovers got packaged and the artifact was incomplete.)
+          LIB_TARGETS=$(ninja -t targets all 2>/dev/null | grep -E '\.a:' | sed 's#:.*##' | sort -u)
+          TARGET_COUNT=$(echo "$LIB_TARGETS" | grep -c .)
           echo "Found $TARGET_COUNT library targets"
 
-          if [ "$TARGET_COUNT" -eq 0 ]; then
-            echo "ERROR: No library targets found! Falling back to listing all targets:"
+          if [ -z "$LIB_TARGETS" ]; then
+            echo "ERROR: No library targets found!"
             ninja -t targets all 2>/dev/null | head -100
             exit 1
           fi
