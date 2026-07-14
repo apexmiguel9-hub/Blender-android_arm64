@@ -3317,18 +3317,8 @@ static int gpencil_draw_invoke(bContext *C, wmOperator *op, const wmEvent *event
 
   p = op->customdata;
 
-  /* In 2D Animation workspace, place 3D cursor at first touch point
-   * to simulate Shift+RMB cursor placement before drawing starts. */
-  {
-    WorkSpace *workspace = CTX_wm_workspace(C);
-    if (workspace && strstr(workspace->id.name + 2, "2D Animation")) {
-      float rvec[3], cursor_3d[3];
-      gpencil_get_3d_reference(p, rvec);
-      View3D *v3d = (View3D *)p->area->spacedata.first;
-      ED_view3d_win_to_3d(v3d, p->region, rvec, event->mval, cursor_3d);
-      copy_v3_v3(p->scene->cursor.location, cursor_3d);
-    }
-  }
+  /* NOTE: The original Shift+RMB cursor placement (2D Animation workspace)
+   * is disabled on Android — the cursor gizmo handles all cursor movement. */
 
   /* Init random settings. */
   ED_gpencil_init_random_settings(p->brush, event->mval, &p->random_settings);
