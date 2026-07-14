@@ -262,12 +262,6 @@ struct gpIterData {
   int curve_len;
 };
 
-static GPUVertBuf *gpencil_dummy_buffer_get()
-{
-  GPUBatch *batch = DRW_gpencil_dummy_buffer_get();
-  return batch->verts[0];
-}
-
 static int gpencil_stroke_is_cyclic(const bGPDstroke *gps)
 {
   return ((gps->flag & GP_STROKE_CYCLIC) != 0) && (gps->totpoints > 2);
@@ -679,10 +673,29 @@ static void gpencil_sbuffer_stroke_ensure(bGPdata *gpd, bool do_fill)
     /* Fill buffers with data. */
     gpencil_buffer_add_stroke(&ibo_builder, verts, cols, gps);
 
+    /* Upload the position/color TBO data now so the buffer textures used by the
+     * GPencil geometry shader (gp_pos_tx / gp_col_tx) exist before the draw.
+     * Without this the lazy upload can race with batch discard on Mali. */
+    GPU_vertbuf_use(vbo);
+    GPU_vertbuf_use(vbo_col);
+
+    /* The GPencil geometry shader reads all per-vertex data from TBOs, not from
+     * the VAO. The VAO still needs a bound vertex buffer (GL requirement) and
+     * the vertex fetch unit may speculatively prefetch VBO data indexed by the
+     * IBO. The IBO indices range up to (vert_len+1)*4, so the shared 4-vertex
+     * dummy VBO is far too small and Mali G52 prefetches out-of-bounds → GPU
+     * page fault / kernel panic. Allocate a dummy VBO large enough to cover the
+     * full IBO range. Its contents are never read by the shader. */
+    int max_vert = (vert_len + 1) * 4;
+    GPUVertFormat dummy_format = {0};
+    GPU_vertformat_attr_add(&dummy_format, "dummy", GPU_COMP_U32, 1, GPU_FETCH_INT);
+    GPUVertBuf *dummy_vbo = GPU_vertbuf_create_with_format(&dummy_format);
+    GPU_vertbuf_data_alloc(dummy_vbo, max_vert);
+
     GPUBatch *batch = GPU_batch_create_ex(GPU_PRIM_TRIS,
-                                          gpencil_dummy_buffer_get(),
+                                          dummy_vbo,
                                           GPU_indexbuf_build(&ibo_builder),
-                                          GPU_BATCH_OWNS_INDEX);
+                                          GPU_BATCH_OWNS_VBO | GPU_BATCH_OWNS_INDEX);
 
     gpd->runtime.sbuffer_position_buf = vbo;
     gpd->runtime.sbuffer_color_buf = vbo_col;

@@ -14,6 +14,8 @@
 #include "gpu_backend.hh"
 #include "gpu_node_graph.h"
 
+#include "gpu_context_private.hh"
+
 #include "GPU_context.h"
 #include "GPU_material.h"
 
@@ -241,7 +243,10 @@ void GPU_uniformbuf_unbind(GPUUniformBuf *ubo)
 
 void GPU_uniformbuf_unbind_all()
 {
-  /* FIXME */
+  Context *ctx = Context::get();
+  if (ctx && ctx->state_manager) {
+    ctx->state_manager->uniformbuf_unbind_all();
+  }
 }
 
 void GPU_uniformbuf_clear_to_zero(GPUUniformBuf *ubo)

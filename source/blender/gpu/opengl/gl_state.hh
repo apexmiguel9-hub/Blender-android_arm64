@@ -71,6 +71,7 @@ class GLStateManager : public StateManager {
   void texture_bind_temp(GLTexture *tex);
   void texture_unbind(Texture *tex) override;
   void texture_unbind_all() override;
+  void uniformbuf_unbind_all() override;
   void vao_unbind_all() override;
 
   void image_bind(Texture *tex, int unit) override;
