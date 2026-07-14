@@ -11,6 +11,10 @@
 #include "DNA_camera_types.h"
 #include "DNA_world_types.h"
 
+#ifdef __ANDROID__
+#  include <android/log.h>
+#endif
+
 #include "MEM_guardedalloc.h"
 
 #include "BLI_blenlib.h"
@@ -846,6 +850,14 @@ void ED_view3d_cursor3d_position(bContext *C,
     ED_view3d_calc_zfac(rv3d, cursor_co);
   }
 
+#ifdef __ANDROID__
+  __android_log_print(ANDROID_LOG_ERROR, "Blender.GP.Crash",
+      "CURSOR3D: mval=(%d,%d) use_depth=%d flip=%d, cursor_co_in=(%.4f,%.4f,%.4f) rv3d_persp=%d",
+      mval[0], mval[1], use_depth, flip,
+      cursor_co[0], cursor_co[1], cursor_co[2],
+      (rv3d) ? rv3d->persp : -1);
+#endif
+
   if (use_depth) { /* maybe this should be accessed some other way */
     struct Depsgraph *depsgraph = CTX_data_ensure_evaluated_depsgraph(C);
 
@@ -860,6 +872,12 @@ void ED_view3d_cursor3d_position(bContext *C,
     copy_v3_v3(depth_pt, cursor_co);
     ED_view3d_win_to_3d_int(v3d, region, depth_pt, mval, cursor_co);
   }
+
+#ifdef __ANDROID__
+  __android_log_print(ANDROID_LOG_ERROR, "Blender.GP.Crash",
+      "CURSOR3D_OUT: depth_used=%d cursor_co_out=(%.4f,%.4f,%.4f)",
+      depth_used, cursor_co[0], cursor_co[1], cursor_co[2]);
+#endif
 }
 
 void ED_view3d_cursor3d_position_rotation(bContext *C,
