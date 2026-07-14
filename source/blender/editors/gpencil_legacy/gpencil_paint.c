@@ -3268,12 +3268,25 @@ static int gpencil_draw_invoke(bContext *C, wmOperator *op, const wmEvent *event
 {
   tGPsdata *p = NULL;
   Object *ob = CTX_data_active_object(C);
+
+  /* Safety: if undo corrupted the active object, fail gracefully */
+  if (ob == NULL) {
+    __android_log_print(ANDROID_LOG_ERROR, "Blender.GP", "draw_invoke FAIL: ob is NULL");
+    BKE_report(op->reports, RPT_ERROR, "No active object to draw on");
+    return OPERATOR_CANCELLED;
+  }
+
   bGPdata *gpd = (bGPdata *)ob->data;
+  if (gpd == NULL) {
+    __android_log_print(ANDROID_LOG_ERROR, "Blender.GP", "draw_invoke FAIL: ob->data is NULL");
+    BKE_report(op->reports, RPT_ERROR, "GPencil data is NULL");
+    return OPERATOR_CANCELLED;
+  }
 
   __android_log_print(ANDROID_LOG_DEBUG, "Blender.GP", "draw_invoke: ob=%p type=%d gpd=%p ev_type=%d ev_val=%d gpd_flag=0x%x",
-    (void*)ob, ob ? ob->type : -1, (void*)gpd,
+    (void*)ob, ob->type, (void*)gpd,
     event ? event->type : -1, event ? event->val : -1,
-    gpd ? gpd->flag : 0);
+    gpd->flag);
 
   /* support for tablets eraser pen */
   if (gpencil_is_tablet_eraser_active(event)) {
