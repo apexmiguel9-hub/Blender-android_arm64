@@ -71,11 +71,11 @@ class VIEW3D_GT_cursor_axis_arrow(Gizmo):
             context.scene.cursor.location = self.init_loc
 
     def modal(self, context, event, tweak):
-        if event.type == 'LEFTMOUSE' and event.value == 'RELEASE':
-            return {'FINISHED'}
-
-        if event.type not in {'MOUSEMOVE', 'INBETWEEN_MOUSEMOVE'}:
+        if event.type not in {'MOUSEMOVE', 'INBETWEEN_MOUSEMOVE', 'LEFTMOUSE'}:
             return {'PASS_THROUGH'}
+
+        if event.type == 'LEFTMOUSE':
+            return {'RUNNING_MODAL'}
 
         rv3d = context.space_data.region_3d
         region = context.region
