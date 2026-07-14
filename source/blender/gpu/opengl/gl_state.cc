@@ -512,6 +512,20 @@ void GLStateManager::vao_unbind_all()
   glBindVertexArray(0);
 }
 
+void GLStateManager::uniformbuf_unbind_all()
+{
+  /* Unbind every uniform buffer binding point.
+   * GPU_shader_unbind() only calls glUseProgram(0) which does NOT clear UBO
+   * bindings, so stale bindings from a previous shader (e.g. the GPencil
+   * geometry shader at slots 0,1,3,4,8) persist on the context. Mali G52 can
+   * kernel-panic when a new (UBO-less) shader such as GPU_SHADER_3D_FLAT_COLOR
+   * inherits these bindings. Clearing them explicitly avoids the fault. */
+  for (int slot = 0; slot < 16; slot++) {
+    glBindBufferBase(GL_UNIFORM_BUFFER, slot, 0);
+  }
+  GLContext::get()->bound_ubo_slots = 0;
+}
+
 void GLStateManager::texture_bind_apply()
 {
   if (dirty_texture_binds_ == 0) {

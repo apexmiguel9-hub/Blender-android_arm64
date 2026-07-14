@@ -75,6 +75,7 @@ extern void OBL_log(const char *tag, const char *fmt, ...);
 #include "GPU_matrix.h"
 #include "GPU_shader.h"
 #include "GPU_state.h"
+#include "GPU_uniform_buffer.h"
 #include "GPU_texture.h"
 
 #include "UI_interface.h"
@@ -1260,6 +1261,11 @@ static bool gpencil_render_offscreen(tGPDfill *tgpf)
    * kernel-panic when a new context (offscreen FBO) inherits a GS program. */
   GPU_shader_unbind();
   GPU_vao_unbind_all();
+  /* Unbind stale UBO bindings (slots 0,1,3,4,8) left by the GPencil geometry
+   * shader. GPU_shader_unbind() only does glUseProgram(0), which does NOT clear
+   * UBO bindings — they persist on the GL context. Mali G52 can kernel-panic
+   * when the UBO-less flat-color offscreen shader inherits these bindings. */
+  GPU_uniformbuf_unbind_all();
 
   /* Flush GPU pipeline before switching framebuffers.
    * Mali-G52 can hang if the GPencil engine's RGBA16F framebuffer operations
@@ -1344,6 +1350,7 @@ static bool gpencil_render_offscreen(tGPDfill *tgpf)
    * with a GS program. */
   GPU_shader_unbind();
   GPU_vao_unbind_all();
+  GPU_uniformbuf_unbind_all();
   GPU_depth_test(GPU_DEPTH_NONE);
   /* Stencil: disable writes FIRST, then disable test.
    * GPU_stencil_test(GPU_STENCIL_NONE) sets glStencilMask(0x00) internally,
@@ -1397,6 +1404,7 @@ static bool gpencil_render_offscreen(tGPDfill *tgpf)
    * stale draw state from gpencil_draw_datablock is in-flight. */
   GPU_finish();
   GPU_vao_unbind_all();
+  GPU_uniformbuf_unbind_all();
   GPU_blend(GPU_BLEND_NONE);
   GPU_texture_unbind_all();
   GPU_depth_test(GPU_DEPTH_NONE);
