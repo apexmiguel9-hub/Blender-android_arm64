@@ -672,6 +672,11 @@ void MTLStateManager::vao_unbind_all()
   /* No-op: Metal has no vertex array objects. */
 }
 
+void MTLStateManager::uniformbuf_unbind_all()
+{
+  /* No-op: Metal manages uniform buffer lifetime separately. */
+}
+
 /** \} */
 
 /* -------------------------------------------------------------------- */
