@@ -73,6 +73,7 @@ extern void OBL_log(const char *tag, const char *fmt, ...);
 #include "GPU_framebuffer.h"
 #include "GPU_immediate.h"
 #include "GPU_matrix.h"
+#include "GPU_shader.h"
 #include "GPU_state.h"
 #include "GPU_texture.h"
 
@@ -1326,16 +1327,31 @@ static bool gpencil_render_offscreen(tGPDfill *tgpf)
   GPU_matrix_push();
   GPU_matrix_identity_set();
 
-  /* Reset GPU state from the viewport render pass. Mali G52 can hang if
-   * stale blend/texture/depth/stencil state is inherited when rendering
-   * into the offscreen FBO. */
+  /* FULL GPU state reset before offscreen render. Mali G52 can hang if
+   * stale shader/blend/cull/depth/stencil state from the GPencil stroke
+   * engine (Solid Stroke) is inherited when rendering into the offscreen
+   * FBO. Every GPU state function is explicitly reset to neutral. */
+  GPU_shader_unbind();
+  GPU_vao_unbind_all();
   GPU_depth_test(GPU_DEPTH_NONE);
   GPU_stencil_test(GPU_STENCIL_NONE);
+  GPU_stencil_reference_set(0);
+  GPU_stencil_write_mask_set(0xFF);
+  GPU_stencil_compare_mask_set(0xFF);
   GPU_blend(GPU_BLEND_NONE);
+  GPU_face_culling(GPU_CULL_NONE);
   GPU_color_mask(true, true, true, true);
-  GPU_scissor_test(false);
-  GPU_texture_unbind_all();
   GPU_depth_mask(true);
+  GPU_scissor_test(false);
+  GPU_logic_op_xor_set(false);
+  GPU_line_smooth(false);
+  GPU_polygon_smooth(false);
+  GPU_front_facing(false);
+  GPU_provoking_vertex(GPU_VERTEX_LAST);
+  GPU_shadow_offset(false);
+  GPU_depth_range(0.0f, 1.0f);
+  GPU_clip_distances(0);
+  GPU_texture_unbind_all();
   GPU_clear_color(0.0f, 0.0f, 0.0f, 0.0f);
   GPU_clear_depth(1.0f);
 
