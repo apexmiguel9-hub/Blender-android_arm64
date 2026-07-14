@@ -1254,12 +1254,18 @@ static bool gpencil_render_offscreen(tGPDfill *tgpf)
   GP_FILL_LOG("CP02 render_offscreen: region resized to %dx%d fill_factor=%.2f zoom=%.2f",
               tgpf->sizex, tgpf->sizey, tgpf->fill_factor, tgpf->zoom);
 
+  /* Unbind any stale shader program from the GPencil stroke engine (Solid Stroke).
+   * GPU_shader_unbind() and GLShader::unbind() were no-ops in release builds,
+   * leaving the geometry-shader-backed stroke program active. Mali G52 can
+   * kernel-panic when a new context (offscreen FBO) inherits a GS program. */
+  GPU_shader_unbind();
+  GPU_vao_unbind_all();
+
   /* Flush GPU pipeline before switching framebuffers.
    * Mali-G52 can hang if the GPencil engine's RGBA16F framebuffer operations
    * overlap with the fill offscreen creation. Use matching RGBA16F format. */
   GPU_finish();
-  GPU_vao_unbind_all();
-  GP_FILL_LOG("CP03a render_offscreen: GPU flushed and VAO unbound before offscreen_create");
+  GP_FILL_LOG("CP03a render_offscreen: shader unbound, GPU flushed, VAO unbound before offscreen_create");
   char err_out[256] = "unknown";
   GPUOffScreen *offscreen = GPU_offscreen_create(
       tgpf->sizex, tgpf->sizey, true, GPU_RGBA16F, GPU_TEXTURE_USAGE_HOST_READ, err_out);

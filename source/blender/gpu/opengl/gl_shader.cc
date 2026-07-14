@@ -1118,9 +1118,7 @@ void GLShader::bind()
 
 void GLShader::unbind()
 {
-#ifndef NDEBUG
   glUseProgram(0);
-#endif
 }
 
 /** \} */
