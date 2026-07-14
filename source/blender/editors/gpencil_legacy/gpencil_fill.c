@@ -1336,13 +1336,23 @@ static bool gpencil_render_offscreen(tGPDfill *tgpf)
   /* FULL GPU state reset before offscreen render. Mali G52 can hang if
    * stale shader/blend/cull/depth/stencil state from the GPencil stroke
    * engine (Solid Stroke) is inherited when rendering into the offscreen
-   * FBO. Every GPU state function is explicitly reset to neutral. */
+   * FBO. Every GPU state function is explicitly reset to neutral.
+   *
+   * NOTE: GPU_shader_unbind() was a no-op in release builds (NDEBUG guard)
+   * before commit 598ff988 — the geometry-shader-backed stroke program
+   * remained active, causing Mali to try to interpret flat-color draws
+   * with a GS program. */
   GPU_shader_unbind();
   GPU_vao_unbind_all();
   GPU_depth_test(GPU_DEPTH_NONE);
+  /* Stencil: disable writes FIRST, then disable test.
+   * GPU_stencil_test(GPU_STENCIL_NONE) sets glStencilMask(0x00) internally,
+   * so DO NOT call GPU_stencil_write_mask_set(0xFF) afterwards — that
+   * re-enables stencil writes, which on Mali G52 can cause a GPU page fault
+   * when the offscreen FBO has no stencil attachment. */
+  GPU_stencil_write_mask_set(0x00);
   GPU_stencil_test(GPU_STENCIL_NONE);
   GPU_stencil_reference_set(0);
-  GPU_stencil_write_mask_set(0xFF);
   GPU_stencil_compare_mask_set(0xFF);
   GPU_blend(GPU_BLEND_NONE);
   GPU_face_culling(GPU_CULL_NONE);
@@ -1355,6 +1365,7 @@ static bool gpencil_render_offscreen(tGPDfill *tgpf)
   GPU_front_facing(false);
   GPU_provoking_vertex(GPU_VERTEX_LAST);
   GPU_shadow_offset(false);
+  GPU_line_width(1.0f);
   GPU_depth_range(0.0f, 1.0f);
   GPU_clip_distances(0);
   GPU_texture_unbind_all();
