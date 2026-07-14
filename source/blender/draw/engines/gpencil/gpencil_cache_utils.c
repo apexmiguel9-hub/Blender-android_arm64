@@ -392,7 +392,7 @@ GPENCIL_tLayer *gpencil_layer_cache_add(GPENCIL_PrivateData *pd,
     /* Always write stencil. Only used as optimization for blending. */
     state |= DRW_STATE_WRITE_STENCIL | DRW_STATE_STENCIL_ALWAYS;
 
-    tgp_layer->geom_ps = DRW_pass_create("GPencil Layer", state);
+    tgp_layer->geom_ps = DRW_pass_create("GPencil Layer Fill", state);
 
     struct GPUShader *sh = GPENCIL_shader_geometry_get();
     DRWShadingGroup *grp = tgp_layer->base_shgrp = DRW_shgroup_create(sh, tgp_layer->geom_ps);
@@ -417,6 +417,23 @@ GPENCIL_tLayer *gpencil_layer_cache_add(GPENCIL_PrivateData *pd,
 
     DRW_shgroup_uniform_float_copy(grp, "gpLayerOpacity", layer_alpha);
     DRW_shgroup_stencil_mask(grp, 0xFF);
+
+    /* Stroke pass: same state, separate command stream (split for Mali crash localization). */
+    tgp_layer->stroke_ps = DRW_pass_create("GPencil Layer Stroke", state);
+    DRWShadingGroup *grp_stroke = tgp_layer->base_stroke_shgrp =
+        DRW_shgroup_create(sh, tgp_layer->stroke_ps);
+
+    DRW_shgroup_uniform_texture(grp_stroke, "gpSceneDepthTexture", depth_tex);
+    DRW_shgroup_uniform_texture_ref(grp_stroke, "gpMaskTexture", mask_tex);
+    DRW_shgroup_uniform_vec3_copy(grp_stroke, "gpNormal", tgp_ob->plane_normal);
+    DRW_shgroup_uniform_bool_copy(grp_stroke, "gpStrokeOrder3d", tgp_ob->is_drawmode3d);
+    DRW_shgroup_uniform_float_copy(grp_stroke, "gpThicknessScale", tgp_ob->object_scale);
+    DRW_shgroup_uniform_float_copy(grp_stroke, "gpThicknessOffset", (float)gpl->line_change);
+    DRW_shgroup_uniform_float_copy(grp_stroke, "gpThicknessWorldScale", thickness_scale);
+    DRW_shgroup_uniform_float_copy(grp_stroke, "gpVertexColorOpacity", vert_col_opacity);
+    DRW_shgroup_uniform_vec4_copy(grp_stroke, "gpLayerTint", gpl_color);
+    DRW_shgroup_uniform_float_copy(grp_stroke, "gpLayerOpacity", layer_alpha);
+    DRW_shgroup_stencil_mask(grp_stroke, 0xFF);
   }
 
   return tgp_layer;
