@@ -104,6 +104,9 @@ void GPENCIL_engine_init(void *ved)
 
   GPENCIL_ViewLayerData *vldata = GPENCIL_view_layer_data_ensure();
 
+  GPU_finish();
+  gp_crash_log("CACHE_INIT start");
+
   /* Resize and reset memblocks. */
   BLI_memblock_clear(vldata->gp_light_pool, gpencil_light_pool_free);
   BLI_memblock_clear(vldata->gp_material_pool, gpencil_material_pool_free);
@@ -888,7 +891,6 @@ static void gpencil_draw_mask(GPENCIL_Data *vedata, GPENCIL_tObject *ob, GPENCIL
     GPU_uniformbuf_unbind_all();
     GPU_texture_unbind_all();
     DRW_draw_pass(mask_layer->geom_ps);
-    GPU_finish();
     GPU_shader_unbind();
     GPU_vao_unbind_all();
     GPU_uniformbuf_unbind_all();
@@ -1088,7 +1090,6 @@ void GPENCIL_draw_scene(void *ved)
     gp_crash_log("ABOUT antialiasing_draw");
     GPENCIL_antialiasing_draw(vedata);
     gp_crash_log("DONE antialiasing_draw");
-    GPU_finish();
   }
 
   pd->gp_object_pool = pd->gp_layer_pool = pd->gp_vfx_pool = pd->gp_maskbit_pool = NULL;
