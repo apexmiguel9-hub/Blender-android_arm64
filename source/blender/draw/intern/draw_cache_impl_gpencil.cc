@@ -22,7 +22,33 @@
 
 #include <android/log.h>
 #include <stdio.h>
+#include <fcntl.h>
+#include <unistd.h>
+#include <stdarg.h>
 #include "DEG_depsgraph_query.h"
+
+/* TEMP diagnostic fsync log (localize layer-2 / color-picker SIGSEGV). */
+static void gp_crash_log(const char *fmt, ...)
+{
+  static int gp_crash_fd = -2;
+  if (gp_crash_fd == -2) {
+    gp_crash_fd = open("/sdcard/com.epai.oblender/gp_crash.log",
+                       O_WRONLY | O_CREAT | O_APPEND, 0644);
+  }
+  if (gp_crash_fd < 0) {
+    return;
+  }
+  char buf[768];
+  va_list ap;
+  va_start(ap, fmt);
+  int n = vsnprintf(buf, sizeof(buf), fmt, ap);
+  va_end(ap);
+  if (n > 0) {
+    write(gp_crash_fd, buf, n);
+  }
+  write(gp_crash_fd, "\n", 1);
+  fsync(gp_crash_fd);
+}
 
 #include "BLI_hash.h"
 #include "BLI_math_vector_types.hh"
@@ -393,6 +419,11 @@ static void gpencil_stroke_iter_cb(bGPDlayer * /*gpl*/,
                                     void *thunk)
 {
   gpIterData *iter = (gpIterData *)thunk;
+  gp_crash_log("CACHE stroke vstart=%d fill_start=%d stroke_start=%d mat_nr=%d "
+      "totpoints=%d tot_triangles=%d has_fill=%d",
+      gps->runtime.vertex_start, gps->runtime.fill_start, gps->runtime.stroke_start,
+      gps->mat_nr, gps->totpoints, gps->tot_triangles,
+      (gps->tot_triangles > 0) ? 1 : 0);
   if (gps->tot_triangles > 0) {
     gpencil_buffer_add_fill(&iter->ibo, gps);
   }

@@ -536,6 +536,8 @@ static void gpencil_stroke_cache_populate(bGPDlayer *gpl,
   GPUTexture *tex_stroke, *tex_fill;
   gpencil_material_resources_get(
       iter->matpool, iter->mat_ofs + gps->mat_nr, &tex_stroke, &tex_fill, &ubo_mat);
+  gp_crash_log("MAT mat_nr=%d ubo_mat=%p tex_fill=%p tex_stroke=%p",
+      iter->mat_ofs + gps->mat_nr, (void *)ubo_mat, (void *)tex_fill, (void *)tex_stroke);
 
   iter->ubo_mat = ubo_mat;
   iter->tex_fill = tex_fill;
@@ -558,15 +560,6 @@ static void gpencil_stroke_cache_populate(bGPDlayer *gpl,
     int vcount = gps->tot_triangles * 3;
     gp_crash_log("  DRAWCALL FILL mat_nr=%d vfirst=%d vcount=%d has_tex=%d sbuf=%d",
         gps->mat_nr, vfirst, vcount, (tex_fill != NULL), do_sbuffer);
-    /* TEMP guard: skip fill drawcalls that would read past the position TBO.
-     * Used to localize the layer-2 fill_ps SIGSEGV. Removed in clean build. */
-    uint pos_len = position_tx ? GPU_vertbuf_get_vertex_len(position_tx) : 0;
-    if (pos_len > 0 && (vfirst < 0 || vfirst + vcount > (int)pos_len)) {
-      gp_crash_log("  !! SKIP OOB FILL mat_nr=%d vfirst=%d vcount=%d pos_len=%u",
-          gps->mat_nr, vfirst, vcount, pos_len);
-      show_fill = false;
-    }
-    else {
     gpencil_drawcall_flush(iter);
     DRWShadingGroup *grp = DRW_shgroup_create_sub(iter->tgp_layer->base_shgrp);
     DRW_shgroup_uniform_block(grp, "materials", ubo_mat);
@@ -578,13 +571,14 @@ static void gpencil_stroke_cache_populate(bGPDlayer *gpl,
     DRW_shgroup_uniform_float_copy(grp, "gpStrokeIndexOffset", iter->stroke_index_offset);
     iter->grp = grp;
     gpencil_drawcall_add(iter, geom, vfirst, vcount);
-    }
   }
 
   if (show_stroke) {
     int vfirst = gps->runtime.stroke_start * 3;
     bool is_cyclic = ((gps->flag & GP_STROKE_CYCLIC) != 0) && (gps->totpoints > 2);
     int vcount = (gps->totpoints + (int)is_cyclic) * 2 * 3;
+    gp_crash_log("  DRAWCALL STROKE mat_nr=%d vfirst=%d vcount=%d has_tex=%d sbuf=%d",
+        gps->mat_nr, vfirst, vcount, (tex_stroke != NULL), do_sbuffer);
     gpencil_drawcall_flush(iter);
     DRWShadingGroup *grp = DRW_shgroup_create_sub(iter->tgp_layer->base_stroke_shgrp);
     DRW_shgroup_uniform_block(grp, "materials", ubo_mat);
@@ -662,6 +656,7 @@ void GPENCIL_cache_populate(void *ved, Object *ob)
     iter.matpool = gpencil_material_pool_create(pd, ob, &iter.mat_ofs);
     iter.tex_fill = txl->dummy_texture;
     iter.tex_stroke = txl->dummy_texture;
+    gp_crash_log("CACHE_POPULATE start ob=%p mat_ofs=%d", (void *)ob, iter.mat_ofs);
 
     /* Special case for rendering onion skin. */
     bGPdata *gpd = (bGPdata *)ob->data;
@@ -817,11 +812,15 @@ static void GPENCIL_draw_scene_depth_only(void *ved)
     int layer_count = 0;
     LISTBASE_FOREACH (GPENCIL_tLayer *, layer, &ob->layers) {
     layer_count++;
+    gp_crash_log("ABOUT fill_ps ob=%p layer=%d", (void *)ob, layer_count);
     DRW_draw_pass(layer->geom_ps);
     GPU_flush();
+    gp_crash_log("DONE fill_ps ob=%p layer=%d", (void *)ob, layer_count);
 
+    gp_crash_log("ABOUT stroke_ps ob=%p layer=%d", (void *)ob, layer_count);
     DRW_draw_pass(layer->stroke_ps);
     GPU_flush();
+    gp_crash_log("DONE stroke_ps ob=%p layer=%d", (void *)ob, layer_count);
     }
   }
 
@@ -922,11 +921,15 @@ static void GPENCIL_draw_object(GPENCIL_Data *vedata, GPENCIL_tObject *ob)
       GPU_framebuffer_bind(fb_object);
     }
 
+    gp_crash_log("ABOUT fill_ps ob=%p layer=%d", (void *)ob, layer_count);
     DRW_draw_pass(layer->geom_ps);
     GPU_flush();
+    gp_crash_log("DONE fill_ps ob=%p layer=%d", (void *)ob, layer_count);
 
+    gp_crash_log("ABOUT stroke_ps ob=%p layer=%d", (void *)ob, layer_count);
     DRW_draw_pass(layer->stroke_ps);
     GPU_flush();
+    gp_crash_log("DONE stroke_ps ob=%p layer=%d", (void *)ob, layer_count);
 
     if (layer->blend_ps) {
       GPU_framebuffer_bind(fb_object);
@@ -1008,6 +1011,8 @@ void GPENCIL_draw_scene(void *ved)
       "GPENCIL_draw_scene #%d: tobjects=%d do_fast=%d sbuffer_used=%d",
       draw_count, BLI_listbase_count(&pd->tobjects),
       pd->do_fast_drawing, sbuf_used);
+  gp_crash_log("==== DRAW_SCENE #%d start tobjects=%d sbuf=%d ====",
+      draw_count, BLI_listbase_count(&pd->tobjects), sbuf_used);
 
   /* Fade 3D objects. */
   if ((!pd->is_render) && (pd->fade_3d_object_opacity > -1.0f) && (pd->obact != NULL) &&
@@ -1049,7 +1054,9 @@ void GPENCIL_draw_scene(void *ved)
 
   if (pd->scene_fb) {
     GPU_memory_barrier(GPU_BARRIER_TEXTURE_FETCH | GPU_BARRIER_FRAMEBUFFER);
+    gp_crash_log("ABOUT antialiasing_draw");
     GPENCIL_antialiasing_draw(vedata);
+    gp_crash_log("DONE antialiasing_draw");
   }
 
   pd->gp_object_pool = pd->gp_layer_pool = pd->gp_vfx_pool = pd->gp_maskbit_pool = NULL;
