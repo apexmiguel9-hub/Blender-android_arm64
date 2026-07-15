@@ -395,6 +395,7 @@ void GPENCIL_cache_init(void *ved)
 typedef struct gpIterPopulateData {
   Object *ob;
   GPENCIL_tObject *tgp_ob;
+  GPENCIL_tLayer *tgp_layer;
   GPENCIL_PrivateData *pd;
   GPENCIL_MaterialPool *matpool;
   DRWShadingGroup *grp;
@@ -495,16 +496,8 @@ static void gpencil_layer_cache_populate(bGPDlayer *gpl,
 
   gpencil_drawcall_flush(iter);
 
-  if (iter->do_sbuffer_call) {
-    gpencil_sbuffer_cache_populate(iter);
-  }
-  else {
-    iter->do_sbuffer_call = !pd->do_fast_drawing && (gpd == pd->sbuffer_gpd) &&
-                            (gpl == pd->sbuffer_layer) &&
-                            (gpf == NULL || gpf->runtime.onion_id == 0.0f);
-  }
-
   GPENCIL_tLayer *tgp_layer = gpencil_layer_cache_add(pd, iter->ob, gpl, gpf, iter->tgp_ob);
+  iter->tgp_layer = tgp_layer;
 
   const bool use_lights = pd->use_lighting && ((gpl->flag & GP_LAYER_USE_LIGHTS) != 0) &&
                           (iter->ob->dtx & OB_USE_GPENCIL_LIGHTS);
@@ -522,6 +515,25 @@ static void gpencil_layer_cache_populate(bGPDlayer *gpl,
   DRW_shgroup_uniform_int_copy(grp, "gpMaterialOffset", iter->mat_ofs);
   DRW_shgroup_uniform_float_copy(grp, "gpStrokeIndexOffset", iter->stroke_index_offset);
   DRW_shgroup_uniform_vec2_copy(grp, "viewportSize", DRW_viewport_size_get());
+
+  /* Mirror the per-layer index/offset/lights on the stroke base shgroup. */
+  DRWShadingGroup *grp_stroke = tgp_layer->base_stroke_shgrp;
+  DRW_shgroup_uniform_block(grp_stroke, "lights", iter->ubo_lights);
+  DRW_shgroup_uniform_block(grp_stroke, "materials", iter->ubo_mat);
+  DRW_shgroup_uniform_texture(grp_stroke, "gpFillTexture", iter->tex_fill);
+  DRW_shgroup_uniform_texture(grp_stroke, "gpStrokeTexture", iter->tex_stroke);
+  DRW_shgroup_uniform_int_copy(grp_stroke, "gpMaterialOffset", iter->mat_ofs);
+  DRW_shgroup_uniform_float_copy(grp_stroke, "gpStrokeIndexOffset", iter->stroke_index_offset);
+  DRW_shgroup_uniform_vec2_copy(grp_stroke, "viewportSize", DRW_viewport_size_get());
+
+  if (iter->do_sbuffer_call) {
+    gpencil_sbuffer_cache_populate(iter);
+  }
+  else {
+    iter->do_sbuffer_call = !pd->do_fast_drawing && (gpd == pd->sbuffer_gpd) &&
+                            (gpl == pd->sbuffer_layer) &&
+                            (gpf == NULL || gpf->runtime.onion_id == 0.0f);
+  }
 }
 
 static void gpencil_stroke_cache_populate(bGPDlayer *gpl,
@@ -564,49 +576,35 @@ static void gpencil_stroke_cache_populate(bGPDlayer *gpl,
   gpencil_material_resources_get(
       iter->matpool, iter->mat_ofs + gps->mat_nr, &tex_stroke, &tex_fill, &ubo_mat);
 
-  bool resource_changed = (iter->ubo_mat != ubo_mat) ||
-                          (tex_fill && (iter->tex_fill != tex_fill)) ||
-                          (tex_stroke && (iter->tex_stroke != tex_stroke));
-
-  if (resource_changed) {
-    gpencil_drawcall_flush(iter);
-
-    iter->grp = DRW_shgroup_create_sub(iter->grp);
-    if (iter->ubo_mat != ubo_mat) {
-      DRW_shgroup_uniform_block(iter->grp, "materials", ubo_mat);
-      iter->ubo_mat = ubo_mat;
-    }
-    if (tex_fill) {
-      DRW_shgroup_uniform_texture(iter->grp, "gpFillTexture", tex_fill);
-      iter->tex_fill = tex_fill;
-    }
-    if (tex_stroke) {
-      DRW_shgroup_uniform_texture(iter->grp, "gpStrokeTexture", tex_stroke);
-      iter->tex_stroke = tex_stroke;
-    }
-  }
+  iter->ubo_mat = ubo_mat;
+  iter->tex_fill = tex_fill;
+  iter->tex_stroke = tex_stroke;
 
   bool do_sbuffer = (iter->do_sbuffer_call == DRAW_NOW);
 
   GPUBatch *geom = do_sbuffer ? DRW_cache_gpencil_sbuffer_get(iter->ob, show_fill) :
                                 DRW_cache_gpencil_get(iter->ob, iter->pd->cfra);
-  if (geom != iter->geom) {
-    gpencil_drawcall_flush(iter);
 
-    GPUVertBuf *position_tx = do_sbuffer ?
-                                  DRW_cache_gpencil_sbuffer_position_buffer_get(iter->ob,
-                                                                                show_fill) :
-                                  DRW_cache_gpencil_position_buffer_get(iter->ob, iter->pd->cfra);
-    GPUVertBuf *color_tx = do_sbuffer ?
-                               DRW_cache_gpencil_sbuffer_color_buffer_get(iter->ob, show_fill) :
-                               DRW_cache_gpencil_color_buffer_get(iter->ob, iter->pd->cfra);
-    DRW_shgroup_buffer_texture(iter->grp, "gp_pos_tx", position_tx);
-    DRW_shgroup_buffer_texture(iter->grp, "gp_col_tx", color_tx);
-  }
+  GPUVertBuf *position_tx = do_sbuffer ?
+                                DRW_cache_gpencil_sbuffer_position_buffer_get(iter->ob, show_fill) :
+                                DRW_cache_gpencil_position_buffer_get(iter->ob, iter->pd->cfra);
+  GPUVertBuf *color_tx = do_sbuffer ?
+                             DRW_cache_gpencil_sbuffer_color_buffer_get(iter->ob, show_fill) :
+                             DRW_cache_gpencil_color_buffer_get(iter->ob, iter->pd->cfra);
 
   if (show_fill) {
     int vfirst = gps->runtime.fill_start * 3;
     int vcount = gps->tot_triangles * 3;
+    gpencil_drawcall_flush(iter);
+    DRWShadingGroup *grp = DRW_shgroup_create_sub(iter->tgp_layer->base_shgrp);
+    DRW_shgroup_uniform_block(grp, "materials", ubo_mat);
+    if (tex_fill) {
+      DRW_shgroup_uniform_texture(grp, "gpFillTexture", tex_fill);
+    }
+    DRW_shgroup_buffer_texture(grp, "gp_pos_tx", position_tx);
+    DRW_shgroup_buffer_texture(grp, "gp_col_tx", color_tx);
+    DRW_shgroup_uniform_float_copy(grp, "gpStrokeIndexOffset", iter->stroke_index_offset);
+    iter->grp = grp;
     gp_crash_log("  DRAWCALL FILL mat_nr=%d vfirst=%d vcount=%d skip=%d",
         gps->mat_nr, vfirst, vcount, skip_mode);
     gpencil_drawcall_add(iter, geom, vfirst, vcount);
@@ -616,6 +614,16 @@ static void gpencil_stroke_cache_populate(bGPDlayer *gpl,
     int vfirst = gps->runtime.stroke_start * 3;
     bool is_cyclic = ((gps->flag & GP_STROKE_CYCLIC) != 0) && (gps->totpoints > 2);
     int vcount = (gps->totpoints + (int)is_cyclic) * 2 * 3;
+    gpencil_drawcall_flush(iter);
+    DRWShadingGroup *grp = DRW_shgroup_create_sub(iter->tgp_layer->base_stroke_shgrp);
+    DRW_shgroup_uniform_block(grp, "materials", ubo_mat);
+    if (tex_stroke) {
+      DRW_shgroup_uniform_texture(grp, "gpStrokeTexture", tex_stroke);
+    }
+    DRW_shgroup_buffer_texture(grp, "gp_pos_tx", position_tx);
+    DRW_shgroup_buffer_texture(grp, "gp_col_tx", color_tx);
+    DRW_shgroup_uniform_float_copy(grp, "gpStrokeIndexOffset", iter->stroke_index_offset);
+    iter->grp = grp;
     gp_crash_log("  DRAWCALL STROKE mat_nr=%d vfirst=%d vcount=%d cyclic=%d skip=%d",
         gps->mat_nr, vfirst, vcount, is_cyclic, skip_mode);
     gpencil_drawcall_add(iter, geom, vfirst, vcount);
@@ -840,14 +848,15 @@ static void GPENCIL_draw_scene_depth_only(void *ved)
     int layer_count = 0;
     LISTBASE_FOREACH (GPENCIL_tLayer *, layer, &ob->layers) {
     layer_count++;
-    gp_crash_log("ABOUT geom_ps ob=%p layer=%d", (void *)ob, layer_count);
-    __android_log_print(ANDROID_LOG_DEBUG, "Blender.GP",
-        "  >> geom_ps draw start (layer %d)", layer_count);
+    gp_crash_log("ABOUT fill_ps ob=%p layer=%d", (void *)ob, layer_count);
     DRW_draw_pass(layer->geom_ps);
     GPU_flush();
-    gp_crash_log("DONE geom_ps ob=%p layer=%d", (void *)ob, layer_count);
-    __android_log_print(ANDROID_LOG_DEBUG, "Blender.GP",
-        "  << geom_ps draw end (layer %d)", layer_count);
+    gp_crash_log("DONE fill_ps ob=%p layer=%d", (void *)ob, layer_count);
+
+    gp_crash_log("ABOUT stroke_ps ob=%p layer=%d", (void *)ob, layer_count);
+    DRW_draw_pass(layer->stroke_ps);
+    GPU_flush();
+    gp_crash_log("DONE stroke_ps ob=%p layer=%d", (void *)ob, layer_count);
     }
   }
 
@@ -902,6 +911,7 @@ static void gpencil_draw_mask(GPENCIL_Data *vedata, GPENCIL_tObject *ob, GPENCIL
     }
 
     DRW_draw_pass(mask_layer->geom_ps);
+    DRW_draw_pass(mask_layer->stroke_ps);
   }
 
   if (!inverted) {
@@ -947,10 +957,15 @@ static void GPENCIL_draw_object(GPENCIL_Data *vedata, GPENCIL_tObject *ob)
       GPU_framebuffer_bind(fb_object);
     }
 
-    gp_crash_log("ABOUT geom_ps ob=%p layer=%d", (void *)ob, layer_count);
+    gp_crash_log("ABOUT fill_ps ob=%p layer=%d", (void *)ob, layer_count);
     DRW_draw_pass(layer->geom_ps);
     GPU_flush();
-    gp_crash_log("DONE geom_ps ob=%p layer=%d", (void *)ob, layer_count);
+    gp_crash_log("DONE fill_ps ob=%p layer=%d", (void *)ob, layer_count);
+
+    gp_crash_log("ABOUT stroke_ps ob=%p layer=%d", (void *)ob, layer_count);
+    DRW_draw_pass(layer->stroke_ps);
+    GPU_flush();
+    gp_crash_log("DONE stroke_ps ob=%p layer=%d", (void *)ob, layer_count);
 
     if (layer->blend_ps) {
       GPU_framebuffer_bind(fb_object);

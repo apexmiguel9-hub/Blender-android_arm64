@@ -96,12 +96,16 @@ typedef struct GPENCIL_tVfx {
 typedef struct GPENCIL_tLayer {
   /** Single linked-list. */
   struct GPENCIL_tLayer *next;
-  /** Geometry pass (draw all strokes). */
+  /** Geometry pass: fill draws. */
   DRWPass *geom_ps;
+  /** Geometry pass: stroke draws (split for Mali crash localization). */
+  DRWPass *stroke_ps;
   /** Blend pass to composite onto the target buffer (blends modes). NULL if not needed. */
   DRWPass *blend_ps;
-  /** First shading group created for this layer. Contains all uniforms. */
+  /** First shading group created for this layer (fills). Contains all uniforms. */
   DRWShadingGroup *base_shgrp;
+  /** First shading group created for this layer (strokes). Contains all uniforms. */
+  DRWShadingGroup *base_stroke_shgrp;
   /** Layer id of the mask. */
   BLI_bitmap *mask_bits;
   BLI_bitmap *mask_invert_bits;
