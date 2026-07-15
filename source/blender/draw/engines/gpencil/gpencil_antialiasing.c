@@ -13,31 +13,6 @@
 
 #include <android/log.h>
 #include <stdio.h>
-#include <fcntl.h>
-#include <unistd.h>
-#include <stdarg.h>
-
-static void gp_crash_log(const char *fmt, ...)
-{
-  static int gp_crash_fd = -2;
-  if (gp_crash_fd == -2) {
-    gp_crash_fd = open("/sdcard/com.epai.oblender/gp_crash.log",
-                       O_WRONLY | O_CREAT | O_APPEND, 0644);
-  }
-  if (gp_crash_fd < 0) {
-    return;
-  }
-  char buf[512];
-  va_list ap;
-  va_start(ap, fmt);
-  int n = vsnprintf(buf, sizeof(buf), fmt, ap);
-  va_end(ap);
-  if (n > 0) {
-    write(gp_crash_fd, buf, n);
-  }
-  write(gp_crash_fd, "\n", 1);
-  fsync(gp_crash_fd);
-}
 
 void GPENCIL_antialiasing_init(struct GPENCIL_Data *vedata)
 {
@@ -160,28 +135,22 @@ void GPENCIL_antialiasing_draw(struct GPENCIL_Data *vedata)
 
   if (!pd->simplify_antialias) {
     GPU_framebuffer_bind(fbl->smaa_edge_fb);
-    gp_crash_log("ABOUT SMAA edge");
     __android_log_print(ANDROID_LOG_DEBUG, "Blender.GP", "  >> SMAA edge");
     DRW_draw_pass(psl->smaa_edge_ps);
     GPU_flush();
-    gp_crash_log("DONE SMAA edge");
     GPU_memory_barrier(GPU_BARRIER_TEXTURE_FETCH);
 
     GPU_framebuffer_bind(fbl->smaa_weight_fb);
-    gp_crash_log("ABOUT SMAA weight");
     __android_log_print(ANDROID_LOG_DEBUG, "Blender.GP", "  >> SMAA weight");
     DRW_draw_pass(psl->smaa_weight_ps);
     GPU_flush();
-    gp_crash_log("DONE SMAA weight");
     GPU_memory_barrier(GPU_BARRIER_TEXTURE_FETCH);
   }
 
   GPU_framebuffer_bind(pd->scene_fb);
   GPU_memory_barrier(GPU_BARRIER_TEXTURE_FETCH | GPU_BARRIER_FRAMEBUFFER);
-  gp_crash_log("ABOUT SMAA resolve");
   __android_log_print(ANDROID_LOG_DEBUG, "Blender.GP", "  >> SMAA resolve");
   DRW_draw_pass(psl->smaa_resolve_ps);
   GPU_flush();
-  gp_crash_log("DONE SMAA resolve");
   __android_log_print(ANDROID_LOG_DEBUG, "Blender.GP", "  SMAA exit");
 }

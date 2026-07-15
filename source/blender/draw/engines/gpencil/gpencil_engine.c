@@ -36,14 +36,12 @@
 
 #include <stdio.h>
 #include <fcntl.h>
-#include <string.h>
 #include <unistd.h>
 #include <stdarg.h>
+#include "DEG_depsgraph_query.h"
 
-/* Crash-surviving heartbeat log. A Mali G52 kernel panic freezes the I/O stack,
- * so normal logging is lost. Writing the marker to stable storage and fsync()-ing
- * it BEFORE the offending GPU command lets us read the last attempted step after
- * reboot via: adb shell cat /sdcard/com.epai.oblender/gp_crash.log */
+/* TEMP diagnostic: fsync marker that survives a Mali panic, used only to
+ * localize the layer-2 fill_ps SIGSEGV. Removed in the clean build. */
 static void gp_crash_log(const char *fmt, ...)
 {
   static int gp_crash_fd = -2;
@@ -65,34 +63,6 @@ static void gp_crash_log(const char *fmt, ...)
   write(gp_crash_fd, "\n", 1);
   fsync(gp_crash_fd);
 }
-
-/* Diagnostic skip mode (read once per call; cheap for few strokes).
- * File content: "fill"   -> skip fill draws (strokes only)
- *               "stroke" -> skip stroke draws (fills only)
- *               anything else -> normal (both draws) */
-static int gp_debug_skip_get(void)
-{
-  int fd = open("/sdcard/com.epai.oblender/gp_skip_mode", O_RDONLY);
-  if (fd < 0) {
-    return 0;
-  }
-  char buf[16];
-  int n = read(fd, buf, sizeof(buf) - 1);
-  close(fd);
-  if (n <= 0) {
-    return 0;
-  }
-  buf[n] = '\0';
-  if (strncmp(buf, "fill", 4) == 0) {
-    return 1; /* skip fills */
-  }
-  if (strncmp(buf, "stroke", 6) == 0) {
-    return 2; /* skip strokes */
-  }
-  return 0;
-}
-
-#include "DEG_depsgraph_query.h"
 
 #include "ED_screen.h"
 #include "ED_view3d.h"
@@ -553,15 +523,6 @@ static void gpencil_stroke_cache_populate(bGPDlayer *gpl,
   bool show_fill = (gps->tot_triangles > 0) && ((gp_style->flag & GP_MATERIAL_FILL_SHOW) != 0) &&
                     (!iter->pd->simplify_fill) && ((gps->flag & GP_STROKE_NOFILL) == 0);
 
-  /* Diagnostic skip mode: omit one draw type to isolate fill-vs-stroke crash. */
-  int skip_mode = gp_debug_skip_get();
-  if (skip_mode == 1) {
-    show_fill = false;
-  }
-  else if (skip_mode == 2) {
-    show_stroke = false;
-  }
-
   bool only_lines = !GPENCIL_PAINT_MODE(gpd) && gpl && gpf && gpl->actframe != gpf &&
                     iter->pd->use_multiedit_lines_only;
   bool is_onion = gpl && gpf && gpf->runtime.onion_id != 0;
@@ -595,6 +556,17 @@ static void gpencil_stroke_cache_populate(bGPDlayer *gpl,
   if (show_fill) {
     int vfirst = gps->runtime.fill_start * 3;
     int vcount = gps->tot_triangles * 3;
+    gp_crash_log("  DRAWCALL FILL mat_nr=%d vfirst=%d vcount=%d has_tex=%d sbuf=%d",
+        gps->mat_nr, vfirst, vcount, (tex_fill != NULL), do_sbuffer);
+    /* TEMP guard: skip fill drawcalls that would read past the position TBO.
+     * Used to localize the layer-2 fill_ps SIGSEGV. Removed in clean build. */
+    uint pos_len = position_tx ? GPU_vertbuf_get_vertex_len(position_tx) : 0;
+    if (pos_len > 0 && (vfirst < 0 || vfirst + vcount > (int)pos_len)) {
+      gp_crash_log("  !! SKIP OOB FILL mat_nr=%d vfirst=%d vcount=%d pos_len=%u",
+          gps->mat_nr, vfirst, vcount, pos_len);
+      show_fill = false;
+    }
+    else {
     gpencil_drawcall_flush(iter);
     DRWShadingGroup *grp = DRW_shgroup_create_sub(iter->tgp_layer->base_shgrp);
     DRW_shgroup_uniform_block(grp, "materials", ubo_mat);
@@ -605,9 +577,8 @@ static void gpencil_stroke_cache_populate(bGPDlayer *gpl,
     DRW_shgroup_buffer_texture(grp, "gp_col_tx", color_tx);
     DRW_shgroup_uniform_float_copy(grp, "gpStrokeIndexOffset", iter->stroke_index_offset);
     iter->grp = grp;
-    gp_crash_log("  DRAWCALL FILL mat_nr=%d vfirst=%d vcount=%d skip=%d",
-        gps->mat_nr, vfirst, vcount, skip_mode);
     gpencil_drawcall_add(iter, geom, vfirst, vcount);
+    }
   }
 
   if (show_stroke) {
@@ -624,8 +595,6 @@ static void gpencil_stroke_cache_populate(bGPDlayer *gpl,
     DRW_shgroup_buffer_texture(grp, "gp_col_tx", color_tx);
     DRW_shgroup_uniform_float_copy(grp, "gpStrokeIndexOffset", iter->stroke_index_offset);
     iter->grp = grp;
-    gp_crash_log("  DRAWCALL STROKE mat_nr=%d vfirst=%d vcount=%d cyclic=%d skip=%d",
-        gps->mat_nr, vfirst, vcount, is_cyclic, skip_mode);
     gpencil_drawcall_add(iter, geom, vfirst, vcount);
   }
 
@@ -848,15 +817,11 @@ static void GPENCIL_draw_scene_depth_only(void *ved)
     int layer_count = 0;
     LISTBASE_FOREACH (GPENCIL_tLayer *, layer, &ob->layers) {
     layer_count++;
-    gp_crash_log("ABOUT fill_ps ob=%p layer=%d", (void *)ob, layer_count);
     DRW_draw_pass(layer->geom_ps);
     GPU_flush();
-    gp_crash_log("DONE fill_ps ob=%p layer=%d", (void *)ob, layer_count);
 
-    gp_crash_log("ABOUT stroke_ps ob=%p layer=%d", (void *)ob, layer_count);
     DRW_draw_pass(layer->stroke_ps);
     GPU_flush();
-    gp_crash_log("DONE stroke_ps ob=%p layer=%d", (void *)ob, layer_count);
     }
   }
 
@@ -957,15 +922,11 @@ static void GPENCIL_draw_object(GPENCIL_Data *vedata, GPENCIL_tObject *ob)
       GPU_framebuffer_bind(fb_object);
     }
 
-    gp_crash_log("ABOUT fill_ps ob=%p layer=%d", (void *)ob, layer_count);
     DRW_draw_pass(layer->geom_ps);
     GPU_flush();
-    gp_crash_log("DONE fill_ps ob=%p layer=%d", (void *)ob, layer_count);
 
-    gp_crash_log("ABOUT stroke_ps ob=%p layer=%d", (void *)ob, layer_count);
     DRW_draw_pass(layer->stroke_ps);
     GPU_flush();
-    gp_crash_log("DONE stroke_ps ob=%p layer=%d", (void *)ob, layer_count);
 
     if (layer->blend_ps) {
       GPU_framebuffer_bind(fb_object);
@@ -1047,8 +1008,6 @@ void GPENCIL_draw_scene(void *ved)
       "GPENCIL_draw_scene #%d: tobjects=%d do_fast=%d sbuffer_used=%d",
       draw_count, BLI_listbase_count(&pd->tobjects),
       pd->do_fast_drawing, sbuf_used);
-  gp_crash_log("==== DRAW_SCENE #%d start tobjects=%d sbuf=%d skip=%d ====",
-      draw_count, BLI_listbase_count(&pd->tobjects), sbuf_used, gp_debug_skip_get());
 
   /* Fade 3D objects. */
   if ((!pd->is_render) && (pd->fade_3d_object_opacity > -1.0f) && (pd->obact != NULL) &&
@@ -1090,14 +1049,10 @@ void GPENCIL_draw_scene(void *ved)
 
   if (pd->scene_fb) {
     GPU_memory_barrier(GPU_BARRIER_TEXTURE_FETCH | GPU_BARRIER_FRAMEBUFFER);
-    gp_crash_log("ABOUT antialiasing_draw");
     GPENCIL_antialiasing_draw(vedata);
-    gp_crash_log("DONE antialiasing_draw");
   }
 
   pd->gp_object_pool = pd->gp_layer_pool = pd->gp_vfx_pool = pd->gp_maskbit_pool = NULL;
-
-  gp_crash_log("==== DRAW_SCENE #%d done ====", draw_count);
 
   /* Free temp stroke buffers. */
   if (pd->sbuffer_gpd) {
