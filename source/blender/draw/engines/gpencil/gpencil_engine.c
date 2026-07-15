@@ -888,11 +888,13 @@ static void gpencil_draw_mask(GPENCIL_Data *vedata, GPENCIL_tObject *ob, GPENCIL
     GPU_uniformbuf_unbind_all();
     GPU_texture_unbind_all();
     DRW_draw_pass(mask_layer->geom_ps);
+    GPU_finish();
     GPU_shader_unbind();
     GPU_vao_unbind_all();
     GPU_uniformbuf_unbind_all();
     GPU_texture_unbind_all();
     DRW_draw_pass(mask_layer->stroke_ps);
+    GPU_finish();
   }
 
   if (!inverted) {
@@ -1079,9 +1081,14 @@ void GPENCIL_draw_scene(void *ved)
 
   if (pd->scene_fb) {
     GPU_memory_barrier(GPU_BARRIER_TEXTURE_FETCH | GPU_BARRIER_FRAMEBUFFER);
+    GPU_shader_unbind();
+    GPU_vao_unbind_all();
+    GPU_uniformbuf_unbind_all();
+    GPU_texture_unbind_all();
     gp_crash_log("ABOUT antialiasing_draw");
     GPENCIL_antialiasing_draw(vedata);
     gp_crash_log("DONE antialiasing_draw");
+    GPU_finish();
   }
 
   pd->gp_object_pool = pd->gp_layer_pool = pd->gp_vfx_pool = pd->gp_maskbit_pool = NULL;
