@@ -219,17 +219,6 @@ void GPENCIL_cache_init(void *ved)
   GPENCIL_PrivateData *pd = vedata->stl->pd;
   DRWShadingGroup *grp;
 
-  /* DRW defers the actual GL command submission until after draw_scene
-   * returns, so freeing GPU buffers inside draw_scene would race with draws
-   * that have not been submitted/executed yet. Wait for the previous frame's
-   * commands to finish here (they were submitted by DRW at the end of the
-   * previous frame) before freeing any buffer. The GL context is current at
-   * this point (unlike engine_init, which can run before the context is ready
-   * during a "New" file reload and would fault on glFinish). Mali's deferred
-   * renderer raises a bus fault (SIGSEGV / kernel panic) if a buffer still
-   * referenced by an in-flight draw is freed or reused. */
-  GPU_finish();
-
   const DRWContextState *draw_ctx = DRW_context_state_get();
   pd->cfra = (int)DEG_get_ctime(draw_ctx->depsgraph);
   pd->simplify_antialias = GPENCIL_SIMPLIFY_AA(draw_ctx->scene);
@@ -298,18 +287,6 @@ void GPENCIL_cache_init(void *ved)
         pd->do_fast_drawing = false; /* TODO: option. */
       }
     }
-  }
-
-  /* Free the previous frame's temp stroke (sbuffer) buffers now that the
-   * previous frame's commands have been submitted and finished (see the
-   * GPU_finish() above). Freeing them inside draw_scene would race with the
-   * deferred command submission on Mali's deferred renderer. Always clear
-   * (freeing NULL buffers is a no-op) so a committed stroke's sbuffer is not
-   * leaked when the pen is lifted before the next frame. */
-  if (pd->obact && pd->obact->type == OB_GPENCIL_LEGACY) {
-    DRW_cache_gpencil_sbuffer_clear(pd->obact);
-    __android_log_print(ANDROID_LOG_DEBUG, "Blender.GP",
-        "GPENCIL_cache_init: sbuffer cleared");
   }
 
   if (pd->do_fast_drawing) {
@@ -861,6 +838,11 @@ static void GPENCIL_draw_scene_depth_only(void *ved)
   }
 
   pd->gp_object_pool = pd->gp_layer_pool = pd->gp_vfx_pool = pd->gp_maskbit_pool = NULL;
+
+  /* Free temp stroke buffers. */
+  if (pd->sbuffer_gpd) {
+    DRW_cache_gpencil_sbuffer_clear(pd->obact);
+  }
 }
 
 static void gpencil_draw_mask(GPENCIL_Data *vedata, GPENCIL_tObject *ob, GPENCIL_tLayer *layer)
@@ -1097,16 +1079,19 @@ void GPENCIL_draw_scene(void *ved)
 
   if (pd->scene_fb) {
     GPU_memory_barrier(GPU_BARRIER_TEXTURE_FETCH | GPU_BARRIER_FRAMEBUFFER);
-    GPU_shader_unbind();
-    GPU_vao_unbind_all();
-    GPU_uniformbuf_unbind_all();
-    GPU_texture_unbind_all();
     gp_crash_log("ABOUT antialiasing_draw");
     GPENCIL_antialiasing_draw(vedata);
     gp_crash_log("DONE antialiasing_draw");
   }
 
   pd->gp_object_pool = pd->gp_layer_pool = pd->gp_vfx_pool = pd->gp_maskbit_pool = NULL;
+
+  /* Free temp stroke buffers. */
+  if (pd->sbuffer_gpd) {
+    DRW_cache_gpencil_sbuffer_clear(pd->obact);
+    __android_log_print(ANDROID_LOG_DEBUG, "Blender.GP",
+        "GPENCIL_draw_scene #%d: sbuffer cleared", draw_count);
+  }
 }
 
 static void GPENCIL_engine_free(void)
