@@ -104,9 +104,6 @@ void GPENCIL_engine_init(void *ved)
 
   GPENCIL_ViewLayerData *vldata = GPENCIL_view_layer_data_ensure();
 
-  GPU_finish();
-  gp_crash_log("CACHE_INIT start");
-
   /* Resize and reset memblocks. */
   BLI_memblock_clear(vldata->gp_light_pool, gpencil_light_pool_free);
   BLI_memblock_clear(vldata->gp_material_pool, gpencil_material_pool_free);
@@ -1093,6 +1090,12 @@ void GPENCIL_draw_scene(void *ved)
   }
 
   pd->gp_object_pool = pd->gp_layer_pool = pd->gp_vfx_pool = pd->gp_maskbit_pool = NULL;
+
+  /* Ensure every GPU command of this frame has finished before freeing the
+   * sbuffer / cached geometry buffers. Mali's deferred renderer raises a bus
+   * fault (SIGSEGV / kernel panic) if a buffer still referenced by an in-flight
+   * draw is freed or reused. */
+  GPU_finish();
 
   /* Free temp stroke buffers. */
   if (pd->sbuffer_gpd) {
