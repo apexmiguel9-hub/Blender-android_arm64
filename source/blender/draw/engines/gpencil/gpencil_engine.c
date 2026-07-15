@@ -813,11 +813,15 @@ static void GPENCIL_draw_scene_depth_only(void *ved)
     LISTBASE_FOREACH (GPENCIL_tLayer *, layer, &ob->layers) {
     layer_count++;
     gp_crash_log("ABOUT fill_ps ob=%p layer=%d", (void *)ob, layer_count);
+    GPU_shader_unbind();
+    GPU_uniformbuf_unbind_all();
     DRW_draw_pass(layer->geom_ps);
     GPU_flush();
     gp_crash_log("DONE fill_ps ob=%p layer=%d", (void *)ob, layer_count);
 
     gp_crash_log("ABOUT stroke_ps ob=%p layer=%d", (void *)ob, layer_count);
+    GPU_shader_unbind();
+    GPU_uniformbuf_unbind_all();
     DRW_draw_pass(layer->stroke_ps);
     GPU_flush();
     gp_crash_log("DONE stroke_ps ob=%p layer=%d", (void *)ob, layer_count);
@@ -874,7 +878,11 @@ static void gpencil_draw_mask(GPENCIL_Data *vedata, GPENCIL_tObject *ob, GPENCIL
       continue;
     }
 
+    GPU_shader_unbind();
+    GPU_uniformbuf_unbind_all();
     DRW_draw_pass(mask_layer->geom_ps);
+    GPU_shader_unbind();
+    GPU_uniformbuf_unbind_all();
     DRW_draw_pass(mask_layer->stroke_ps);
   }
 
@@ -922,11 +930,15 @@ static void GPENCIL_draw_object(GPENCIL_Data *vedata, GPENCIL_tObject *ob)
     }
 
     gp_crash_log("ABOUT fill_ps ob=%p layer=%d", (void *)ob, layer_count);
+    GPU_shader_unbind();
+    GPU_uniformbuf_unbind_all();
     DRW_draw_pass(layer->geom_ps);
     GPU_flush();
     gp_crash_log("DONE fill_ps ob=%p layer=%d", (void *)ob, layer_count);
 
     gp_crash_log("ABOUT stroke_ps ob=%p layer=%d", (void *)ob, layer_count);
+    GPU_shader_unbind();
+    GPU_uniformbuf_unbind_all();
     DRW_draw_pass(layer->stroke_ps);
     GPU_flush();
     gp_crash_log("DONE stroke_ps ob=%p layer=%d", (void *)ob, layer_count);
