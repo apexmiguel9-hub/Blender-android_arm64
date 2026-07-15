@@ -104,15 +104,6 @@ void GPENCIL_engine_init(void *ved)
 
   GPENCIL_ViewLayerData *vldata = GPENCIL_view_layer_data_ensure();
 
-  /* DRW defers the actual GL command submission until after draw_scene
-   * returns, so freeing GPU buffers inside draw_scene would race with draws
-   * that have not been submitted/executed yet. Wait for the previous frame's
-   * commands to finish here (they were submitted by DRW at the end of the
-   * previous frame) before freeing any buffer. Mali's deferred renderer
-   * raises a bus fault (SIGSEGV / kernel panic) if a buffer still referenced
-   * by an in-flight draw is freed or reused. */
-  GPU_finish();
-
   /* Resize and reset memblocks. */
   BLI_memblock_clear(vldata->gp_light_pool, gpencil_light_pool_free);
   BLI_memblock_clear(vldata->gp_material_pool, gpencil_material_pool_free);
@@ -227,6 +218,17 @@ void GPENCIL_cache_init(void *ved)
   GPENCIL_FramebufferList *fbl = vedata->fbl;
   GPENCIL_PrivateData *pd = vedata->stl->pd;
   DRWShadingGroup *grp;
+
+  /* DRW defers the actual GL command submission until after draw_scene
+   * returns, so freeing GPU buffers inside draw_scene would race with draws
+   * that have not been submitted/executed yet. Wait for the previous frame's
+   * commands to finish here (they were submitted by DRW at the end of the
+   * previous frame) before freeing any buffer. The GL context is current at
+   * this point (unlike engine_init, which can run before the context is ready
+   * during a "New" file reload and would fault on glFinish). Mali's deferred
+   * renderer raises a bus fault (SIGSEGV / kernel panic) if a buffer still
+   * referenced by an in-flight draw is freed or reused. */
+  GPU_finish();
 
   const DRWContextState *draw_ctx = DRW_context_state_get();
   pd->cfra = (int)DEG_get_ctime(draw_ctx->depsgraph);
