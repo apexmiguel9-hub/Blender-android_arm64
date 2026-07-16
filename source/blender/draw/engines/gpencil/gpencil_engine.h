@@ -106,6 +106,11 @@ typedef struct GPENCIL_tLayer {
   DRWShadingGroup *base_shgrp;
   /** First shading group created for this layer (strokes). Contains all uniforms. */
   DRWShadingGroup *base_stroke_shgrp;
+  /** True only for the layer currently holding the active stroke buffer (the
+   *  one being drawn with the brush). Used to limit GPU_shader_unbind() to
+   *  that layer so the Solid Stroke geometry-shader program is cleared before
+   *  the Solid Fill offscreen without breaking normal layer drawing on Mali. */
+  bool is_sbuffer_layer;
   /** Layer id of the mask. */
   BLI_bitmap *mask_bits;
   BLI_bitmap *mask_invert_bits;

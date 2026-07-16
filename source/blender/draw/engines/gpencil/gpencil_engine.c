@@ -822,6 +822,9 @@ static void GPENCIL_draw_scene_depth_only(void *ved)
     gp_crash_log("DONE fill_ps ob=%p layer=%d", (void *)ob, layer_count);
 
     gp_crash_log("ABOUT stroke_ps ob=%p layer=%d", (void *)ob, layer_count);
+    if (layer->is_sbuffer_layer) {
+      GPU_shader_unbind();
+    }
     GPU_vao_unbind_all();
     GPU_uniformbuf_unbind_all();
     GPU_texture_unbind_all();
@@ -885,6 +888,9 @@ static void gpencil_draw_mask(GPENCIL_Data *vedata, GPENCIL_tObject *ob, GPENCIL
     GPU_uniformbuf_unbind_all();
     GPU_texture_unbind_all();
     DRW_draw_pass(mask_layer->geom_ps);
+    if (mask_layer->is_sbuffer_layer) {
+      GPU_shader_unbind();
+    }
     GPU_vao_unbind_all();
     GPU_uniformbuf_unbind_all();
     GPU_texture_unbind_all();
@@ -943,6 +949,9 @@ static void GPENCIL_draw_object(GPENCIL_Data *vedata, GPENCIL_tObject *ob)
     gp_crash_log("DONE fill_ps ob=%p layer=%d", (void *)ob, layer_count);
 
     gp_crash_log("ABOUT stroke_ps ob=%p layer=%d", (void *)ob, layer_count);
+    if (layer->is_sbuffer_layer) {
+      GPU_shader_unbind();
+    }
     GPU_vao_unbind_all();
     GPU_uniformbuf_unbind_all();
     GPU_texture_unbind_all();

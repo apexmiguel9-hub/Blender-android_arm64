@@ -436,6 +436,16 @@ GPENCIL_tLayer *gpencil_layer_cache_add(GPENCIL_PrivateData *pd,
     DRW_shgroup_stencil_mask(grp_stroke, 0xFF);
   }
 
+  /* Mali G52 kernel-panics (phone reboot) when a Solid Stroke's geometry-shader
+   * program is still bound on the GL context and the Solid Fill offscreen
+   * render inherits it. Only the layer that currently holds the active stroke
+   * buffer (the one being drawn with the brush) can have such a program bound,
+   * so we mark just that layer. The draw engine then does GPU_shader_unbind()
+   * only for this layer, clearing the GS program before the Fill offscreen —
+   * without touching the normal per-layer draw of other layers (which would
+   * otherwise cause deferred Mali bus faults / the layer-switch crash). */
+  tgp_layer->is_sbuffer_layer = (gpl == pd->sbuffer_layer);
+
   return tgp_layer;
 }
 
