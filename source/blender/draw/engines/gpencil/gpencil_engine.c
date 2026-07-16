@@ -822,9 +822,6 @@ static void GPENCIL_draw_scene_depth_only(void *ved)
     gp_crash_log("DONE fill_ps ob=%p layer=%d", (void *)ob, layer_count);
 
     gp_crash_log("ABOUT stroke_ps ob=%p layer=%d", (void *)ob, layer_count);
-    if (layer->is_sbuffer_layer) {
-      GPU_shader_unbind();
-    }
     GPU_vao_unbind_all();
     GPU_uniformbuf_unbind_all();
     GPU_texture_unbind_all();
@@ -888,9 +885,6 @@ static void gpencil_draw_mask(GPENCIL_Data *vedata, GPENCIL_tObject *ob, GPENCIL
     GPU_uniformbuf_unbind_all();
     GPU_texture_unbind_all();
     DRW_draw_pass(mask_layer->geom_ps);
-    if (mask_layer->is_sbuffer_layer) {
-      GPU_shader_unbind();
-    }
     GPU_vao_unbind_all();
     GPU_uniformbuf_unbind_all();
     GPU_texture_unbind_all();
@@ -949,9 +943,6 @@ static void GPENCIL_draw_object(GPENCIL_Data *vedata, GPENCIL_tObject *ob)
     gp_crash_log("DONE fill_ps ob=%p layer=%d", (void *)ob, layer_count);
 
     gp_crash_log("ABOUT stroke_ps ob=%p layer=%d", (void *)ob, layer_count);
-    if (layer->is_sbuffer_layer) {
-      GPU_shader_unbind();
-    }
     GPU_vao_unbind_all();
     GPU_uniformbuf_unbind_all();
     GPU_texture_unbind_all();
@@ -1086,6 +1077,16 @@ void GPENCIL_draw_scene(void *ved)
     GPENCIL_antialiasing_draw(vedata);
     gp_crash_log("DONE antialiasing_draw");
   }
+
+  /* Mali G52 kernel-panic fix (Solid Stroke/Fill on same layer reboot).
+   * The GPencil geometry-shader program stays bound on the GL context after
+   * drawing a stroke. If the Solid Fill offscreen render later inherits it,
+   * Mali panics. We clear the bound program ONCE here, at the very end of the
+   * scene draw and in the main context (before any offscreen FBO is touched),
+   * instead of between fill_ps/stroke_ps per layer — doing it per-layer broke
+   * normal layer drawing (deferred Mali bus fault). This single unbind clears
+   * the GS program so the next Fill offscreen never inherits it. */
+  GPU_shader_unbind();
 
   pd->gp_object_pool = pd->gp_layer_pool = pd->gp_vfx_pool = pd->gp_maskbit_pool = NULL;
 
