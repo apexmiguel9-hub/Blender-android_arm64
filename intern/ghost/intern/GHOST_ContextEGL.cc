@@ -581,6 +581,14 @@ GHOST_TSuccess GHOST_ContextEGL::initializeDrawingContext()
     attrib_list.push_back(EGL_CONTEXT_CLIENT_VERSION);
     attrib_list.push_back(3);
 
+  /* Request robust access (EGL_EXT_create_context_robustness) so a Mali GPU
+   * fault causes a controlled context-loss / app crash instead of a kernel
+   * panic that reboots the device. */
+  attrib_list.push_back(EGL_CONTEXT_OPENGL_ROBUST_ACCESS_EXT);
+  attrib_list.push_back(EGL_TRUE);
+  attrib_list.push_back(EGL_CONTEXT_OPENGL_RESET_NOTIFICATION_STRATEGY_EXT);
+  attrib_list.push_back(EGL_LOSE_CONTEXT_ON_RESET_EXT);
+
   attrib_list.push_back(EGL_NONE);
 
   m_context = ::eglCreateContext(m_display, m_config, m_sharedContext, &(attrib_list[0]));
