@@ -1255,11 +1255,13 @@ static bool gpencil_render_offscreen(tGPDfill *tgpf)
   GP_FILL_LOG("CP02 render_offscreen: region resized to %dx%d fill_factor=%.2f zoom=%.2f",
               tgpf->sizex, tgpf->sizey, tgpf->fill_factor, tgpf->zoom);
 
-  /* Unbind any stale shader program from the GPencil stroke engine (Solid Stroke).
-   * GPU_shader_unbind() and GLShader::unbind() were no-ops in release builds,
-   * leaving the geometry-shader-backed stroke program active. Mali G52 can
-   * kernel-panic when a new context (offscreen FBO) inherits a GS program. */
-  GPU_shader_unbind();
+  /* Replace any stale geometry-shader program from the GPencil stroke engine
+   * (Solid Stroke) with a plain (non-GS) builtin BEFORE creating the offscreen
+   * FBO. Mali G52 kernel-panics when a new FBO inherits an active GS program.
+   * We bind a valid non-GS shader (instead of glUseProgram(0)) so the context
+   * is never left with a NULL program, which also avoids the deferred Mali bus
+   * faults that glUseProgram(0) causes on normal layer drawing. */
+  GPU_shader_bind(GPU_shader_get_builtin_shader(GPU_SHADER_3D_FLAT_COLOR));
   GPU_vao_unbind_all();
   /* Unbind stale UBO bindings (slots 0,1,3,4,8) left by the GPencil geometry
    * shader. GPU_shader_unbind() only does glUseProgram(0), which does NOT clear
@@ -1348,7 +1350,7 @@ static bool gpencil_render_offscreen(tGPDfill *tgpf)
    * before commit 598ff988 — the geometry-shader-backed stroke program
    * remained active, causing Mali to try to interpret flat-color draws
    * with a GS program. */
-  GPU_shader_unbind();
+  GPU_shader_bind(GPU_shader_get_builtin_shader(GPU_SHADER_3D_FLAT_COLOR));
   GPU_vao_unbind_all();
   GPU_uniformbuf_unbind_all();
   GPU_depth_test(GPU_DEPTH_NONE);
