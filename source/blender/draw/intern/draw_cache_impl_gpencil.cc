@@ -769,11 +769,40 @@ void DRW_cache_gpencil_sbuffer_clear(Object *ob)
     (void*)gpd->runtime.sbuffer_batch,
     (void*)gpd->runtime.sbuffer_position_buf,
     gpd->runtime.sbuffer_used);
-  MEM_SAFE_FREE(gpd->runtime.sbuffer_gps->points);
-  MEM_SAFE_FREE(gpd->runtime.sbuffer_gps);
-  GPU_BATCH_DISCARD_SAFE(gpd->runtime.sbuffer_batch);
-  GPU_VERTBUF_DISCARD_SAFE(gpd->runtime.sbuffer_position_buf);
-  GPU_VERTBUF_DISCARD_SAFE(gpd->runtime.sbuffer_color_buf);
+
+  /* DOUBLE-BUFFER the sbuffer free: defer destruction of the CURRENT sbuffer by
+   * one frame so the GPU (which defers GL command submission via DRW) has time
+   * to finish reading these VBOs before they are freed. Freeing inline here
+   * causes a deferred Mali bus fault (SIGSEGV) when changing layer + tapping
+   * the canvas, because the buffers are freed while still in flight. We keep a
+   * small ring of previously-cleared gpd and release them on the NEXT call.
+   * NOTE: uses GPU_flush() (glFlush), NOT GPU_finish() (glFinish) — glFinish
+   * breaks "New 2D Animation" on this Mali runtime. */
+  static bGPdata *pending_free[8] = {0};
+  static int pending_count = 0;
+
+  /* Release the gpd queued from the previous frame (GPU had a full frame to
+   * drain its command stream by now). */
+  for (int i = 0; i < pending_count; i++) {
+    bGPdata *pg = pending_free[i];
+    if (pg && pg->runtime.sbuffer_gps) {
+      GPU_flush();
+      MEM_SAFE_FREE(pg->runtime.sbuffer_gps->points);
+      MEM_SAFE_FREE(pg->runtime.sbuffer_gps);
+      GPU_BATCH_DISCARD_SAFE(pg->runtime.sbuffer_batch);
+      GPU_VERTBUF_DISCARD_SAFE(pg->runtime.sbuffer_position_buf);
+      GPU_VERTBUF_DISCARD_SAFE(pg->runtime.sbuffer_color_buf);
+    }
+  }
+  pending_count = 0;
+
+  /* Queue the CURRENT gpd for deferred release next frame (only if it has live
+   * buffers to free). */
+  if (gpd->runtime.sbuffer_batch || gpd->runtime.sbuffer_gps) {
+    if (pending_count < 8) {
+      pending_free[pending_count++] = gpd;
+    }
+  }
 }
 
 /** \} */
