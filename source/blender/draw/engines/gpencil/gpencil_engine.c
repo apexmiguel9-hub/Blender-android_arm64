@@ -712,6 +712,7 @@ void GPENCIL_cache_finish(void *ved)
   GPENCIL_Data *vedata = (GPENCIL_Data *)ved;
   GPENCIL_PrivateData *pd = vedata->stl->pd;
   GPENCIL_FramebufferList *fbl = vedata->fbl;
+  GPENCIL_TextureList *txl = vedata->txl;
 
   /* Upload UBO data. */
   BLI_memblock_iter iter;
@@ -772,6 +773,21 @@ void GPENCIL_cache_finish(void *ved)
                                         GPU_ATTACHMENT_TEXTURE(pd->depth_tx),
                                         GPU_ATTACHMENT_TEXTURE(pd->color_object_tx),
                                         GPU_ATTACHMENT_TEXTURE(pd->reveal_object_tx),
+                                    });
+    }
+
+    /* PROTOTYPE (one-layer): aux FBO to isolate the fill (geom_ps) pass from
+     * the stroke pass. Reuses the shared depth_tx (has stencil) so z-order and
+     * stencil mask are preserved; color goes to its own RGBA16F texture. */
+    {
+      txl->fill_aux_tx = DRW_texture_pool_query_2d(
+          size[0], size[1], GPU_RGBA16F, &draw_engine_gpencil_type);
+
+      GPU_framebuffer_ensure_config(&fbl->fill_aux_fb,
+                                    {
+                                        GPU_ATTACHMENT_TEXTURE(pd->depth_tx),
+                                        GPU_ATTACHMENT_TEXTURE(txl->fill_aux_tx),
+                                        GPU_ATTACHMENT_NONE,
                                     });
     }
 
@@ -912,6 +928,7 @@ static void GPENCIL_draw_object(GPENCIL_Data *vedata, GPENCIL_tObject *ob)
   GPENCIL_PassList *psl = vedata->psl;
   GPENCIL_PrivateData *pd = vedata->stl->pd;
   GPENCIL_FramebufferList *fbl = vedata->fbl;
+  GPENCIL_TextureList *txl = vedata->txl;
   const float clear_cols[2][4] = {{0.0f, 0.0f, 0.0f, 0.0f}, {1.0f, 1.0f, 1.0f, 1.0f}};
 
   DRW_stats_group_start("GPencil Object");
@@ -948,9 +965,47 @@ static void GPENCIL_draw_object(GPENCIL_Data *vedata, GPENCIL_tObject *ob)
     GPU_vao_unbind_all();
     GPU_uniformbuf_unbind_all();
     GPU_texture_unbind_all();
+    /* PROTOTYPE (one-layer): render the fill (geom_ps) into an isolated aux FBO
+     * so the geometry-shader program never contaminates the shared GL context
+     * used by the stroke pass (Mali G52 kernel panic on Solid Stroke+Fill same
+     * layer). Depth+stencil are shared via pd->depth_tx to preserve z-order. */
+    GPU_framebuffer_bind(fbl->fill_aux_fb);
+    {
+      const float fill_clear[4] = {0.0f, 0.0f, 0.0f, 0.0f};
+      GPU_framebuffer_clear_color(fbl->fill_aux_fb, fill_clear);
+    }
+    /* NOTE: do NOT clear depth/stencil here — fill_aux_fb shares pd->depth_tx
+     * with fb_object. The object-level clear (line ~936) already reset it once
+     * per object; clearing again per-layer would wipe stencil accumulated by
+     * earlier layers in the same draw. geom_ps writes into the shared
+     * depth/stencil just like it would inline. */
     DRW_draw_pass(layer->geom_ps);
     GPU_flush();
-    gp_crash_log("DONE fill_ps ob=%p layer=%d", (void *)ob, layer_count);
+    gp_crash_log("DONE fill_ps ob=%p layer=%d (aux fbo)", (void *)ob, layer_count);
+
+    /* Composite the isolated fill back onto fb_object with a PLAIN (non-GS)
+     * shader, before the stroke pass, preserving stencil mask + blend. */
+    GPU_shader_unbind();
+    GPU_vao_unbind_all();
+    GPU_uniformbuf_unbind_all();
+    GPU_texture_unbind_all();
+    GPU_framebuffer_bind(fb_object);
+    {
+      DRWPass *composite_ps = DRW_pass_create(
+          "GPencil Fill Aux Composite",
+          DRW_STATE_WRITE_COLOR | DRW_STATE_STENCIL_EQUAL | DRW_STATE_BLEND_ALPHA_PREMUL);
+      GPUShader *csh = GPENCIL_shader_layer_blend_get();
+      DRWShadingGroup *cgrp = DRW_shgroup_create(csh, composite_ps);
+      DRW_shgroup_uniform_int_copy(cgrp, "blendMode", 0);
+      DRW_shgroup_uniform_texture_ref(cgrp, "colorBuf", &txl->fill_aux_tx);
+      DRW_shgroup_uniform_texture_ref(cgrp, "revealBuf", &pd->reveal_tx);
+      DRW_shgroup_uniform_texture_ref(cgrp, "maskBuf", &pd->dummy_tx);
+      DRW_shgroup_stencil_mask(cgrp, 0xFF);
+      DRW_shgroup_call_procedural_triangles(cgrp, NULL, 1);
+      DRW_draw_pass(composite_ps);
+    }
+    GPU_flush();
+    gp_crash_log("DONE fill composite ob=%p layer=%d", (void *)ob, layer_count);
 
     gp_crash_log("ABOUT stroke_ps ob=%p layer=%d", (void *)ob, layer_count);
     GPU_flush();

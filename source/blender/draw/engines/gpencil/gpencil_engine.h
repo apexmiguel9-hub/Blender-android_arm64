@@ -168,6 +168,10 @@ typedef struct GPENCIL_FramebufferList {
   struct GPUFrameBuffer *mask_fb;
   struct GPUFrameBuffer *smaa_edge_fb;
   struct GPUFrameBuffer *smaa_weight_fb;
+  /* Aux FBO to isolate the fill (geom_ps) pass from the stroke pass on Mali.
+   * The fill is rendered here and composited back with a plain (non-GS) shader
+   * so the geometry-shader program never contaminates the shared context. */
+  struct GPUFrameBuffer *fill_aux_fb;
 } GPENCIL_FramebufferList;
 
 typedef struct GPENCIL_TextureList {
@@ -183,6 +187,8 @@ typedef struct GPENCIL_TextureList {
   /* Textures used during render. Containing underlying rendered scene. */
   struct GPUTexture *render_depth_tx;
   struct GPUTexture *render_color_tx;
+  /* Aux color texture for the isolated fill pass (Mali GS contamination fix). */
+  struct GPUTexture *fill_aux_tx;
 } GPENCIL_TextureList;
 
 typedef struct GPENCIL_Data {
