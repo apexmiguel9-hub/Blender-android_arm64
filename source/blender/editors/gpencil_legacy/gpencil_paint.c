@@ -1872,6 +1872,10 @@ static void gpencil_session_validatebuffer(tGPsdata *p)
   Brush *brush = p->brush;
 
   /* clear memory of buffer (or allocate it if starting a new session) */
+  __android_log_print(ANDROID_LOG_DEBUG, "Blender.GP",
+    "validatebuffer: gpd=%p sbuffer=%p sbuffer_size=%d sbuffer_used=%d brush=%p",
+    (void *)gpd, (void *)gpd->runtime.sbuffer, gpd->runtime.sbuffer_size,
+    gpd->runtime.sbuffer_used, (void *)brush);
   gpd->runtime.sbuffer = ED_gpencil_sbuffer_ensure(
       gpd->runtime.sbuffer, &gpd->runtime.sbuffer_size, &gpd->runtime.sbuffer_used, true);
 
@@ -2194,6 +2198,12 @@ static void gpencil_paint_initstroke(tGPsdata *p,
 
   /* get active layer (or add a new one if non-existent) */
   p->gpl = BKE_gpencil_layer_active_get(p->gpd);
+  __android_log_print(ANDROID_LOG_DEBUG, "Blender.GP",
+    "initstroke: p=%p gpd=%p gpl=%p gpl_flag=0x%x gpf=%p actframe=%p sbuffer_gps=%p sbatch=%p",
+    (void *)p, (void *)p->gpd, (void *)p->gpl, p->gpl ? p->gpl->flag : 0,
+    (void *)p->gpf, p->gpl ? (void *)p->gpl->actframe : NULL,
+    p->gpd ? (void *)p->gpd->runtime.sbuffer_gps : NULL,
+    p->gpd ? (void *)p->gpd->runtime.sbuffer_batch : NULL);
   if (p->gpl == NULL) {
     p->gpl = BKE_gpencil_layer_addnew(p->gpd, DATA_("GP_Layer"), true, false);
     BKE_gpencil_tag_full_update(p->gpd, NULL, NULL, NULL);
@@ -2204,6 +2214,12 @@ static void gpencil_paint_initstroke(tGPsdata *p,
   }
 
   /* Recalculate layer transform matrix to avoid problems if props are animated. */
+  __android_log_print(ANDROID_LOG_DEBUG, "Blender.GP",
+    "initstroke layer_mat: gpl=%p gpl->layer_mat=%p location=%p rotation=%p scale=%p",
+    (void *)p->gpl, p->gpl ? (void *)p->gpl->layer_mat : NULL,
+    p->gpl ? (void *)p->gpl->location : NULL,
+    p->gpl ? (void *)p->gpl->rotation : NULL,
+    p->gpl ? (void *)p->gpl->scale : NULL);
   loc_eul_size_to_mat4(p->gpl->layer_mat, p->gpl->location, p->gpl->rotation, p->gpl->scale);
   invert_m4_m4(p->gpl->layer_invmat, p->gpl->layer_mat);
 
@@ -2250,6 +2266,9 @@ static void gpencil_paint_initstroke(tGPsdata *p,
 
     /* Ensure this gets set. */
     if (ts->gpencil_flags & GP_TOOL_FLAG_RETAIN_LAST) {
+      __android_log_print(ANDROID_LOG_DEBUG, "Blender.GP",
+        "initstroke[eraser] RETAIN: gpl=%p gpl->actframe=%p",
+        (void *)p->gpl, p->gpl ? (void *)p->gpl->actframe : NULL);
       p->gpf = p->gpl->actframe;
     }
 
@@ -2258,6 +2277,9 @@ static void gpencil_paint_initstroke(tGPsdata *p,
       return;
     }
     /* Ensure this gets set... */
+    __android_log_print(ANDROID_LOG_DEBUG, "Blender.GP",
+      "initstroke[eraser] SET: gpl=%p gpl->actframe=%p",
+      (void *)p->gpl, p->gpl ? (void *)p->gpl->actframe : NULL);
     p->gpf = p->gpl->actframe;
   }
   else {
@@ -2278,6 +2300,9 @@ static void gpencil_paint_initstroke(tGPsdata *p,
 
     bool need_tag = p->gpl->actframe == NULL;
     bGPDframe *actframe = p->gpl->actframe;
+    __android_log_print(ANDROID_LOG_DEBUG, "Blender.GP",
+      "initstroke[draw] before frame_get: gpl=%p gpl->actframe=%p cfra=%d",
+      (void *)p->gpl, (void *)p->gpl->actframe, scene ? scene->r.cfra : -1);
 
     p->gpf = BKE_gpencil_layer_frame_get(p->gpl, scene->r.cfra, add_frame_mode);
     /* Only if there wasn't an active frame, need update. */
@@ -2289,6 +2314,9 @@ static void gpencil_paint_initstroke(tGPsdata *p,
     }
 
     if (p->gpf == NULL) {
+      __android_log_print(ANDROID_LOG_DEBUG, "Blender.GP",
+        "initstroke[draw] gpf NULL after frame_get: gpl=%p gpl->actframe=%p",
+        (void *)p->gpl, p->gpl ? (void *)p->gpl->actframe : NULL);
       p->status = GP_STATUS_ERROR;
       if (!IS_AUTOKEY_ON(scene)) {
         BKE_report(p->reports, RPT_INFO, "No available frame for creating stroke");
@@ -2296,6 +2324,8 @@ static void gpencil_paint_initstroke(tGPsdata *p,
 
       return;
     }
+    __android_log_print(ANDROID_LOG_DEBUG, "Blender.GP",
+      "initstroke[draw] gpf OK: gpf=%p gpl=%p", (void *)p->gpf, (void *)p->gpl);
     p->gpf->flag |= GP_FRAME_PAINT;
   }
 
@@ -2335,6 +2365,9 @@ static void gpencil_paint_initstroke(tGPsdata *p,
   /* init stroke point space-conversion settings... */
   p->gsc.gpd = p->gpd;
   p->gsc.gpl = p->gpl;
+  __android_log_print(ANDROID_LOG_DEBUG, "Blender.GP",
+    "initstroke gsc set: gsc.gpl=%p gsc.gpd=%p",
+    (void *)p->gsc.gpl, (void *)p->gsc.gpd);
 
   p->gsc.area = p->area;
   p->gsc.region = p->region;
@@ -3414,6 +3447,9 @@ static tGPsdata *gpencil_stroke_begin(bContext *C, wmOperator *op)
 
   /* we may need to set up paint env again if we're resuming */
   if (gpencil_session_initdata(C, op, p)) {
+    __android_log_print(ANDROID_LOG_DEBUG, "Blender.GP",
+      "stroke_begin after initdata: p=%p gpl=%p gpf=%p",
+      (void *)p, (void *)p->gpl, (void *)p->gpf);
     gpencil_paint_initstroke(p, p->paintmode, CTX_data_depsgraph_pointer(C));
   }
 
