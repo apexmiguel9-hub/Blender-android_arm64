@@ -28,6 +28,7 @@
 #include "DNA_view3d_types.h"
 
 #include "GPU_texture.h"
+#include "GPU_state.h"
 #include <android/log.h>
 #include <epoxy/gl.h>
 #include "GPU_uniform_buffer.h"
@@ -540,6 +541,17 @@ static void gpencil_stroke_cache_populate(bGPDlayer *gpl,
     int vfirst = gps->runtime.fill_start * 3;
     int vcount = gps->tot_triangles * 3;
     gpencil_drawcall_add(iter, geom, vfirst, vcount);
+    /* Break the Mali command stream between the fill (triangles) and the
+     * stroke (manual quad expansion in the VS) of the same stroke. On Mali
+     * G52 a stale UBO bound by the previous stroke draw (slots 0,1,3,4,8)
+     * can be inherited by the fill draw and trigger a GPU page fault /
+     * kernel panic. Flushing + unbinding the program isolates the two
+     * draws without creating a separate pass (which would break layers).
+     * GPU_flush (glFlush) is used, NOT GPU_finish (glFinish) which breaks
+     * "New 2D Animation" on this device. */
+    gpencil_drawcall_flush(iter);
+    GPU_shader_unbind();
+    GPU_flush();
   }
 
   if (show_stroke) {
