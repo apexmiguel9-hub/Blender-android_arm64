@@ -66,28 +66,32 @@ int ED_undo_gpencil_step(bContext *C, const int step)
     }
   }
 
-  if (new_gpd) {
-    if (gpd_ptr) {
-      if (*gpd_ptr) {
-        bGPdata *gpd = *gpd_ptr;
-        bGPDlayer *gpld;
-
-        BKE_gpencil_free_layers(&gpd->layers);
-
-        /* copy layers */
-        BLI_listbase_clear(&gpd->layers);
-
-        LISTBASE_FOREACH (bGPDlayer *, gpl, &gpd->layers) {
-          /* make a copy of source layer and its data */
-          gpld = BKE_gpencil_layer_duplicate(gpl, true, true);
-          BLI_addtail(&gpd->layers, gpld);
-        }
-      }
-    }
-    /* drawing batch cache is dirty now */
-    DEG_id_tag_update(&new_gpd->id, ID_RECALC_TRANSFORM | ID_RECALC_GEOMETRY);
-    new_gpd->flag |= GP_DATA_CACHE_IS_DIRTY;
+  if (new_gpd == nullptr) {
+    /* Undo/redo beyond history limits: leave current gpencil data untouched
+     * so we never leave gpd->layers in an inconsistent/freed state that would
+     * make gpencil_paint.c dereference a dangling active layer pointer. */
+    WM_event_add_notifier(C, NC_GPENCIL | NA_EDITED, nullptr);
+    return OPERATOR_FINISHED;
   }
+
+  if (gpd_ptr && *gpd_ptr) {
+    bGPdata *gpd = *gpd_ptr;
+    bGPDlayer *gpld;
+
+    BKE_gpencil_free_layers(&gpd->layers);
+
+    /* copy layers from the snapshot, not from the (now empty) target list */
+    BLI_listbase_clear(&gpd->layers);
+
+    LISTBASE_FOREACH (bGPDlayer *, gpl, &new_gpd->layers) {
+      /* make a copy of source layer and its data */
+      gpld = BKE_gpencil_layer_duplicate(gpl, true, true);
+      BLI_addtail(&gpd->layers, gpld);
+    }
+  }
+  /* drawing batch cache is dirty now */
+  DEG_id_tag_update(&new_gpd->id, ID_RECALC_TRANSFORM | ID_RECALC_GEOMETRY);
+  new_gpd->flag |= GP_DATA_CACHE_IS_DIRTY;
 
   WM_event_add_notifier(C, NC_GPENCIL | NA_EDITED, nullptr);
 

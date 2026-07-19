@@ -128,11 +128,25 @@ static void rna_MaterialGpencil_update(Main *bmain, Scene *scene, PointerRNA *pt
       "rna_MaterialGpencil_update AFTER rna_Material_update");
 #endif
 
-  /* Need set all caches as dirty. */
+  /* Need set all caches as dirty. Only tag the GPencil objects that actually
+   * use this material, not every GPencil object in the scene. On Mali G52
+   * tagging all bGPdata on every HSV wheel drag event (many per second)
+   * forces a full geometry recalc / draw-cache realloc while the GP engine
+   * may have deferred draws in flight -> SIGSEGV. */
   for (Object *ob = bmain->objects.first; ob; ob = ob->id.next) {
     if (ob->type == OB_GPENCIL_LEGACY) {
       bGPdata *gpd = (bGPdata *)ob->data;
       if (gpd == NULL) {
+        continue;
+      }
+      bool uses_material = false;
+      for (int i = 0; i < ob->totcol; i++) {
+        if (ob->mat[i] == ma) {
+          uses_material = true;
+          break;
+        }
+      }
+      if (!uses_material) {
         continue;
       }
       DEG_id_tag_update(&gpd->id, ID_RECALC_GEOMETRY);
