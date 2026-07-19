@@ -133,6 +133,7 @@ static void rna_MaterialGpencil_update(Main *bmain, Scene *scene, PointerRNA *pt
    * tagging all bGPdata on every HSV wheel drag event (many per second)
    * forces a full geometry recalc / draw-cache realloc while the GP engine
    * may have deferred draws in flight -> SIGSEGV. */
+  int gp_tagged_count = 0;
   for (Object *ob = bmain->objects.first; ob; ob = ob->id.next) {
     if (ob->type == OB_GPENCIL_LEGACY) {
       bGPdata *gpd = (bGPdata *)ob->data;
@@ -150,8 +151,15 @@ static void rna_MaterialGpencil_update(Main *bmain, Scene *scene, PointerRNA *pt
         continue;
       }
       DEG_id_tag_update(&gpd->id, ID_RECALC_GEOMETRY);
+      gp_tagged_count++;
     }
   }
+
+#ifdef __ANDROID__
+  __android_log_print(ANDROID_LOG_DEBUG, "Blender.GP.Crash",
+      "rna_MaterialGpencil_update: tagged %d GPencil objects with ID_RECALC_GEOMETRY (scoped to ma=%p)",
+      gp_tagged_count, (void *)ma);
+#endif
 
 #ifdef __ANDROID__
   __android_log_print(ANDROID_LOG_DEBUG, "Blender.GP.Crash",

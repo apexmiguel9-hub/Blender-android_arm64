@@ -13,8 +13,6 @@
 #include <stdarg.h>
 
 #ifdef __ANDROID__
-#include <android/log.h>
-
 /* Centralized crash logger defined in GHOST_SystemAndroid.cc. */
 extern void OBL_log(const char *tag, const char *fmt, ...);
 
@@ -2288,7 +2286,6 @@ static void gpencil_stroke_from_buffer(tGPDfill *tgpf)
 
   Brush *brush = BKE_paint_brush(&ts->gp_paint->paint);
   if (brush == NULL) {
-    __android_log_print(ANDROID_LOG_ERROR, "Blender.GP.Fill", "stroke_from_buffer: brush is NULL");
     return;
   }
 
@@ -2421,19 +2418,11 @@ static void gpencil_stroke_from_buffer(tGPDfill *tgpf)
 
   /* simplify stroke - always at least one pass to avoid excessive points on mobile */
   int simplify_passes = max_ii(1, tgpf->fill_simplylvl);
-  __android_log_print(ANDROID_LOG_DEBUG, "Blender.GP.Fill",
-    "stroke_from_buffer: totpoints=%d mat_nr=%d brush_mode=%d brush_rgb=(%.3f,%.3f,%.3f) "
-    "is_depth=%d fill_simplylvl=%d simplify_passes=%d",
-    gps->totpoints, gps->mat_nr, brush->gpencil_settings->brush_draw_mode,
-    brush->rgb[0], brush->rgb[1], brush->rgb[2],
-    is_depth, tgpf->fill_simplylvl, simplify_passes);
 
   for (int b = 0; b < simplify_passes; b++) {
     BKE_gpencil_stroke_simplify_fixed(tgpf->gpd, gps);
   }
 
-  __android_log_print(ANDROID_LOG_DEBUG, "Blender.GP.Fill",
-    "stroke_from_buffer: after simplify totpoints=%d", gps->totpoints);
 
   /* Calc geometry data. */
   BKE_gpencil_stroke_geometry_update(tgpf->gpd, gps);

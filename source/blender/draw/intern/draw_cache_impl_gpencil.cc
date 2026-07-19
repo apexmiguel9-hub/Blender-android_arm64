@@ -20,8 +20,6 @@
 #include "ED_gpencil_legacy.h"
 #include "GPU_batch.h"
 
-#include <android/log.h>
-
 #include "DEG_depsgraph_query.h"
 
 #include "BLI_hash.h"
@@ -319,9 +317,6 @@ static void gpencil_buffer_add_point(GPUIndexBufBuilder *ibo,
   vert->point_id = v;
   vert->thickness = max_ff(0.0f, gps->thickness * pt->pressure) * (round_cap1 ? 1.0f : -1.0f);
   if (v == 0) {
-    __android_log_print(ANDROID_LOG_DEBUG, "Blender.GP",
-                        "STROKE: mat_nr=%d gps_thickness=%d pressure=%.2f vert_thickness=%.1f totpoints=%d",
-                        gps->mat_nr, (int)gps->thickness, pt->pressure, vert->thickness, gps->totpoints);
   }
   /* Tag endpoint material to -1 so they get discarded by vertex shader. */
   vert->mat = (is_endpoint) ? -1 : (gps->mat_nr % GPENCIL_MATERIAL_BUFFER_LEN);
@@ -560,9 +555,6 @@ bGPDstroke *DRW_cache_gpencil_sbuffer_stroke_data_get(Object *ob)
 {
   bGPdata *gpd = (bGPdata *)ob->data;
   Brush *brush = gpd->runtime.sbuffer_brush;
-  __android_log_print(ANDROID_LOG_DEBUG, "Blender.GP", "  sbuffer_data_get: gpd=%p sbuf_used=%d sbuf_gps=%p brush=%s",
-    (void*)gpd, gpd->runtime.sbuffer_used, (void*)gpd->runtime.sbuffer_gps,
-    brush ? brush->id.name+2 : "NULL");
   /* Convert the sbuffer to a bGPDstroke. */
   if (gpd->runtime.sbuffer_gps == nullptr) {
     bGPDstroke *gps = (bGPDstroke *)MEM_callocN(sizeof(*gps), "bGPDstroke sbuffer");
@@ -599,12 +591,8 @@ static void gpencil_sbuffer_stroke_ensure(bGPdata *gpd, bool do_fill)
   /* DRW_cache_gpencil_sbuffer_stroke_data_get need to have been called previously. */
   BLI_assert(gps != nullptr);
 
-  __android_log_print(ANDROID_LOG_DEBUG, "Blender.GP", "  sbuffer_ensure: vert_len=%d batch=%p vbo_pos=%p vbo_col=%p",
-    vert_len, (void*)gpd->runtime.sbuffer_batch,
-    (void*)gpd->runtime.sbuffer_position_buf, (void*)gpd->runtime.sbuffer_color_buf);
 
   if (gpd->runtime.sbuffer_batch == nullptr) {
-    __android_log_print(ANDROID_LOG_DEBUG, "Blender.GP", "  sbuffer_ensure: creating NEW batch (%d points)", vert_len);
     gps->points = (bGPDspoint *)MEM_mallocN(vert_len * sizeof(*gps->points), __func__);
 
     const DRWContextState *draw_ctx = DRW_context_state_get();
@@ -734,10 +722,6 @@ GPUVertBuf *DRW_cache_gpencil_sbuffer_color_buffer_get(Object *ob, bool show_fil
 void DRW_cache_gpencil_sbuffer_clear(Object *ob)
 {
   bGPdata *gpd = (bGPdata *)ob->data;
-  __android_log_print(ANDROID_LOG_DEBUG, "Blender.GP", "  sbuffer_clear: batch=%p vbo_pos=%p vbo_col=%d",
-    (void*)gpd->runtime.sbuffer_batch,
-    (void*)gpd->runtime.sbuffer_position_buf,
-    gpd->runtime.sbuffer_used);
   MEM_SAFE_FREE(gpd->runtime.sbuffer_gps->points);
   MEM_SAFE_FREE(gpd->runtime.sbuffer_gps);
   GPU_BATCH_DISCARD_SAFE(gpd->runtime.sbuffer_batch);

@@ -29,7 +29,6 @@
 
 #include "GPU_texture.h"
 #include "GPU_state.h"
-#include <android/log.h>
 #include <epoxy/gl.h>
 #include "GPU_uniform_buffer.h"
 
@@ -63,10 +62,6 @@ void GPENCIL_engine_init(void *ved)
     const float *vp = DRW_viewport_size_get();
     float proj[4][4];
     DRW_view_winmat_get(NULL, proj, false);
-    __android_log_print(ANDROID_LOG_DEBUG, "Blender.GP",
-                        "ENGINE_INIT: vp_size=(%.0fx%.0f) proj[1][1]=%.4f cfra=%d",
-                        vp[0], vp[1], proj[1][1],
-                        (ctx->scene ? ctx->scene->r.cfra : -1));
   }
 
   if (txl->dummy_texture == NULL) {
@@ -868,8 +863,6 @@ static void GPENCIL_draw_object(GPENCIL_Data *vedata, GPENCIL_tObject *ob)
     layer_count++;
     if (layer->mask_bits) {
       gpencil_draw_mask(vedata, ob, layer);
-      __android_log_print(ANDROID_LOG_DEBUG, "Blender.GP",
-          "  layer %d: mask drawn", layer_count);
     }
 
     if (layer->blend_ps) {
@@ -885,8 +878,6 @@ static void GPENCIL_draw_object(GPENCIL_Data *vedata, GPENCIL_tObject *ob)
     if (layer->blend_ps) {
       GPU_framebuffer_bind(fb_object);
       DRW_draw_pass(layer->blend_ps);
-      __android_log_print(ANDROID_LOG_DEBUG, "Blender.GP",
-          "  layer %d: blend drawn", layer_count);
     }
   }
 
@@ -895,8 +886,6 @@ static void GPENCIL_draw_object(GPENCIL_Data *vedata, GPENCIL_tObject *ob)
     vfx_count++;
     GPU_framebuffer_bind(*(vfx->target_fb));
     DRW_draw_pass(vfx->vfx_ps);
-    __android_log_print(ANDROID_LOG_DEBUG, "Blender.GP",
-        "  vfx %d drawn", vfx_count);
   }
 
   copy_m4_m4(pd->object_bound_mat, ob->plane_mat);
@@ -958,10 +947,6 @@ void GPENCIL_draw_scene(void *ved)
   if (pd->obact && pd->obact->type == OB_GPENCIL_LEGACY) {
     sbuf_used = ((bGPdata *)pd->obact->data)->runtime.sbuffer_used;
   }
-  __android_log_print(ANDROID_LOG_DEBUG, "Blender.GP",
-      "GPENCIL_draw_scene #%d: tobjects=%d do_fast=%d sbuffer_used=%d",
-      draw_count, BLI_listbase_count(&pd->tobjects),
-      pd->do_fast_drawing, sbuf_used);
 
   /* Fade 3D objects. */
   if ((!pd->is_render) && (pd->fade_3d_object_opacity > -1.0f) && (pd->obact != NULL) &&
@@ -1011,8 +996,6 @@ void GPENCIL_draw_scene(void *ved)
   /* Free temp stroke buffers. */
   if (pd->sbuffer_gpd) {
     DRW_cache_gpencil_sbuffer_clear(pd->obact);
-    __android_log_print(ANDROID_LOG_DEBUG, "Blender.GP",
-        "GPENCIL_draw_scene #%d: sbuffer cleared", draw_count);
   }
 }
 

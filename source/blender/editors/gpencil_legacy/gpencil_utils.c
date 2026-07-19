@@ -11,10 +11,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-#ifdef __ANDROID__
-#  include <android/log.h>
-#endif
-
 #include "MEM_guardedalloc.h"
 
 #include "BLI_blenlib.h"
@@ -2794,9 +2790,6 @@ void ED_gpencil_point_vertex_color_set(ToolSettings *ts,
                                        tGPspoint *tpt)
 {
   if (brush == NULL || brush->gpencil_settings == NULL) {
-    __android_log_print(ANDROID_LOG_ERROR, "Blender.GP.Fill",
-      "point_vertex_color_set: brush=%p gpencil_settings=%p", (void*)brush,
-      (void*)(brush ? brush->gpencil_settings : NULL));
     return;
   }
   const bool is_vertex = (GPENCIL_USE_VERTEX_COLOR_STROKE(ts, brush) &&

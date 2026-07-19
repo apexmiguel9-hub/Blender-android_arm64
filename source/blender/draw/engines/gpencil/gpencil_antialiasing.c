@@ -11,8 +11,6 @@
 
 #include "BLI_smaa_textures.h"
 
-#include <android/log.h>
-
 void GPENCIL_antialiasing_init(struct GPENCIL_Data *vedata)
 {
   GPENCIL_PrivateData *pd = vedata->stl->pd;
@@ -129,8 +127,6 @@ void GPENCIL_antialiasing_draw(struct GPENCIL_Data *vedata)
   GPENCIL_PrivateData *pd = vedata->stl->pd;
   GPENCIL_PassList *psl = vedata->psl;
 
-  __android_log_print(ANDROID_LOG_DEBUG, "Blender.GP",
-      "  SMAA enter: simplify=%d", pd->simplify_antialias);
 
   if (!pd->simplify_antialias) {
     GPU_framebuffer_bind(fbl->smaa_edge_fb);
@@ -145,5 +141,4 @@ void GPENCIL_antialiasing_draw(struct GPENCIL_Data *vedata)
   GPU_framebuffer_bind(pd->scene_fb);
   GPU_memory_barrier(GPU_BARRIER_TEXTURE_FETCH | GPU_BARRIER_FRAMEBUFFER);
   DRW_draw_pass(psl->smaa_resolve_ps);
-  __android_log_print(ANDROID_LOG_DEBUG, "Blender.GP", "  SMAA exit");
 }

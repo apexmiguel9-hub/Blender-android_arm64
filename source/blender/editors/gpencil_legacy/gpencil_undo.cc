@@ -10,6 +10,10 @@
 
 #include "MEM_guardedalloc.h"
 
+#ifdef __ANDROID__
+#  include <android/log.h>
+#endif
+
 #include "DNA_gpencil_legacy_types.h"
 #include "DNA_listBase.h"
 #include "DNA_object_types.h"
@@ -50,7 +54,19 @@ int ED_undo_gpencil_step(bContext *C, const int step)
 {
   bGPdata **gpd_ptr = nullptr, *new_gpd = nullptr;
 
+#ifdef __ANDROID__
+  __android_log_print(ANDROID_LOG_DEBUG, "Blender.GP.Crash",
+      "ED_undo_gpencil_step: step=%d cur_node=%p", step, (void *)cur_node);
+#endif
+
   gpd_ptr = ED_gpencil_data_get_pointers(C, nullptr);
+
+#ifdef __ANDROID__
+  __android_log_print(ANDROID_LOG_DEBUG, "Blender.GP.Crash",
+      "ED_undo_gpencil_step: gpd_ptr=%p *gpd_ptr=%p cur_node->gpd=%p",
+      (void *)gpd_ptr, gpd_ptr ? (void *)*gpd_ptr : (void *)nullptr,
+      cur_node ? (void *)cur_node->gpd : (void *)nullptr);
+#endif
 
   const eUndoStepDir undo_step = (eUndoStepDir)step;
   if (undo_step == STEP_UNDO) {
@@ -78,20 +94,46 @@ int ED_undo_gpencil_step(bContext *C, const int step)
     bGPdata *gpd = *gpd_ptr;
     bGPDlayer *gpld;
 
+#ifdef __ANDROID__
+    __android_log_print(ANDROID_LOG_DEBUG, "Blender.GP.Crash",
+        "ED_undo_gpencil_step: BEFORE BKE_gpencil_free_layers gpd->layers.count=%d",
+        BLI_listbase_count(&gpd->layers));
+#endif
+
     BKE_gpencil_free_layers(&gpd->layers);
+
+#ifdef __ANDROID__
+    __android_log_print(ANDROID_LOG_DEBUG, "Blender.GP.Crash",
+        "ED_undo_gpencil_step: AFTER BKE_gpencil_free_layers gpd->layers.count=%d",
+        BLI_listbase_count(&gpd->layers));
+#endif
 
     /* copy layers from the snapshot, not from the (now empty) target list */
     BLI_listbase_clear(&gpd->layers);
 
+    int copied = 0;
     LISTBASE_FOREACH (bGPDlayer *, gpl, &new_gpd->layers) {
       /* make a copy of source layer and its data */
       gpld = BKE_gpencil_layer_duplicate(gpl, true, true);
       BLI_addtail(&gpd->layers, gpld);
+      copied++;
     }
+#ifdef __ANDROID__
+    __android_log_print(ANDROID_LOG_DEBUG, "Blender.GP.Crash",
+        "ED_undo_gpencil_step: copied %d layers from snapshot new_gpd->layers.count=%d",
+        copied, BLI_listbase_count(&new_gpd->layers));
+#endif
   }
   /* drawing batch cache is dirty now */
   DEG_id_tag_update(&new_gpd->id, ID_RECALC_TRANSFORM | ID_RECALC_GEOMETRY);
   new_gpd->flag |= GP_DATA_CACHE_IS_DIRTY;
+
+#ifdef __ANDROID__
+  __android_log_print(ANDROID_LOG_DEBUG, "Blender.GP.Crash",
+      "ED_undo_gpencil_step: END gpd->layers.count=%d new_gpd->layers.count=%d",
+      (gpd_ptr && *gpd_ptr) ? BLI_listbase_count(&(*gpd_ptr)->layers) : -1,
+      BLI_listbase_count(&new_gpd->layers));
+#endif
 
   WM_event_add_notifier(C, NC_GPENCIL | NA_EDITED, nullptr);
 

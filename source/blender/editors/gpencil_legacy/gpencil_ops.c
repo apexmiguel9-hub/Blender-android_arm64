@@ -9,8 +9,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include <android/log.h>
-
 #include "BLI_sys_types.h"
 
 #include "BKE_context.h"
@@ -63,7 +61,6 @@ static bool gpencil_stroke_paintmode_poll(bContext *C)
   /* TODO: limit this to mode, but review 2D editors */
   bGPdata *gpd = CTX_data_gpencil_data(C);
   bool ret = (gpd && (gpd->flag & GP_DATA_STROKE_PAINTMODE));
-  __android_log_print(ANDROID_LOG_DEBUG, "Blender.GP", "poll(paintmode): ret=%d gpd_flag=0x%x", ret, gpd ? gpd->flag : 0);
   return ret;
 }
 
@@ -72,31 +69,25 @@ static bool gpencil_stroke_paintmode_poll_with_tool(bContext *C, const char gpen
   /* TODO: limit this to mode, but review 2D editors */
   bGPdata *gpd = CTX_data_gpencil_data(C);
   if (!gpd) {
-    __android_log_print(ANDROID_LOG_DEBUG, "Blender.GP", "poll(with_tool=%d): FAIL - no gpd", gpencil_tool);
     return false;
   }
 
   ToolSettings *ts = CTX_data_tool_settings(C);
   if (!ts || !ts->gp_paint) {
-    __android_log_print(ANDROID_LOG_DEBUG, "Blender.GP", "poll(with_tool=%d): FAIL - no ts/gp_paint", gpencil_tool);
     return false;
   }
 
   Brush *brush = BKE_paint_brush(&ts->gp_paint->paint);
   if (!(gpd->flag & GP_DATA_STROKE_PAINTMODE)) {
-    __android_log_print(ANDROID_LOG_DEBUG, "Blender.GP", "poll(with_tool=%d): FAIL - !PAINTMODE flag=0x%x", gpencil_tool, gpd->flag);
     return false;
   }
   if (!(brush && brush->gpencil_settings)) {
-    __android_log_print(ANDROID_LOG_DEBUG, "Blender.GP", "poll(with_tool=%d): FAIL - no brush/settings brush=%p", gpencil_tool, (void*)brush);
     return false;
   }
   if (!WM_toolsystem_active_tool_is_brush(C)) {
-    __android_log_print(ANDROID_LOG_DEBUG, "Blender.GP", "poll(with_tool=%d): FAIL - !active_tool_is_brush", gpencil_tool);
     return false;
   }
   if (brush->gpencil_tool != gpencil_tool) {
-    __android_log_print(ANDROID_LOG_DEBUG, "Blender.GP", "poll(with_tool=%d): FAIL - wrong tool %d", gpencil_tool, brush->gpencil_tool);
     return false;
   }
   return true;
@@ -164,11 +155,6 @@ static bool gpencil_stroke_paintmode_draw_poll(bContext *C)
   ToolSettings *ts = CTX_data_tool_settings(C);
   bool has_paint = ts && ts->gp_paint;
   Brush *brush = has_paint ? BKE_paint_brush(&ts->gp_paint->paint) : NULL;
-  __android_log_print(ANDROID_LOG_DEBUG, "Blender.GP", "poll(draw): ret=%d gpd_flag=0x%x has_tsgp=%d brush=%s is_brush_tool=%d gpencil_tool=%d",
-    ret, gpd ? gpd->flag : 0, has_paint,
-    brush ? brush->id.name+2 : "NULL",
-    WM_toolsystem_active_tool_is_brush(C),
-    brush ? brush->gpencil_tool : -1);
   return ret;
 }
 
