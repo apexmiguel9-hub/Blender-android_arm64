@@ -537,22 +537,23 @@ static void gpencil_stroke_cache_populate(bGPDlayer *gpl,
     DRW_shgroup_buffer_texture(iter->grp, "gp_col_tx", color_tx);
   }
 
+  /* Clear any stale GL context state (UBOs bound in slots 0,1,3,4,8 by the
+   * previous stroke draw, and the active program) BEFORE emitting this
+   * stroke's fill/stroke draws. On Mali G52 a dirty context inherited by the
+   * fill draw triggers a kernel panic. This mirrors what gpencil_render_offscreen
+   * does (GPU_shader_unbind + GPU_uniformbuf_unbind_all) but here we use
+   * GPU_flush (glFlush), not GPU_finish, to avoid breaking "New 2D Animation".
+   * Done once per stroke at the start of populate, not between fill/stroke. */
+  gpencil_drawcall_flush(iter);
+  GPU_shader_unbind();
+  GPU_uniformbuf_unbind_all();
+  GPU_flush();
+
   if (show_fill) {
     int vfirst = gps->runtime.fill_start * 3;
     int vcount = gps->tot_triangles * 3;
     gpencil_drawcall_add(iter, geom, vfirst, vcount);
-    /* Break the Mali command stream between the fill (triangles) and the
-     * stroke (manual quad expansion in the VS) of the same stroke. On Mali
-     * G52 a stale UBO bound by the previous stroke draw (slots 0,1,3,4,8)
-     * can be inherited by the fill draw and trigger a GPU page fault /
-     * kernel panic. Flushing + unbinding the program isolates the two
-     * draws without creating a separate pass (which would break layers).
-     * GPU_flush (glFlush) is used, NOT GPU_finish (glFinish) which breaks
-     * "New 2D Animation" on this device. */
     gpencil_drawcall_flush(iter);
-    GPU_shader_unbind();
-    GPU_uniformbuf_unbind_all();
-    GPU_flush();
   }
 
   if (show_stroke) {
