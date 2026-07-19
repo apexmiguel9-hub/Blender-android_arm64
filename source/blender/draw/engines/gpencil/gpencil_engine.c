@@ -551,6 +551,7 @@ static void gpencil_stroke_cache_populate(bGPDlayer *gpl,
      * "New 2D Animation" on this device. */
     gpencil_drawcall_flush(iter);
     GPU_shader_unbind();
+    GPU_uniformbuf_unbind_all();
     GPU_flush();
   }
 
