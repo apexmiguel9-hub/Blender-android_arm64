@@ -941,6 +941,19 @@ void GPENCIL_draw_scene(void *ved)
   GPENCIL_FramebufferList *fbl = vedata->fbl;
   float clear_cols[2][4] = {{0.0f, 0.0f, 0.0f, 0.0f}, {1.0f, 1.0f, 1.0f, 1.0f}};
 
+  /* Clear stale GL context state left by UI widget draws (e.g. the color
+   * picker popup swatch, drawn via GPU_SHADER_2D_WIDGET_BASE which binds a
+   * program + VAO/VBO and never unbinds). The UI and the GPencil DRW draw
+   * share the same GL context, so the next GPencil draw_scene inherits the
+   * dirty bindings. On Mali G52 an inherited dirty context (program/VAO or
+   * UBO slots) triggers a bus fault -> SIGSEGV, even on an empty canvas
+   * (where the per-stroke cleanup in gpencil_stroke_cache_populate never
+   * runs). This mirrors the proven Solid Stroke + Solid Fill fix. Use
+   * glFlush, NOT glFinish (glFinish breaks "New 2D Animation" on this device). */
+  GPU_shader_unbind();
+  GPU_uniformbuf_unbind_all();
+  GPU_flush();
+
   static int draw_count = 0;
   draw_count++;
   int sbuf_used = 0;

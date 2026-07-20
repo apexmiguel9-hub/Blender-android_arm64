@@ -1220,6 +1220,11 @@ static void draw_widgetbase_batch(uiWidgetBase *wtb)
         batch, "parameters", MAX_WIDGET_PARAMETERS, (float(*)[4]) & wtb->uniform_params);
     GPU_batch_uniform_3fv(batch, "checkerColorAndSize", checker_params);
     GPU_batch_draw(batch);
+    /* Unbind the program + VAO/VBO so the shared GL context is not left dirty
+     * for the next draw (e.g. the GPencil DRW draw on Mali G52, where an
+     * inherited dirty context causes a bus fault -> SIGSEGV). This widget
+     * shader has no UBOs, but keep symmetry with immUnbindProgram(). */
+    GPU_shader_unbind();
   }
 }
 
