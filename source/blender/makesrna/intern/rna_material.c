@@ -122,43 +122,35 @@ static void rna_MaterialGpencil_update(Main *bmain, Scene *scene, PointerRNA *pt
   __android_log_print(ANDROID_LOG_DEBUG, "Blender.GP.Crash",
       "rna_MaterialGpencil_update ENTER: ma=%p owner_id=%p", (void*)ma, (void*)ptr->owner_id);
 #endif
-  rna_Material_update(bmain, scene, ptr);
-#ifdef __ANDROID__
-  __android_log_print(ANDROID_LOG_DEBUG, "Blender.GP.Crash",
-      "rna_MaterialGpencil_update AFTER rna_Material_update");
-#endif
 
-  /* A GPencil material color/stroke/fill change does NOT need any depsgraph
-   * recalc on the bGPdata object. The color is read into the gp_material_pool
-   * UBO (stroke_color/fill_color) every frame from ma->gp_style, so the new
-   * color shows up on the next draw automatically.
+  /* On Mali G52 the material-panel color picker crashes with SIGSEGV. Root
+   * cause (isolated vs the non-crashing Fill-tool picker):
+   *  - rna_Material_update() does DEG_id_tag_update(ma, ID_RECALC_SHADING)
+   *    + WM_main_add_notifier(NC_MATERIAL | ND_SHADING).
+   *  - NC_MATERIAL | ND_SHADING makes the 3D view ED_region_tag_redraw, so a
+   *    full GPENCIL_draw_scene() runs on EVERY HSV/RGB/HEX drag event, driven
+   *    from inside the color-picker popup modal loop, racing with the in-flight
+   *    deferred GP draw on Mali -> bus fault -> SIGSEGV.
+   *  - The Fill-tool picker edits brush.color via rna_Brush_update which only
+   *    sends NC_BRUSH | NA_EDITED (redraws just the cursor, NO depsgraph tag,
+   *    NO 3D-view redraw) and never crashes.
    *
-   * Tagging the gpd object (ID_RECALC_SHADING or GEOMETRY) is fatal here:
-   * BKE_object_batch_cache_dirty_tag() runs for ANY recalc on the GP object
-   * (object_update.cc), setting GP_DATA_CACHE_IS_DIRTY -> the GP draw engine
-   * frees+reallocs all batches (geom_batch/vbo/ibo, incl. the active sbuffer)
-   * on every HSV wheel drag event (many per second). On Mali G52 that races
-   * with the in-flight deferred GP draw (2D Animation = Draw mode has a live
-   * sbuffer redraw loop) -> use-after-free -> SIGSEGV. Sculpt mode has no such
-   * live sbuffer loop, so the same dirty does not crash there.
+   * A GPencil material color lives in the gp_material_pool UBO
+   * (stroke_color/fill_color), rebuilt EVERY FRAME from ma->gp_style, so the
+   * new color appears on the next normal draw automatically. It does NOT need
+   * a depsgraph recalc nor a forced 3D-view redraw.
    *
-   * Fix: do NOT dirty the gpd batch cache. Only nudge the material itself
-   * (which does NOT flow through BKE_object_eval_uber_data for the GP object,
-   * so it will not dirty GP_DATA_CACHE_IS_DIRTY) and send a notifier so the
-   * UI / next-frame populate picks up the change. */
-  DEG_id_tag_update(&ma->id, ID_RECALC_SHADING);
+   * Fix: do NOT call rna_Material_update (no DEG_id_tag_update, no
+   * NC_MATERIAL|ND_SHADING redraw-forcing notifier). Only notify the UI panel
+   * so the swatch refreshes; the canvas color updates via the per-frame UBO
+   * rebuild. This mirrors the non-crashing Fill-tool picker behavior. */
+  WM_main_add_notifier(NC_MATERIAL | ND_SHADING_DRAW, ma);
 
 #ifdef __ANDROID__
   __android_log_print(ANDROID_LOG_DEBUG, "Blender.GP.Crash",
-      "rna_MaterialGpencil_update: tagged material ma=%p with ID_RECALC_SHADING (no gpd batch dirty)",
+      "rna_MaterialGpencil_update: notified NC_MATERIAL|ND_SHADING_DRAW only (no depsgraph tag, no 3D-view redraw)",
       (void *)ma);
 #endif
-
-#ifdef __ANDROID__
-  __android_log_print(ANDROID_LOG_DEBUG, "Blender.GP.Crash",
-      "rna_MaterialGpencil_update BEFORE notifier: ma=%p", (void*)ma);
-#endif
-  WM_main_add_notifier(NC_GPENCIL | ND_DATA, ma);
 #ifdef __ANDROID__
   __android_log_print(ANDROID_LOG_DEBUG, "Blender.GP.Crash",
       "rna_MaterialGpencil_update EXIT OK");
