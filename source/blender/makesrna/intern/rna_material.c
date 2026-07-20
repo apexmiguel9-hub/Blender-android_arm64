@@ -128,11 +128,14 @@ static void rna_MaterialGpencil_update(Main *bmain, Scene *scene, PointerRNA *pt
       "rna_MaterialGpencil_update AFTER rna_Material_update");
 #endif
 
-  /* Need set all caches as dirty. Only tag the GPencil objects that actually
-   * use this material, not every GPencil object in the scene. On Mali G52
-   * tagging all bGPdata on every HSV wheel drag event (many per second)
-   * forces a full geometry recalc / draw-cache realloc while the GP engine
-   * may have deferred draws in flight -> SIGSEGV. */
+  /* A material color/stroke/fill change only affects shading, NOT geometry.
+   * The GPencil material color lives in the gp_material_pool UBO
+   * (stroke_color/fill_color), refreshed by ID_RECALC_SHADING. Tagging
+   * ID_RECALC_GEOMETRY here forces a full draw-cache (batch) rebuild of every
+   * stroke on every HSV wheel drag event (many per second). On Mali G52 that
+   * reallocs the GP batches (incl. the active sbuffer) while deferred draws
+   * are still in flight -> SIGSEGV. Tag only SHADING, scoped to the GPencil
+   * objects that actually use this material. */
   int gp_tagged_count = 0;
   for (Object *ob = bmain->objects.first; ob; ob = ob->id.next) {
     if (ob->type == OB_GPENCIL_LEGACY) {
@@ -150,14 +153,14 @@ static void rna_MaterialGpencil_update(Main *bmain, Scene *scene, PointerRNA *pt
       if (!uses_material) {
         continue;
       }
-      DEG_id_tag_update(&gpd->id, ID_RECALC_GEOMETRY);
+      DEG_id_tag_update(&gpd->id, ID_RECALC_SHADING);
       gp_tagged_count++;
     }
   }
 
 #ifdef __ANDROID__
   __android_log_print(ANDROID_LOG_DEBUG, "Blender.GP.Crash",
-      "rna_MaterialGpencil_update: tagged %d GPencil objects with ID_RECALC_GEOMETRY (scoped to ma=%p)",
+      "rna_MaterialGpencil_update: tagged %d GPencil objects with ID_RECALC_SHADING (scoped to ma=%p)",
       gp_tagged_count, (void *)ma);
 #endif
 
