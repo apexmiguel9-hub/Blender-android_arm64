@@ -128,40 +128,30 @@ static void rna_MaterialGpencil_update(Main *bmain, Scene *scene, PointerRNA *pt
       "rna_MaterialGpencil_update AFTER rna_Material_update");
 #endif
 
-  /* A material color/stroke/fill change only affects shading, NOT geometry.
-   * The GPencil material color lives in the gp_material_pool UBO
-   * (stroke_color/fill_color), refreshed by ID_RECALC_SHADING. Tagging
-   * ID_RECALC_GEOMETRY here forces a full draw-cache (batch) rebuild of every
-   * stroke on every HSV wheel drag event (many per second). On Mali G52 that
-   * reallocs the GP batches (incl. the active sbuffer) while deferred draws
-   * are still in flight -> SIGSEGV. Tag only SHADING, scoped to the GPencil
-   * objects that actually use this material. */
-  int gp_tagged_count = 0;
-  for (Object *ob = bmain->objects.first; ob; ob = ob->id.next) {
-    if (ob->type == OB_GPENCIL_LEGACY) {
-      bGPdata *gpd = (bGPdata *)ob->data;
-      if (gpd == NULL) {
-        continue;
-      }
-      bool uses_material = false;
-      for (int i = 0; i < ob->totcol; i++) {
-        if (ob->mat[i] == ma) {
-          uses_material = true;
-          break;
-        }
-      }
-      if (!uses_material) {
-        continue;
-      }
-      DEG_id_tag_update(&gpd->id, ID_RECALC_SHADING);
-      gp_tagged_count++;
-    }
-  }
+  /* A GPencil material color/stroke/fill change does NOT need any depsgraph
+   * recalc on the bGPdata object. The color is read into the gp_material_pool
+   * UBO (stroke_color/fill_color) every frame from ma->gp_style, so the new
+   * color shows up on the next draw automatically.
+   *
+   * Tagging the gpd object (ID_RECALC_SHADING or GEOMETRY) is fatal here:
+   * BKE_object_batch_cache_dirty_tag() runs for ANY recalc on the GP object
+   * (object_update.cc), setting GP_DATA_CACHE_IS_DIRTY -> the GP draw engine
+   * frees+reallocs all batches (geom_batch/vbo/ibo, incl. the active sbuffer)
+   * on every HSV wheel drag event (many per second). On Mali G52 that races
+   * with the in-flight deferred GP draw (2D Animation = Draw mode has a live
+   * sbuffer redraw loop) -> use-after-free -> SIGSEGV. Sculpt mode has no such
+   * live sbuffer loop, so the same dirty does not crash there.
+   *
+   * Fix: do NOT dirty the gpd batch cache. Only nudge the material itself
+   * (which does NOT flow through BKE_object_eval_uber_data for the GP object,
+   * so it will not dirty GP_DATA_CACHE_IS_DIRTY) and send a notifier so the
+   * UI / next-frame populate picks up the change. */
+  DEG_id_tag_update(&ma->id, ID_RECALC_SHADING);
 
 #ifdef __ANDROID__
   __android_log_print(ANDROID_LOG_DEBUG, "Blender.GP.Crash",
-      "rna_MaterialGpencil_update: tagged %d GPencil objects with ID_RECALC_SHADING (scoped to ma=%p)",
-      gp_tagged_count, (void *)ma);
+      "rna_MaterialGpencil_update: tagged material ma=%p with ID_RECALC_SHADING (no gpd batch dirty)",
+      (void *)ma);
 #endif
 
 #ifdef __ANDROID__
