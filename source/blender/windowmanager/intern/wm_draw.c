@@ -1006,6 +1006,16 @@ static void wm_draw_window_offscreen(bContext *C, wmWindow *win, bool stereo)
     ED_region_do_draw(C, region);
     wm_draw_region_unbind(region);
 
+    /* On Mali G52 (Android), the IMM draw of the popup (color picker HSV
+     * wheel/sliders via ui_draw_but_HSVCIRCLE/ui_draw_but_HSVCUBE) leaves the
+     * IMM VAO/VBO bound in the GL context. When the next DRW draw (GPencil
+     * engine) starts and switches framebuffers, the stale bindings can trigger
+     * a GPU page fault -> SIGSEGV/kernel panic.
+     * glFlush submits pending IMM commands so Mali doesn't race with the
+     * next framebuffer switch. Must NOT use glFinish (would break 2D
+     * Animation during file load, per AGENTS.md). */
+    GPU_flush();
+
     GPU_debug_group_end();
 
     region->do_draw = false;
