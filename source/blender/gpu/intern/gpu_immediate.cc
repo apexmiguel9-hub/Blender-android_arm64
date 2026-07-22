@@ -124,6 +124,10 @@ static void wide_line_workaround_start(GPUPrimType prim_type)
     return;
   }
 
+  /* Diagnostic: log the line width and shader being used */
+  printf("OBL_GIZMO: wide_line_workaround lw=%.1f shader=%d\n",
+         line_width, (int)*imm->builtin_shader_bound);
+
   eGPUBuiltinShader polyline_sh;
   switch (*imm->builtin_shader_bound) {
     case GPU_SHADER_3D_CLIPPED_UNIFORM_COLOR:
@@ -143,7 +147,7 @@ static void wide_line_workaround_start(GPUPrimType prim_type)
       float vp[4];
       GPU_viewport_size_get_f(vp);
       immUniform2fv("viewportSize", &vp[2]);
-      immUniform1f("lineWidth", line_width);
+      immUniform1f("lineWidth", max_ff(line_width, 4.0f));
       if (ELEM(*imm->builtin_shader_bound,
                GPU_SHADER_3D_POLYLINE_CLIPPED_UNIFORM_COLOR,
                GPU_SHADER_3D_POLYLINE_UNIFORM_COLOR,
@@ -168,7 +172,7 @@ static void wide_line_workaround_start(GPUPrimType prim_type)
   float viewport[4];
   GPU_viewport_size_get_f(viewport);
   immUniform2fv("viewportSize", &viewport[2]);
-  immUniform1f("lineWidth", line_width);
+  immUniform1f("lineWidth", max_ff(line_width, 4.0f));
 
   if (GPU_blend_get() == GPU_BLEND_NONE) {
     /* Disable line smoothing when blending is disabled (see #81827). */
