@@ -106,7 +106,7 @@ static void cage2d_draw_box_corners(const rctf *r,
   GPU_viewport_size_get_f(viewport);
   immUniform2fv("viewportSize", &viewport[2]);
 
-  immUniform1f("lineWidth", line_width * U.pixelsize);
+  GPU_line_width(line_width);
 
   immBegin(GPU_PRIM_LINES, 16);
 
@@ -414,7 +414,7 @@ static void cage2d_draw_box_interaction(const float color[4],
       GPU_viewport_size_get_f(viewport);
       immUniform2fv("viewportSize", &viewport[2]);
 
-      immUniform1f("lineWidth", (line_width * 3.0f) * U.pixelsize);
+      GPU_line_width((line_width * 3.0f));
 
       immBegin(prim_type, verts_len);
       immAttr3f(attr_id.col, 0.0f, 0.0f, 0.0f);
@@ -423,7 +423,7 @@ static void cage2d_draw_box_interaction(const float color[4],
       }
       immEnd();
 
-      immUniform1f("lineWidth", line_width * U.pixelsize);
+      GPU_line_width(line_width);
 
       immBegin(prim_type, verts_len);
       immAttr3fv(attr_id.col, color);
@@ -508,7 +508,7 @@ static void cage2d_draw_rect_wire(const rctf *r,
   float viewport[4];
   GPU_viewport_size_get_f(viewport);
   immUniform2fv("viewportSize", &viewport[2]);
-  immUniform1f("lineWidth", line_width * U.pixelsize);
+  GPU_line_width(line_width);
 
   /* Small 'lines' primitives more efficient for hardware processing than line-strip. */
   immBegin(GPU_PRIM_LINES, 8);
@@ -573,7 +573,7 @@ static void cage2d_draw_circle_wire(const float color[3],
     float viewport[4];
     GPU_viewport_size_get_f(viewport);
     immUniform2fv("viewportSize", &viewport[2]);
-    immUniform1f("lineWidth", line_width * U.pixelsize);
+    GPU_line_width(line_width);
     imm_draw_circle_wire_aspect_3d(pos, 0.0f, 0.0f, size[0], size[1], CIRCLE_RESOL);
   }
 

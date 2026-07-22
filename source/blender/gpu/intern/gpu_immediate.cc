@@ -143,9 +143,22 @@ static void wide_line_workaround_start(GPUPrimType prim_type)
     case GPU_SHADER_3D_SMOOTH_COLOR:
       polyline_sh = GPU_SHADER_3D_POLYLINE_SMOOTH_COLOR;
       break;
-    default:
-      /* Cannot replace the current shader with a polyline shader. */
+    default: {
+      /* Shader might already be a polyline variant — set uniforms anyway. */
+      float vp[4];
+      GPU_viewport_size_get_f(vp);
+      immUniform2fv("viewportSize", &vp[2]);
+      immUniform1f("lineWidth", line_width);
+      if (ELEM(*imm->builtin_shader_bound,
+               GPU_SHADER_3D_POLYLINE_CLIPPED_UNIFORM_COLOR,
+               GPU_SHADER_3D_POLYLINE_UNIFORM_COLOR,
+               GPU_SHADER_3D_POLYLINE_FLAT_COLOR,
+               GPU_SHADER_3D_POLYLINE_SMOOTH_COLOR))
+      {
+        immUniformColor4fv(imm->uniform_color);
+      }
       return;
+    }
   }
 
   imm->prev_builtin_shader = imm->builtin_shader_bound;

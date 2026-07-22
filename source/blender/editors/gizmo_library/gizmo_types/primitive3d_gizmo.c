@@ -148,7 +148,7 @@ static void gizmo_primitive_draw_geom(PrimitiveGizmo3D *gz_prim,
     float viewport[4];
     GPU_viewport_size_get_f(viewport);
     immUniform2fv("viewportSize", &viewport[2]);
-    immUniform1f("lineWidth", gz_prim->gizmo.line_width * U.pixelsize);
+    GPU_line_width(gz_prim->gizmo.line_width);
   }
 
   if (gz_prim->draw_style == ED_GIZMO_PRIMITIVE_STYLE_PLANE) {

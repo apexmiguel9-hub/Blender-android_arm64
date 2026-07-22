@@ -152,7 +152,7 @@ static void dial_geom_draw(const float color[4],
     float viewport[4];
     GPU_viewport_size_get_f(viewport);
     immUniform2fv("viewportSize", &viewport[2]);
-    immUniform1f("lineWidth", line_width * U.pixelsize);
+    GPU_line_width(line_width);
 
     if (arc_partial_angle == 0.0f) {
       imm_draw_circle_wire_3d(pos, 0.0f, 0.0f, 1.0f, DIAL_RESOLUTION);
@@ -196,7 +196,7 @@ static void dial_ghostarc_draw_helpline(const float angle,
   float viewport[4];
   GPU_viewport_size_get_f(viewport);
   immUniform2fv("viewportSize", &viewport[2]);
-  immUniform1f("lineWidth", line_width * U.pixelsize);
+  GPU_line_width(line_width);
 
   immUniformColor4fv(color);
 
@@ -225,7 +225,7 @@ static void dial_ghostarc_draw_incremental_angle(const float incremental_angle, 
   float viewport[4];
   GPU_viewport_size_get_f(viewport);
   immUniform2fv("viewportSize", &viewport[2]);
-  immUniform1f("lineWidth", U.pixelsize);
+  GPU_line_width(1.0f);
 
   immBegin(GPU_PRIM_LINES, tot_incr * 2);
 

@@ -131,7 +131,7 @@ static void cage3d_draw_box_corners(const float r[3],
   float viewport[4];
   GPU_viewport_size_get_f(viewport);
   immUniform2fv("viewportSize", &viewport[2]);
-  immUniform1f("lineWidth", line_width * U.pixelsize);
+  GPU_line_width(line_width);
 
   imm_draw_cube_wire_3d(pos, (float[3]){0}, r);
 
@@ -212,7 +212,7 @@ static void cage3d_draw_circle_wire(const float r[3],
   float viewport[4];
   GPU_viewport_size_get_f(viewport);
   immUniform2fv("viewportSize", &viewport[2]);
-  immUniform1f("lineWidth", line_width * U.pixelsize);
+  GPU_line_width(line_width);
 
   imm_draw_cube_wire_3d(pos, (const float[3]){0}, r);
 

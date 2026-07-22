@@ -143,7 +143,7 @@ static int node_shader_gpu_bsdf_principled(GPUMaterial *mat,
 #endif
 
   bool use_diffuse = socket_not_one(6) && socket_not_one(17);
-  bool use_subsurf = socket_not_zero(1) && use_diffuse;
+  bool use_subsurf = socket_not_zero(1) && use_diffuse && (clamp_f(in[1].vec[0], 0.0f, 1.0f) > 1e-3f);
   bool use_refract = socket_not_one(6) && socket_not_zero(17);
   bool use_transparency = socket_not_one(21);
   bool use_clear = socket_not_zero(14);
@@ -187,9 +187,8 @@ static int node_shader_gpu_bsdf_principled(GPUMaterial *mat,
     if (node->runtime && node->runtime->original) {
       bNodeSocket *socket = (bNodeSocket *)BLI_findlink(&node->runtime->original->inputs, 2);
       if (socket && socket->default_value) {
-        bNodeSocketValueRGBA *socket_data = (bNodeSocketValueRGBA *)socket->default_value;
-        /* For some reason it seems that the socket value is in ARGB format. */
-        use_subsurf = GPU_material_sss_profile_create(mat, &socket_data->value[1]);
+        bNodeSocketValueVector *socket_data = (bNodeSocketValueVector *)socket->default_value;
+        use_subsurf = GPU_material_sss_profile_create(mat, socket_data->value);
       }
     }
   }
