@@ -105,7 +105,7 @@ static void gizmo_init(wmGizmo *gz)
   const float color_default[4] = {1.0f, 1.0f, 1.0f, 1.0f};
 
   gz->scale_basis = 1.0f;
-  gz->line_width = 1.0f;
+  gz->line_width = 3.0f;
 
   /* defaults */
   copy_v4_v4(gz->color, color_default);

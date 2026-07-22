@@ -289,7 +289,11 @@ GPU_SHADER_CREATE_INFO(eevee_legacy_shader_effect_subsurface_translucency)
     .sampler(1, ImageType::FLOAT_2D_ARRAY, "sssShadowCascades")
     .uniform_buf(0, "SSSProfileBlock", "sssProfile", Frequency::PASS)
     .auto_resource_location(true)
-    .do_static_compilation(true);
+    .do_static_compilation(true)
+#ifdef __ANDROID__
+    .define("MAX_SSS_SAMPLES", "9")
+#endif
+    ;
 
 /* EEVEE_shaders_renderpasses_post_process_sh_get */
 GPU_SHADER_CREATE_INFO(eevee_legacy_post_process)

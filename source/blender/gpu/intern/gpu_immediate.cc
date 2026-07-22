@@ -120,11 +120,6 @@ static void wide_line_workaround_start(GPUPrimType prim_type)
   }
 
   float line_width = GPU_line_width_get();
-
-  if (line_width == 1.0f) {
-    /* No need to change the shader. */
-    return;
-  }
   if (!imm->builtin_shader_bound) {
     return;
   }
