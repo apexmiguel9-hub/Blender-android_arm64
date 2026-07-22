@@ -7,6 +7,10 @@
  * Mimics old style opengl immediate mode drawing.
  */
 
+#ifdef __ANDROID__
+#  include <android/log.h>
+#endif
+
 #ifndef GPU_STANDALONE
 #  include "UI_resources.h"
 #endif
@@ -124,9 +128,11 @@ static void wide_line_workaround_start(GPUPrimType prim_type)
     return;
   }
 
-  /* Diagnostic: log the line width and shader being used */
-  printf("OBL_GIZMO: wide_line_workaround lw=%.1f shader=%d\n",
-         line_width, (int)*imm->builtin_shader_bound);
+#ifdef __ANDROID__
+  __android_log_print(ANDROID_LOG_INFO, "OBL.GIZMO",
+    "wide_line_workaround lw=%.1f shader=%d",
+    line_width, (int)*imm->builtin_shader_bound);
+#endif
 
   eGPUBuiltinShader polyline_sh;
   switch (*imm->builtin_shader_bound) {
