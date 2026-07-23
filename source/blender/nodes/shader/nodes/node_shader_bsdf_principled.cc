@@ -210,7 +210,7 @@ static int node_shader_gpu_bsdf_principled(GPUMaterial *mat,
                         GPU_constant(&use_clear_f),
                         GPU_constant(&use_refract_f),
                         GPU_constant(&use_multi_scatter),
-                        GPU_uniform(&use_sss));
+                        GPU_constant(&use_sss));
 }
 
 static void node_shader_update_principled(bNodeTree *ntree, bNode *node)

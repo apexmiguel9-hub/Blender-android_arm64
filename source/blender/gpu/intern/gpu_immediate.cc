@@ -119,6 +119,10 @@ static bool vertex_count_makes_sense_for_primitive(uint vertex_len, GPUPrimType 
 
 static void wide_line_workaround_start(GPUPrimType prim_type)
 {
+#ifdef __ANDROID__
+  __android_log_print(ANDROID_LOG_INFO, "OBL.GIZMO",
+    "wide_line_workaround START prim_type=%d", (int)prim_type);
+#endif
   if (!ELEM(prim_type, GPU_PRIM_LINES, GPU_PRIM_LINE_STRIP, GPU_PRIM_LINE_LOOP)) {
     return;
   }

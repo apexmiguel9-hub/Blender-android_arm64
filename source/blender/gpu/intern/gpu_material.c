@@ -9,6 +9,9 @@
 
 #include <math.h>
 #include <string.h>
+#ifdef __ANDROID__
+#  include <android/log.h>
+#endif
 
 #include "MEM_guardedalloc.h"
 
@@ -599,6 +602,12 @@ struct GPUUniformBuf *GPU_material_sss_profile_get(GPUMaterial *material,
     return NULL;
   }
 
+#ifdef __ANDROID__
+  __android_log_print(ANDROID_LOG_INFO, "OBL.SHADER",
+    "sss_profile_get name=%s sample_len=%d dirty=%d",
+    material->name, sample_len, (int)material->sss_dirty);
+#endif
+
   if (material->sss_dirty || (material->sss_samples != sample_len)) {
     GPUSssKernelData kd;
 
@@ -933,12 +942,24 @@ void GPU_material_compile(GPUMaterial *mat)
   BLI_assert(ELEM(mat->status, GPU_MAT_QUEUED, GPU_MAT_CREATED));
   BLI_assert(mat->pass);
 
+#ifdef __ANDROID__
+  __android_log_print(ANDROID_LOG_INFO, "OBL.SHADER",
+    "GPU_material_compile BEFORE pass_compile name=%s sss=%d",
+    mat->name, (int)mat->sss_enabled);
+#endif
+
   /* NOTE: The shader may have already been compiled here since we are
    * sharing GPUShader across GPUMaterials. In this case it's a no-op. */
 #ifndef NDEBUG
   success = GPU_pass_compile(mat->pass, mat->name);
 #else
   success = GPU_pass_compile(mat->pass, __func__);
+#endif
+
+#ifdef __ANDROID__
+  __android_log_print(ANDROID_LOG_INFO, "OBL.SHADER",
+    "GPU_material_compile AFTER pass_compile name=%s success=%d",
+    mat->name, (int)success);
 #endif
 
   mat->flag |= GPU_MATFLAG_UPDATED;

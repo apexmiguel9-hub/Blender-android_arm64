@@ -21,6 +21,9 @@
 
 #include "BLI_string_utils.h"
 #include <CLG_log.h>
+#ifdef __ANDROID__
+#  include <android/log.h>
+#endif
 static CLG_LogRef LOG = {"gl.shader"};
 using namespace blender;
 using namespace blender::gpu;
@@ -1007,6 +1010,15 @@ GLuint GLShader::create_shader_stage(GLenum gl_stage, MutableSpan<const char *> 
 
     for(int index=0;index<sources.size();index++){
     }
+#ifdef __ANDROID__
+  __android_log_print(ANDROID_LOG_INFO, "OBL.SHADER",
+    "glCompileShader stage=%s name=%s len=%zu",
+    (gl_stage == GL_VERTEX_SHADER ? "VERT" :
+     gl_stage == GL_GEOMETRY_SHADER ? "GEOM" :
+     gl_stage == GL_FRAGMENT_SHADER ? "FRAG" :
+     gl_stage == GL_COMPUTE_SHADER ? "COMP" : "???"),
+    name, sources[0] ? strlen(sources[0]) : 0);
+#endif
   glShaderSource(shader, sources.size(), sources.data(), nullptr);
   glCompileShader(shader);
 
@@ -1080,7 +1092,15 @@ bool GLShader::finalize(const shader::ShaderCreateInfo *info)
     geometry_shader_from_glsl(sources);
   }
 
+#ifdef __ANDROID__
+  __android_log_print(ANDROID_LOG_INFO, "OBL.SHADER",
+    "glLinkProgram name=%s", name);
+#endif
   glLinkProgram(shader_program_);
+#ifdef __ANDROID__
+  __android_log_print(ANDROID_LOG_INFO, "OBL.SHADER",
+    "glLinkProgram DONE name=%s", name);
+#endif
 
   GLint status;
   glGetProgramiv(shader_program_, GL_LINK_STATUS, &status);
