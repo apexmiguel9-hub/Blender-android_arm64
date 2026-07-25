@@ -790,6 +790,7 @@ set_property(GLOBAL PROPERTY ICON_GEOM_NAMES
   ops.generic.cursor
   ops.generic.select
   ops.generic.select_box
+  ops.generic.toggle_select
   ops.generic.select_circle
   ops.generic.select_lasso
   ops.generic.select_paint
