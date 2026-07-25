@@ -6900,7 +6900,7 @@ def km_3d_view_tool_toggle_select(params, *, fallback):
         {"space_type": 'VIEW_3D', "region_type": 'WINDOW'},
         {"items": [
             ("view3d.select", {"type": 'LEFTMOUSE', "value": 'PRESS'},
-             {"properties": [("deselect_all", False), ("toggle", True)]}),
+             {"properties": [("deselect_all", False), ("extend", True)]}),
         ]},
     )
 
