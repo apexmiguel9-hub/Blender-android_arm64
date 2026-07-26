@@ -91,5 +91,9 @@ enum OBLButtonID {
     OBLButtonID_Semicolon,
     OBLButtonID_Apostrophe,
     OBLButtonID_Insert,
+    OBLButtonID_Num_6,
+    OBLButtonID_Num_7,
+    OBLButtonID_Num_8,
+    OBLButtonID_Num_9,
     OBLButtonID_End,
 };
