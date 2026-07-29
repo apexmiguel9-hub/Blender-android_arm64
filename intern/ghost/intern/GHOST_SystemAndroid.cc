@@ -2061,6 +2061,16 @@ void GHOST_SystemAndroid::setValue(int values[], int num) {
         } else if (oblButtonId == 10006) {
             /* Toggle scroll mode. */
             m_scrollMode = !m_scrollMode;
+
+        } else if (values[0] == 10010 && num >= 3) {
+            /* Set cursor position (virtual cursor). */
+            GHOST_WindowAndroid *win = (GHOST_WindowAndroid *) getWindowManager()->getActiveWindow();
+            if (win) {
+                GHOST_TabletData td;
+                pushEvent(new GHOST_EventCursor(getMilliSeconds(), GHOST_kEventCursorMove, win, values[1], values[2], td));
+            }
+            m_x = values[1];
+            m_y = values[2];
         }
     }
 }
