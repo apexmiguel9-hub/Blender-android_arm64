@@ -47,6 +47,16 @@ void blenderSetValue(int values[],int num){
     GHOST_ISystem *system = GHOST_ISystem::getSystem();
     system->setValue(values,num);
 }
+void blenderGetCursorPosition(int *x, int *y){
+    GHOST_ISystem *system = GHOST_ISystem::getSystem();
+    if (system) {
+        int32_t cx = -1, cy = -1;
+        if (system->getCursorPosition(cx, cy) == GHOST_kSuccess) {
+            *x = (int)cx;
+            *y = (int)cy;
+        }
+    }
+}
 void blenderSetValueOn(int values[],int num){
     GHOST_ISystem *system = GHOST_ISystem::getSystem();
     system->setValueOn(values,num);

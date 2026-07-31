@@ -24,6 +24,7 @@ extern "C" {
 typedef bool (*GHOST_EventCallbackProcPtr)(GHOST_EventHandle event, GHOST_TUserDataPtr userdata);
 extern void setNativeWindow(void*nativeWindow);
 extern void blenderSetValue(int values[],int num);
+extern void blenderGetCursorPosition(int *x, int *y);
 extern void blenderSetValueOn(int values[],int num);
 extern void blenderSetValueOff(int values[],int num);
 extern void blenderWMInitReinit();
