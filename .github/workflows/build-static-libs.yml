@@ -480,8 +480,14 @@ jobs:
 
           # Build all library targets in parallel
           echo "=== Building $TARGET_COUNT static library targets ==="
+          set -o pipefail
           ninja -j$(nproc) $LIB_TARGETS 2>&1 | tee /tmp/build.log
+          NINJA_STATUS=$?
           echo "=== Static library build complete ==="
+          if [ "$NINJA_STATUS" -ne 0 ]; then
+            echo "ERROR: ninja failed with exit code $NINJA_STATUS — aborting to avoid shipping an incomplete static-libs artifact"
+            exit 1
+          fi
         timeout-minutes: 180
 
       - name: Diagnose generated static libraries

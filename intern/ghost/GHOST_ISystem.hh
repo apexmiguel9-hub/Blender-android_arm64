@@ -409,6 +409,12 @@ class GHOST_ISystem {
   virtual GHOST_TSuccess getCursorPosition(int32_t &x, int32_t &y) const = 0;
 
   /**
+   * Returns true if a finger is currently down on the (touch) primary pointer.
+   * Used by the precision-cursor lens overlay to show the magnifier only while drawing.
+   */
+  virtual bool isTouchDown() const { return false; }
+
+  /**
    * Updates the location of the cursor (location in screen coordinates).
    * Not all operating systems allow the cursor to be moved (without the input device being moved).
    * \param x: The x-coordinate of the cursor.
