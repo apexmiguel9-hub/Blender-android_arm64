@@ -57,6 +57,13 @@ void blenderGetCursorPosition(int *x, int *y){
         }
     }
 }
+bool blenderIsTouchDown(void){
+    GHOST_ISystem *system = GHOST_ISystem::getSystem();
+    if (system) {
+        return system->isTouchDown();
+    }
+    return false;
+}
 void blenderSetValueOn(int values[],int num){
     GHOST_ISystem *system = GHOST_ISystem::getSystem();
     system->setValueOn(values,num);

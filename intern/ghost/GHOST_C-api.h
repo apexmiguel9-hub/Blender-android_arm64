@@ -25,6 +25,7 @@ typedef bool (*GHOST_EventCallbackProcPtr)(GHOST_EventHandle event, GHOST_TUserD
 extern void setNativeWindow(void*nativeWindow);
 extern void blenderSetValue(int values[],int num);
 extern void blenderGetCursorPosition(int *x, int *y);
+extern bool blenderIsTouchDown(void);
 extern void blenderSetValueOn(int values[],int num);
 extern void blenderSetValueOff(int values[],int num);
 extern void blenderWMInitReinit();

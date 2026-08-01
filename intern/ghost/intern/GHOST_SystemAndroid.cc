@@ -966,6 +966,7 @@ bool processButtonEvent(struct android_app *app, AInputEvent *event) {
     td.Active=GHOST_TTabletMode::GHOST_kTabletModeStylus;
     uint64_t currentTime = system->getMilliSeconds();
     if (motionaction == AMOTION_EVENT_ACTION_DOWN) {
+        system->m_isTouchDown = true;
         system->m_lastDownx = msgPosX;
         system->m_lastDowny = msgPosY;
         //  当前窗口不是用户定义窗口
@@ -996,6 +997,7 @@ bool processButtonEvent(struct android_app *app, AInputEvent *event) {
         }
         // CLOG_ERROR(&LOG, "交互processButtonEvent 12 %s", strInfo.c_str());
     } else if (motionaction == AMOTION_EVENT_ACTION_UP) {
+        system->m_isTouchDown = false;
         // CLOG_ERROR(&LOG, "交互processButtonEvent 13");
         if (checkClickPos(width, height, system->m_lastDownx, system->m_lastDowny) &&
             (system->m_lastClickTopLeftBtn)) {

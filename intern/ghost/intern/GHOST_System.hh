@@ -222,6 +222,10 @@ class GHOST_System : public GHOST_ISystem {
    * </pre>
    */
 
+  /* Android: true while a finger/stylus is pressed on screen. Used by the
+   * precision-cursor lens overlay. Default false on other platforms. */
+  virtual bool isTouchDown() const { return false; }
+
   /***************************************************************************************
    * Access to mouse button and keyboard states.
    ***************************************************************************************/

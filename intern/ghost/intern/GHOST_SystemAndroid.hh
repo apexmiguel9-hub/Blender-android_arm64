@@ -94,6 +94,7 @@ public:
         return uint8_t(1);
     }
     GHOST_TSuccess getCursorPosition(int32_t & x, int32_t & y) const override;
+    bool isTouchDown() const override { return m_isTouchDown; }
     GHOST_TSuccess setCursorPosition(int32_t x, int32_t y) override;
     void getMainDisplayDimensions(uint32_t & width, uint32_t & height) const override;
     void getAllDisplayDimensions(uint32_t & width, uint32_t & height) const override;
@@ -205,6 +206,9 @@ public:
   /* Scroll mode: single-finger drag sends wheel events instead of LEFT drag. */
   bool m_scrollMode = false;
   float m_scrollLastY = 0.0f;
+
+  /* True while a finger/stylus is pressed on the screen (precision cursor lens). */
+  bool m_isTouchDown = false;
 
   /* Viewport bounds (screen coords). Only the 3D viewport area; everything else is UI/menus. */
   int32_t m_viewportXMin = 0;
