@@ -44,7 +44,7 @@
 #include "RNA_access.h"
 #include "RNA_define.h"
 
-#include "GHOST_C-api.h"
+#include "../../../../intern/ghost/GHOST_C-api.h"
 
 #include "curves_sculpt_intern.hh"
 #include "paint_intern.hh"
