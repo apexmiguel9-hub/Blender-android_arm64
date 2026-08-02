@@ -73,6 +73,7 @@ void blenderSetValueOff(int values[],int num){
   system->setValueOff(values,num);
 }
 static char g_obl_active_tool_id[256] = "";
+static char g_obl_active_workspace[128] = "";
 static int g_obl_active_mode = 0;
 void blenderSetActiveTool(const char *idname){
   if (idname != NULL) {
@@ -85,6 +86,18 @@ void blenderSetActiveTool(const char *idname){
 }
 const char *blenderGetActiveToolId(void){
   return g_obl_active_tool_id;
+}
+void blenderSetActiveWorkspace(const char *name){
+  if (name != NULL) {
+    strncpy(g_obl_active_workspace, name, sizeof(g_obl_active_workspace) - 1);
+    g_obl_active_workspace[sizeof(g_obl_active_workspace) - 1] = '\0';
+  }
+  else {
+    g_obl_active_workspace[0] = '\0';
+  }
+}
+const char *blenderGetActiveWorkspace(void){
+  return g_obl_active_workspace;
 }
 void blenderSetActiveMode(int mode){
   g_obl_active_mode = mode;

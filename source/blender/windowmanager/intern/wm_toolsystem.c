@@ -308,6 +308,7 @@ void WM_toolsystem_ref_set_from_runtime(struct bContext *C,
 
   STRNCPY(tref->idname, idname);
   blenderSetActiveTool(tref->idname);
+  blenderSetActiveWorkspace(workspace->id.name + 2);
   blenderSetActiveMode(CTX_data_mode_enum(C));
 
   if (tref->runtime == NULL) {
@@ -776,8 +777,12 @@ static bToolRef *toolsystem_reinit_ensure_toolref(bContext *C,
       default_tool = toolsystem_default_tool(tkey);
     }
     STRNCPY(tref->idname, default_tool);
-    blenderSetActiveTool(tref->idname);
   }
+  /* Always refresh the active tool + workspace statics: they feed the mobile
+   * sculpt arc overlay, and switching workspaces does NOT change the object
+   * mode, so the mode alone is not enough to hide the UI. */
+  blenderSetActiveTool(tref->idname);
+  blenderSetActiveWorkspace(workspace->id.name + 2);
   blenderSetActiveMode(CTX_data_mode_enum(C));
   toolsystem_reinit_with_toolref(C, workspace, tref);
   return tref;

@@ -30,6 +30,8 @@ extern void blenderSetValueOn(int values[],int num);
 extern void blenderSetValueOff(int values[],int num);
 extern void blenderSetActiveTool(const char *idname);
 extern const char *blenderGetActiveToolId(void);
+extern void blenderSetActiveWorkspace(const char *name);
+extern const char *blenderGetActiveWorkspace(void);
 extern void blenderSetActiveMode(int mode);
 extern int blenderGetActiveMode(void);
 extern void blenderWMInitReinit();
