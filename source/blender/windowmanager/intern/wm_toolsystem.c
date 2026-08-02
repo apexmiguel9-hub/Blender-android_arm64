@@ -40,6 +40,8 @@
 #include "WM_toolsystem.h" /* own include */
 #include "WM_types.h"
 
+#include "GHOST_C-api.h"
+
 static void toolsystem_reinit_with_toolref(bContext *C,
                                            WorkSpace *UNUSED(workspace),
                                            bToolRef *tref);
@@ -305,6 +307,8 @@ void WM_toolsystem_ref_set_from_runtime(struct bContext *C,
   }
 
   STRNCPY(tref->idname, idname);
+  blenderSetActiveTool(tref->idname);
+  blenderSetActiveMode(CTX_data_mode_enum(C));
 
   if (tref->runtime == NULL) {
     tref->runtime = MEM_callocN(sizeof(*tref->runtime), __func__);
@@ -772,7 +776,9 @@ static bToolRef *toolsystem_reinit_ensure_toolref(bContext *C,
       default_tool = toolsystem_default_tool(tkey);
     }
     STRNCPY(tref->idname, default_tool);
+    blenderSetActiveTool(tref->idname);
   }
+  blenderSetActiveMode(CTX_data_mode_enum(C));
   toolsystem_reinit_with_toolref(C, workspace, tref);
   return tref;
 }

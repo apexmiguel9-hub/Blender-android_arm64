@@ -210,6 +210,11 @@ public:
   /* True while a finger/stylus is pressed on the screen (precision cursor lens). */
   bool m_isTouchDown = false;
 
+  /* True when the current touch DOWN was suppressed because it started inside
+   * the sculpt tool arc band. The matching UP must also be suppressed so
+   * Blender never sees a ButtonDown without a ButtonUp (stuck button). */
+  bool m_sculptArcDownSuppressed = false;
+
   /* Viewport bounds (screen coords). Only the 3D viewport area; everything else is UI/menus. */
   int32_t m_viewportXMin = 0;
   int32_t m_viewportYMin = 0;

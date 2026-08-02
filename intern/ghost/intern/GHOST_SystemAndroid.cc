@@ -16,6 +16,7 @@
 #include <android/native_window.h>
 #include <android/native_window_jni.h>
 #include <cmath>
+#include <algorithm>
 #include <signal.h>
 #include <stdio.h>
 #include <sys/time.h>
@@ -921,6 +922,55 @@ static bool checkClickPos(uint32_t width, uint32_t height, float posX, float pos
     return false;
 }
 
+/* ─── Sculpt arc geometry ────────────────────────────────────────────────
+ * The sculpt tool arc is a 180° semicircle anchored to the bottom of the
+ * screen, opened upward. The active tool sits at the apex (center). This
+ * geometry MUST match the Kotlin overlay (SculptArcOverlay.kt).
+ *
+ *   cx, cy     : center of the circle (cy == screen height)
+ *   R          : arc radius  = min(w, h) * 0.24
+ *   bandHalf   : half thickness of the touch band = max(28, w * 0.03)
+ *   apex       : top point of the arc = (cx, cy - R)
+ *   arrowHole  : half-size of the arrow handle hit zone around the apex
+ *
+ * returns 1 if the point (x,y) is inside the sculpt arc band or the arrow
+ * handle, 0 otherwise. Only the upper half of the circle (y <= cy) counts.
+ *
+ * When `collapsed` is true (user swiped the handle down to hide the arc),
+ * only the arrow handle region intercepts; the rest of the screen draws
+ * normally.
+ */
+static bool sculpt_arc_hit_test(uint32_t width, uint32_t height, float posX, float posY, bool collapsed)
+{
+    const float cx = width * 0.5f;
+    const float cy = (float)height;
+    const float R = std::min((float)width, (float)height) * 0.24f;
+    const float bandHalf = std::max(28.0f, width * 0.03f);
+    const float arrowHole = std::max(30.0f, width * 0.04f);
+
+    /* Arrow handle around the apex (top vertex of the semicircle). */
+    const float apexX = cx;
+    const float apexY = cy - R;
+    if (std::fabs(posX - apexX) <= arrowHole && std::fabs(posY - apexY) <= arrowHole) {
+        return true;
+    }
+
+    /* When collapsed to the handle, only the handle region intercepts. */
+    if (collapsed) {
+        return false;
+    }
+
+    /* Arc band: upper half of the circle between R-bandHalf and R+bandHalf. */
+    const float dx = posX - cx;
+    const float dy = posY - cy;
+    const float dist = std::sqrt(dx * dx + dy * dy);
+    if (posY <= cy && dist >= (R - bandHalf) && dist <= (R + bandHalf)) {
+        return true;
+    }
+
+    return false;
+}
+
 //  触摸屏事件
 bool processButtonEvent(struct android_app *app, AInputEvent *event) {
     GHOST_SystemAndroid *system = (GHOST_SystemAndroid *) GHOST_ISystem::getSystem();
@@ -959,6 +1009,10 @@ bool processButtonEvent(struct android_app *app, AInputEvent *event) {
             std::to_string(msgPosY)+"压感压力大小"+" "+std::to_string(pressure)+" "+"压感尺寸"+" "+std::to_string(size);
 //    // CLOG_ERROR(&LOG, "交互processButtonEvent 5 %s", strInfo.c_str());
     bool checkMove = app->GetAsyncKeyState(101);
+    bool sculptArcActive = app->GetAsyncKeyState(102);
+    bool sculptArcCollapsed = app->GetAsyncKeyState(103);
+    bool inSculptArc = sculptArcActive &&
+                       sculpt_arc_hit_test(width, height, msgPosX, msgPosY, sculptArcCollapsed);
     GHOST_TabletData td;
     td.Xtilt=msgPosX;
     td.Ytilt=msgPosY;
@@ -990,10 +1044,14 @@ bool processButtonEvent(struct android_app *app, AInputEvent *event) {
         system->pushEvent(
                 new GHOST_EventCursor(currentTime, GHOST_kEventCursorMove, window, msgPosX,
                                       msgPosY, td));
-        if (!checkMove) {
+        if (!checkMove && !inSculptArc) {
             system->pushEvent(
                     new GHOST_EventButton(currentTime, GHOST_TEventType::GHOST_kEventButtonDown,
                                           window, GHOST_SystemAndroid::currentButton(app), td));
+            system->m_sculptArcDownSuppressed = false;
+        }
+        else {
+            system->m_sculptArcDownSuppressed = inSculptArc;
         }
         // CLOG_ERROR(&LOG, "交互processButtonEvent 12 %s", strInfo.c_str());
     } else if (motionaction == AMOTION_EVENT_ACTION_UP) {
@@ -1010,7 +1068,12 @@ bool processButtonEvent(struct android_app *app, AInputEvent *event) {
         /* Don't send CURSOR MOVE on UP — the finger lifts at a different
            position than the last MOVE (finger deforms), causing a "whip" effect
            in Grease Pencil strokes. The cursor stays at the last MOVE position. */
-        if (!checkMove) {
+        /* Suppress UP only if the matching DOWN was suppressed (started inside
+           the arc) or grid-move is active. If the stroke started outside the
+           arc, the UP must be sent even if it lifts inside the arc. */
+        bool suppressUp = checkMove || system->m_sculptArcDownSuppressed;
+        system->m_sculptArcDownSuppressed = false;
+        if (!suppressUp) {
             system->pushEvent(
                     new GHOST_EventButton(currentTime, GHOST_TEventType::GHOST_kEventButtonUp,
                                           window, GHOST_SystemAndroid::currentButton(app), td));

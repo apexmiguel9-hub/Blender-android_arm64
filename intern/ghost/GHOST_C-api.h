@@ -28,6 +28,10 @@ extern void blenderGetCursorPosition(int *x, int *y);
 extern bool blenderIsTouchDown(void);
 extern void blenderSetValueOn(int values[],int num);
 extern void blenderSetValueOff(int values[],int num);
+extern void blenderSetActiveTool(const char *idname);
+extern const char *blenderGetActiveToolId(void);
+extern void blenderSetActiveMode(int mode);
+extern int blenderGetActiveMode(void);
 extern void blenderWMInitReinit();
 extern void blenderInputKey(int p_physical_keycode,
                      int p_unicode, int p_key_label, bool p_pressed,

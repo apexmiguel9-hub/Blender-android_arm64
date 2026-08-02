@@ -65,12 +65,32 @@ bool blenderIsTouchDown(void){
     return false;
 }
 void blenderSetValueOn(int values[],int num){
-    GHOST_ISystem *system = GHOST_ISystem::getSystem();
-    system->setValueOn(values,num);
+  GHOST_ISystem *system = GHOST_ISystem::getSystem();
+  system->setValueOn(values,num);
 }
 void blenderSetValueOff(int values[],int num){
-    GHOST_ISystem *system = GHOST_ISystem::getSystem();
-    system->setValueOff(values,num);
+  GHOST_ISystem *system = GHOST_ISystem::getSystem();
+  system->setValueOff(values,num);
+}
+static char g_obl_active_tool_id[256] = "";
+static int g_obl_active_mode = 0;
+void blenderSetActiveTool(const char *idname){
+  if (idname != NULL) {
+    strncpy(g_obl_active_tool_id, idname, sizeof(g_obl_active_tool_id) - 1);
+    g_obl_active_tool_id[sizeof(g_obl_active_tool_id) - 1] = '\0';
+  }
+  else {
+    g_obl_active_tool_id[0] = '\0';
+  }
+}
+const char *blenderGetActiveToolId(void){
+  return g_obl_active_tool_id;
+}
+void blenderSetActiveMode(int mode){
+  g_obl_active_mode = mode;
+}
+int blenderGetActiveMode(void){
+  return g_obl_active_mode;
 }
 void GHOST_showKeyboard(GHOST_WindowHandle windowhandle,char* p_existing_text,
                         int p_type,
