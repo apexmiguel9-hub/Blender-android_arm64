@@ -958,11 +958,11 @@ static bool sculpt_arc_hit_test(uint32_t width, uint32_t height, float posX, flo
     const float arrowHole = std::max(30.0f, width * 0.04f);
 
     /* Arrow handle around the apex (top vertex of the ellipse). The handle
-     * sits slightly below the apex so it does not cover the active tool pill;
+     * sits below the active tool's sphere + label so it does not cover them;
      * the Kotlin overlay draws the chevron at the same offset. */
     const float apexX = cx;
     const float apexY = cy - Ry;
-    const float handleY = apexY + arrowHole * 0.8f;
+    const float handleY = apexY + 80.0f;
     if (std::fabs(posX - apexX) <= arrowHole && std::fabs(posY - handleY) <= arrowHole) {
         return true;
     }
