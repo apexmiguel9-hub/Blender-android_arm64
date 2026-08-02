@@ -923,18 +923,25 @@ static bool checkClickPos(uint32_t width, uint32_t height, float posX, float pos
 }
 
 /* ─── Sculpt arc geometry ────────────────────────────────────────────────
- * The sculpt tool arc is a 180° semicircle anchored to the bottom of the
- * screen, opened upward. The active tool sits at the apex (center). This
- * geometry MUST match the Kotlin overlay (SculptArcOverlay.kt).
+ * The sculpt tool arc is a flattened half-ellipse (a wide "parenthesis")
+ * anchored to the bottom of the screen, opened upward. The active tool sits
+ * at the apex (center). This geometry MUST match the Kotlin overlay
+ * (SculptArcOverlay.kt).
  *
- *   cx, cy     : center of the circle (cy == screen height)
- *   R          : arc radius  = min(w, h) * 0.24
+ *   cx, cy     : center of the ellipse (cy == screen height)
+ *   Rx         : horizontal semi-axis = min(w, h) * 0.40
+ *   Ry         : vertical semi-axis   = min(w, h) * 0.18
  *   bandHalf   : half thickness of the touch band = max(28, w * 0.03)
- *   apex       : top point of the arc = (cx, cy - R)
+ *   apex       : top point of the arc = (cx, cy - Ry)
  *   arrowHole  : half-size of the arrow handle hit zone around the apex
  *
+ * Hit test uses normalized ellipse distance: scale (dx, dy) by (1/Rx, 1/Ry)
+ * to turn the ellipse into a unit circle, then test the band around 1.0.
+ * The band is widened near the horizontal ends so the end tools are easy
+ * to hit.
+ *
  * returns 1 if the point (x,y) is inside the sculpt arc band or the arrow
- * handle, 0 otherwise. Only the upper half of the circle (y <= cy) counts.
+ * handle, 0 otherwise. Only the upper half of the ellipse (y <= cy) counts.
  *
  * When `collapsed` is true (user swiped the handle down to hide the arc),
  * only the arrow handle region intercepts; the rest of the screen draws
@@ -944,14 +951,19 @@ static bool sculpt_arc_hit_test(uint32_t width, uint32_t height, float posX, flo
 {
     const float cx = width * 0.5f;
     const float cy = (float)height;
-    const float R = std::min((float)width, (float)height) * 0.24f;
+    const float minWh = std::min((float)width, (float)height);
+    const float Rx = minWh * 0.40f;
+    const float Ry = minWh * 0.18f;
     const float bandHalf = std::max(28.0f, width * 0.03f);
     const float arrowHole = std::max(30.0f, width * 0.04f);
 
-    /* Arrow handle around the apex (top vertex of the semicircle). */
+    /* Arrow handle around the apex (top vertex of the ellipse). The handle
+     * sits slightly below the apex so it does not cover the active tool pill;
+     * the Kotlin overlay draws the chevron at the same offset. */
     const float apexX = cx;
-    const float apexY = cy - R;
-    if (std::fabs(posX - apexX) <= arrowHole && std::fabs(posY - apexY) <= arrowHole) {
+    const float apexY = cy - Ry;
+    const float handleY = apexY + arrowHole * 0.8f;
+    if (std::fabs(posX - apexX) <= arrowHole && std::fabs(posY - handleY) <= arrowHole) {
         return true;
     }
 
@@ -960,11 +972,12 @@ static bool sculpt_arc_hit_test(uint32_t width, uint32_t height, float posX, flo
         return false;
     }
 
-    /* Arc band: upper half of the circle between R-bandHalf and R+bandHalf. */
-    const float dx = posX - cx;
-    const float dy = posY - cy;
-    const float dist = std::sqrt(dx * dx + dy * dy);
-    if (posY <= cy && dist >= (R - bandHalf) && dist <= (R + bandHalf)) {
+    /* Ellipse band: normalized unit-circle distance within bandN of 1.0. */
+    const float nx = (posX - cx) / Rx;
+    const float ny = (posY - cy) / Ry;
+    const float distN = std::sqrt(nx * nx + ny * ny);
+    const float bandN = bandHalf / Ry;
+    if (posY <= cy && distN >= (1.0f - bandN) && distN <= (1.0f + bandN)) {
         return true;
     }
 
