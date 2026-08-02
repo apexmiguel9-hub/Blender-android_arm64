@@ -952,8 +952,8 @@ static bool sculpt_arc_hit_test(uint32_t width, uint32_t height, float posX, flo
     const float cx = width * 0.5f;
     const float cy = (float)height;
     const float minWh = std::min((float)width, (float)height);
-    const float Rx = minWh * 0.40f;
-    const float Ry = minWh * 0.18f;
+    const float Rx = minWh * 0.75f;
+    const float Ry = minWh * 0.10f;
     const float bandHalf = std::max(28.0f, width * 0.03f);
     const float arrowHole = std::max(30.0f, width * 0.04f);
 
