@@ -929,7 +929,7 @@ static bool checkClickPos(uint32_t width, uint32_t height, float posX, float pos
  *
  *   cx, cy     : center of the arc (cy == screen height)
  *   halfW      : horizontal half-width = width * 0.30 (60% of screen)
- *   arcH       : apex height above the base = width * 0.16
+ *   arcH       : apex height above the base = width * 0.11 (very gentle curve)
  *   bandHalf   : half thickness of the touch band = max(28, w * 0.03)
  *   apex       : top point of the arc = (cx, cy - arcH)
  *   arrowHole  : half-size of the arrow handle hit zone around the apex
@@ -951,7 +951,7 @@ static bool sculpt_arc_hit_test(uint32_t width, uint32_t height, float posX, flo
     const float cx = width * 0.5f;
     const float cy = (float)height;
     const float halfW = width * 0.30f;
-    const float arcH = width * 0.16f;
+    const float arcH = width * 0.11f;
     const float bandHalf = std::max(28.0f, width * 0.03f);
     const float arrowHole = std::max(30.0f, width * 0.04f);
 
