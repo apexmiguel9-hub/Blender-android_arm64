@@ -44,6 +44,8 @@
 #include "RNA_access.h"
 #include "RNA_define.h"
 
+#include "GHOST_C-api.h"
+
 #include "curves_sculpt_intern.hh"
 #include "paint_intern.hh"
 #include "sculpt_intern.hh"
@@ -928,6 +930,12 @@ static bool brush_generic_tool_set(bContext *C,
     char tool_id[MAX_NAME];
     SNPRINTF(tool_id, "builtin_brush.%s", tool_name);
     WM_toolsystem_ref_set_by_id(C, tool_id);
+    /* Update the mobile sculpt-arc overlay's active-tool static directly. The
+     * tool_set_by_id operator is Python-driven and may not run (scripts not
+     * fully loaded / operator lookup fails), leaving g_obl_active_tool_id stale
+     * (e.g. stuck on Draw), which makes the arc keep the OLD tool highlighted
+     * alongside the newly-selected one (double outline). */
+    blenderSetActiveTool(tool_id);
 
     return true;
   }
