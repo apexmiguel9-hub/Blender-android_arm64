@@ -929,8 +929,8 @@ static bool checkClickPos(uint32_t width, uint32_t height, float posX, float pos
  * (SculptArcOverlay.kt).
  *
  *   cx, cy     : center of the ellipse (cy == screen height)
- *   Rx         : horizontal semi-axis = min(w, h) * 0.40
- *   Ry         : vertical semi-axis   = min(w, h) * 0.18
+ *   Rx         : horizontal semi-axis = min(w, h) * 0.72
+ *   Ry         : vertical semi-axis   = min(w, h) * 0.20
  *   bandHalf   : half thickness of the touch band = max(28, w * 0.03)
  *   apex       : top point of the arc = (cx, cy - Ry)
  *   arrowHole  : half-size of the arrow handle hit zone around the apex
@@ -952,8 +952,8 @@ static bool sculpt_arc_hit_test(uint32_t width, uint32_t height, float posX, flo
     const float cx = width * 0.5f;
     const float cy = (float)height;
     const float minWh = std::min((float)width, (float)height);
-    const float Rx = minWh * 0.75f;
-    const float Ry = minWh * 0.10f;
+    const float Rx = minWh * 0.72f;
+    const float Ry = minWh * 0.20f;
     const float bandHalf = std::max(28.0f, width * 0.03f);
     const float arrowHole = std::max(30.0f, width * 0.04f);
 
