@@ -19,6 +19,7 @@
 #include "BKE_context.h"
 #include "BKE_paint.h"
 #include "BKE_pbvh.h"
+#include "BKE_brush.h"
 
 #include "IMB_colormanagement.h"
 
