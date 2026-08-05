@@ -409,6 +409,19 @@ static int sculpt_color_filter_invoke(bContext *C, wmOperator *op, const wmEvent
     v3d->shading.color_type = V3D_SHADING_VERTEX_COLOR;
   }
 
+  /* Android fork: usar el color del brush activo como fill_color (el color picker
+   * del sculpt wheel escribe a brush->rgb via BKE_brush_color_set). Solo si el
+   * operador no recibió un fill_color explícito (default blanco). */
+  if (!RNA_struct_property_is_set(op->ptr, "fill_color")) {
+    Sculpt *sd = CTX_data_tool_settings(C)->sculpt;
+    Brush *br = BKE_paint_brush(&sd->paint);
+    if (br) {
+      float color[3];
+      copy_v3_v3(color, BKE_brush_color_get(CTX_data_scene(C), br));
+      RNA_float_set_array(op->ptr, "fill_color", color);
+    }
+  }
+
   RNA_int_set_array(op->ptr, "start_mouse", event->mval);
 
   if (sculpt_color_filter_init(C, op) == OPERATOR_CANCELLED) {
