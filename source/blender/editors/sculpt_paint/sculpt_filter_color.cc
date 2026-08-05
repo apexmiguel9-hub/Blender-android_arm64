@@ -55,6 +55,26 @@ enum eSculptColorFilterTypes {
 
 static const float fill_filter_default_color[4] = {1.0f, 1.0f, 1.0f, 1.0f};
 
+/* Android fork: ajustes del filtro configurados desde el sculpt wheel de la app.
+ * type/strength se persisten aqui (el operador se crea por trazo y resetea sus
+ * defaults); fill_color se sincroniza SIEMPRE desde el brush activo en init. */
+static bool g_obl_color_filter_active = false;
+static int g_obl_color_filter_type = COLOR_FILTER_FILL;
+static float g_obl_color_filter_strength = 1.0f;
+
+extern "C" void OBL_color_filter_set(int type, float strength)
+{
+  g_obl_color_filter_type = type;
+  g_obl_color_filter_strength = strength;
+  g_obl_color_filter_active = true;
+}
+
+extern "C" void OBL_color_filter_get(int *type, float *strength)
+{
+  *type = g_obl_color_filter_type;
+  *strength = g_obl_color_filter_strength;
+}
+
 static EnumPropertyItem prop_color_filter_types[] = {
     {COLOR_FILTER_FILL, "FILL", 0, "Fill", "Fill with a specific color"},
     {COLOR_FILTER_HUE, "HUE", 0, "Hue", "Change hue"},
@@ -335,6 +355,24 @@ static int sculpt_color_filter_modal(bContext *C, wmOperator *op, const wmEvent 
 
 static int sculpt_color_filter_init(bContext *C, wmOperator *op)
 {
+  /* Android fork: el color filter se configura desde el sculpt wheel de la app.
+   * fill_color SIEMPRE desde el brush activo (el picker escribe brush->rgb); el
+   * type/strength se aplican desde los statics OBL_color_filter_set si la app los
+   * definió (default FILL / 1.0). Se hace aqui (init) para cubrir invoke y exec. */
+  {
+    Sculpt *sd = CTX_data_tool_settings(C)->sculpt;
+    Brush *br = BKE_paint_brush(&sd->paint);
+    if (br) {
+      float color[3];
+      copy_v3_v3(color, BKE_brush_color_get(CTX_data_scene(C), br));
+      RNA_float_set_array(op->ptr, "fill_color", color);
+    }
+    if (g_obl_color_filter_active) {
+      RNA_enum_set(op->ptr, "type", g_obl_color_filter_type);
+      RNA_float_set(op->ptr, "strength", g_obl_color_filter_strength);
+    }
+  }
+
   Object *ob = CTX_data_active_object(C);
   Sculpt *sd = CTX_data_tool_settings(C)->sculpt;
   SculptSession *ss = ob->sculpt;
@@ -408,19 +446,6 @@ static int sculpt_color_filter_invoke(bContext *C, wmOperator *op, const wmEvent
   View3D *v3d = CTX_wm_view3d(C);
   if (v3d && v3d->shading.type == OB_SOLID) {
     v3d->shading.color_type = V3D_SHADING_VERTEX_COLOR;
-  }
-
-  /* Android fork: usar el color del brush activo como fill_color (el color picker
-   * del sculpt wheel escribe a brush->rgb via BKE_brush_color_set). Solo si el
-   * operador no recibió un fill_color explícito (default blanco). */
-  if (!RNA_struct_property_is_set(op->ptr, "fill_color")) {
-    Sculpt *sd = CTX_data_tool_settings(C)->sculpt;
-    Brush *br = BKE_paint_brush(&sd->paint);
-    if (br) {
-      float color[3];
-      copy_v3_v3(color, BKE_brush_color_get(CTX_data_scene(C), br));
-      RNA_float_set_array(op->ptr, "fill_color", color);
-    }
   }
 
   RNA_int_set_array(op->ptr, "start_mouse", event->mval);
