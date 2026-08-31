@@ -98,6 +98,14 @@ class GHOST_ContextEGL : public GHOST_Context {
 
   EGLSurface getSurface() const;
 
+  /**
+   * Recreate the EGL surface with a new native window handle, keeping the
+   * existing EGL context and all its GPU state intact. This is used by
+   * wmInitReInit to avoid destroying the GL context (which would invalidate
+   * all GPU object handles).
+   */
+  GHOST_TSuccess recreateSurface(EGLNativeWindowType nativeWindow);
+
  private:
   bool bindAPI(EGLenum api);
 

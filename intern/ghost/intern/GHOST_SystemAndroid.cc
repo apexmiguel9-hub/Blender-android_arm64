@@ -1902,12 +1902,12 @@ void GHOST_SystemAndroid::inputKey(int p_physical_keycode,
 }
 
 void GHOST_SystemAndroid::wmInitReInit() {
-    // Instead of removing all windows and creating new ones (which breaks Blender's
-    // wmWindow → GHOST window mapping), update existing windows in-place:
-    // update m_nativeWindow to the new ANativeWindow and recreate the EGL context.
+    /* Instead of destroying and recreating the entire EGL context (which
+     * invalidates ALL GL object handles — textures, FBOs, VBOs, shaders —
+     * causing the gray viewport), we only recreate the EGL surface while
+     * keeping the existing EGL context alive. This preserves all GPU state. */
     struct android_app *app = (struct android_app *) m_nativeWindow;
 
-    // DIAGNOSTIC: log new ANativeWindow properties
     ANativeWindow *newWin = app->window;
     if (newWin) {
         int32_t newWidth = ANativeWindow_getWidth(newWin);
@@ -1921,94 +1921,33 @@ void GHOST_SystemAndroid::wmInitReInit() {
     for (auto window : getWindowManager()->getWindows()) {
         GHOST_WindowAndroid *win = (GHOST_WindowAndroid *) window;
 
-        // DIAGNOSTIC: log old EGL state before destroying context
-        {
+        GHOST_ContextEGL *ctx = dynamic_cast<GHOST_ContextEGL *>(win->getDrawingContext());
+        if (ctx) {
             EGLContext curCtx = eglGetCurrentContext();
-            EGLSurface curDraw = eglGetCurrentSurface(EGL_DRAW);
-            EGLSurface curRead = eglGetCurrentSurface(EGL_READ);
             OBL_log("Blender.EGL",
-                "wmInitReInit: BEFORE destruction — current context=0x%p draw=0x%p read=0x%p",
-                (void *)curCtx, (void *)curDraw, (void *)curRead);
-        }
-        GHOST_ContextEGL *oldCtx = dynamic_cast<GHOST_ContextEGL *>(win->getDrawingContext());
-        if (oldCtx) {
-            EGLDisplay dpy = oldCtx->getDisplay();
-            EGLConfig cfg = oldCtx->getConfig();
-            EGLSurface oldSfc = oldCtx->getSurface();
+                "wmInitReInit: BEFORE recreateSurface — context=0x%p surface=0x%p",
+                (void *)curCtx, (void *)ctx->getSurface());
+
+            /* Recreate only the surface, preserving the EGL context and all
+             * its GPU object handles (textures, FBOs, VBOs, shaders, etc.). */
+            GHOST_TSuccess result = ctx->recreateSurface((EGLNativeWindowType)newWin);
+
+            EGLContext afterCtx = eglGetCurrentContext();
+            EGLSurface afterSfc = eglGetCurrentSurface(EGL_DRAW);
             OBL_log("Blender.EGL",
-                "wmInitReInit: OLD surface=0x%p config=0x%p display=0x%p context=0x%p",
-                (void *)oldSfc, (void *)cfg, (void *)dpy, (void *)oldCtx->getContext());
-            if (dpy != EGL_NO_DISPLAY && cfg) {
-                EGLint v;
-                eglGetConfigAttrib(dpy, cfg, EGL_CONFIG_ID, &v);
-                EGLint cid = v;
-                eglGetConfigAttrib(dpy, cfg, EGL_NATIVE_VISUAL_ID, &v);
-                EGLint nid = v;
-                eglGetConfigAttrib(dpy, cfg, EGL_RED_SIZE, &v);
-                EGLint rs = v;
-                eglGetConfigAttrib(dpy, cfg, EGL_GREEN_SIZE, &v);
-                EGLint gs = v;
-                eglGetConfigAttrib(dpy, cfg, EGL_BLUE_SIZE, &v);
-                EGLint bs = v;
-                eglGetConfigAttrib(dpy, cfg, EGL_ALPHA_SIZE, &v);
-                EGLint as = v;
-                eglGetConfigAttrib(dpy, cfg, EGL_BUFFER_SIZE, &v);
-                EGLint bufs = v;
-                eglGetConfigAttrib(dpy, cfg, EGL_SURFACE_TYPE, &v);
-                EGLint st = v;
-                OBL_log("Blender.EGL",
-                    "wmInitReInit: OLD config id=%d nativeVisualID=0x%x "
-                    "R%dG%dB%dA%d bufSize=%d surfType=0x%x",
-                    cid, nid, rs, gs, bs, as, bufs, st);
-            }
+                "wmInitReInit: AFTER recreateSurface result=%d — context=0x%p draw=0x%p",
+                (int)result, (void *)afterCtx, (void *)afterSfc);
         }
-
-        win->m_nativeWindow = app->window;
-
-        // Force recreation of EGL context with the new native window handle.
-        // Must go through None first since setDrawingContextType() is a no-op
-        // when the type hasn't changed.
-        win->setDrawingContextType(GHOST_kDrawingContextTypeNone);
-
-        // DIAGNOSTIC: check if ~GHOST_ContextEGL left any EGL errors during surface/context destruction
-        {
-            EGLint err = eglGetError();
-            if (err != EGL_SUCCESS) {
-                OBL_log("Blender.EGL",
-                    "wmInitReInit: eglError AFTER ~GHOST_ContextEGL destructor = 0x%x", err);
-            } else {
-                OBL_log("Blender.EGL",
-                    "wmInitReInit: eglDestroySurface+eglDestroyContext OK (no error)");
-            }
-        }
-        win->setDrawingContextType(GHOST_kDrawingContextTypeOpenGL);
-
-        // DIAGNOSTIC: log new EGL surface handle and properties after recreation
-        GHOST_ContextEGL *newCtx = dynamic_cast<GHOST_ContextEGL *>(win->getDrawingContext());
-        if (newCtx) {
-            EGLDisplay dpy = newCtx->getDisplay();
-            EGLConfig cfg = newCtx->getConfig();
-            EGLSurface sfc = newCtx->getSurface();
-            EGLSurface currentSfc = eglGetCurrentSurface(EGL_DRAW);
-            OBL_log("Blender.EGL",
-                "wmInitReInit: NEW surface=0x%p (current draw=0x%p) config=0x%p",
-                (void *)sfc, (void *)currentSfc, (void *)cfg);
-            if (dpy != EGL_NO_DISPLAY && sfc != EGL_NO_SURFACE) {
-                EGLint w, h, cid, nid;
-                eglQuerySurface(dpy, sfc, EGL_WIDTH, &w);
-                eglQuerySurface(dpy, sfc, EGL_HEIGHT, &h);
-                eglQuerySurface(dpy, sfc, EGL_CONFIG_ID, &cid);
-                eglGetConfigAttrib(dpy, cfg, EGL_NATIVE_VISUAL_ID, &nid);
-                OBL_log("Blender.EGL",
-                    "wmInitReInit: NEW surface %dx%d configId=%d nativeVisualID=0x%x",
-                    w, h, cid, nid);
-            }
+        else {
+            /* Fallback: no EGL context (should not happen). */
+            OBL_log("Blender.EGL", "wmInitReInit: WARNING — no GHOST_ContextEGL for window");
+            win->m_nativeWindow = app->window;
+            win->setDrawingContextType(GHOST_kDrawingContextTypeNone);
+            win->setDrawingContextType(GHOST_kDrawingContextTypeOpenGL);
         }
     }
 
-    /* Force all windows to redraw after context recreation. Without this, the
-     * viewport stays gray because no region is marked dirty after the EGL
-     * context is destroyed and recreated. */
+    /* Force all windows to redraw after surface recreation. */
     for (auto window : getWindowManager()->getWindows()) {
         addDirtyWindow(window);
     }

@@ -285,6 +285,50 @@ EGLSurface GHOST_ContextEGL::getSurface() const
   return m_surface;
 }
 
+GHOST_TSuccess GHOST_ContextEGL::recreateSurface(EGLNativeWindowType nativeWindow)
+{
+  if (m_display == EGL_NO_DISPLAY || m_context == EGL_NO_CONTEXT) {
+    return GHOST_kFailure;
+  }
+
+  bindAPI(m_api);
+
+  /* Destroy the old surface (but NOT the context — that preserves all GL
+   * object handles: textures, FBOs, VBOs, shaders, etc.). */
+  if (m_surface != EGL_NO_SURFACE) {
+    /* Detach from current thread first if this surface is current. */
+    if (::eglGetCurrentSurface(EGL_DRAW) == m_surface ||
+        ::eglGetCurrentSurface(EGL_READ) == m_surface) {
+      EGL_CHK(::eglMakeCurrent(m_display, EGL_NO_SURFACE, EGL_NO_SURFACE, m_context));
+    }
+    EGL_CHK(::eglDestroySurface(m_display, m_surface));
+    m_surface = EGL_NO_SURFACE;
+  }
+
+  /* Create a new surface from the new native window, reusing the existing
+   * EGL display, config, and context. */
+  m_nativeWindow = nativeWindow;
+  if (m_nativeWindow != 0) {
+    m_surface = ::eglCreateWindowSurface(m_display, m_config, m_nativeWindow, nullptr);
+    m_surface_from_native_window = true;
+  }
+  else {
+    /* Fallback: pbuffer surface (should not happen on Android). */
+    const EGLint pb_attrib_list[] = {EGL_NONE};
+    m_surface = ::eglCreatePbufferSurface(m_display, m_config, pb_attrib_list);
+    m_surface_from_native_window = false;
+  }
+
+  if (m_surface == EGL_NO_SURFACE) {
+    return GHOST_kFailure;
+  }
+
+  /* Make the existing context current with the new surface. */
+  EGL_CHK(::eglMakeCurrent(m_display, m_surface, m_surface, m_context));
+
+  return GHOST_kSuccess;
+}
+
 GHOST_TSuccess GHOST_ContextEGL::activateDrawingContext()
 {
   if (m_display) {
