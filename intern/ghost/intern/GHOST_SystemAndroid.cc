@@ -2005,6 +2005,13 @@ void GHOST_SystemAndroid::wmInitReInit() {
             }
         }
     }
+
+    /* Force all windows to redraw after context recreation. Without this, the
+     * viewport stays gray because no region is marked dirty after the EGL
+     * context is destroyed and recreated. */
+    for (auto window : getWindowManager()->getWindows()) {
+        addDirtyWindow(window);
+    }
 }
 
 //  快捷键键盘输入
