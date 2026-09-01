@@ -1898,9 +1898,6 @@ DRWShadingGroup *DRW_shgroup_material_create(GPUMaterial *material, DRWPass *pas
 
 DRWShadingGroup *DRW_shgroup_create(GPUShader *shader, DRWPass *pass)
 {
-  if (!shader) {
-    return nullptr;
-  }
   DRWShadingGroup *shgroup = drw_shgroup_create_ex(shader, pass);
   drw_shgroup_init(shgroup, shader);
   return shgroup;
@@ -1911,9 +1908,6 @@ DRWShadingGroup *DRW_shgroup_transform_feedback_create(GPUShader *shader,
                                                        GPUVertBuf *tf_target)
 {
   BLI_assert(tf_target != nullptr);
-  if (!shader) {
-    return nullptr;
-  }
   DRWShadingGroup *shgroup = drw_shgroup_create_ex(shader, pass);
   drw_shgroup_init(shgroup, shader);
   drw_shgroup_uniform_create_ex(shgroup,
