@@ -550,6 +550,9 @@ void GPU_shader_transform_feedback_disable(GPUShader *shader)
 
 int GPU_shader_get_uniform(GPUShader *shader, const char *name)
 {
+  if (!shader || !unwrap(shader)->interface) {
+    return -1;
+  }
   const ShaderInterface *interface = unwrap(shader)->interface;
   const ShaderInput *uniform = interface->uniform_get(name);
   return uniform ? uniform->location : -1;
@@ -557,18 +560,27 @@ int GPU_shader_get_uniform(GPUShader *shader, const char *name)
 
 int GPU_shader_get_builtin_uniform(GPUShader *shader, int builtin)
 {
+  if (!shader || !unwrap(shader)->interface) {
+    return -1;
+  }
   const ShaderInterface *interface = unwrap(shader)->interface;
   return interface->uniform_builtin((GPUUniformBuiltin)builtin);
 }
 
 int GPU_shader_get_builtin_block(GPUShader *shader, int builtin)
 {
+  if (!shader || !unwrap(shader)->interface) {
+    return -1;
+  }
   const ShaderInterface *interface = unwrap(shader)->interface;
   return interface->ubo_builtin((GPUUniformBlockBuiltin)builtin);
 }
 
 int GPU_shader_get_ssbo_binding(GPUShader *shader, const char *name)
 {
+  if (!shader || !unwrap(shader)->interface) {
+    return -1;
+  }
   const ShaderInterface *interface = unwrap(shader)->interface;
   const ShaderInput *ssbo = interface->ssbo_get(name);
   return ssbo ? ssbo->location : -1;
@@ -576,6 +588,9 @@ int GPU_shader_get_ssbo_binding(GPUShader *shader, const char *name)
 
 int GPU_shader_get_uniform_block(GPUShader *shader, const char *name)
 {
+  if (!shader || !unwrap(shader)->interface) {
+    return -1;
+  }
   const ShaderInterface *interface = unwrap(shader)->interface;
   const ShaderInput *ubo = interface->ubo_get(name);
   return ubo ? ubo->location : -1;
@@ -583,6 +598,9 @@ int GPU_shader_get_uniform_block(GPUShader *shader, const char *name)
 
 int GPU_shader_get_ubo_binding(GPUShader *shader, const char *name)
 {
+  if (!shader || !unwrap(shader)->interface) {
+    return -1;
+  }
   const ShaderInterface *interface = unwrap(shader)->interface;
   const ShaderInput *ubo = interface->ubo_get(name);
   return ubo ? ubo->binding : -1;
@@ -590,6 +608,9 @@ int GPU_shader_get_ubo_binding(GPUShader *shader, const char *name)
 
 int GPU_shader_get_sampler_binding(GPUShader *shader, const char *name)
 {
+  if (!shader || !unwrap(shader)->interface) {
+    return -1;
+  }
   const ShaderInterface *interface = unwrap(shader)->interface;
   const ShaderInput *tex = interface->uniform_get(name);
   return tex ? tex->binding : -1;
@@ -597,12 +618,18 @@ int GPU_shader_get_sampler_binding(GPUShader *shader, const char *name)
 
 uint GPU_shader_get_attribute_len(const GPUShader *shader)
 {
+  if (!shader || !unwrap(shader)->interface) {
+    return 0;
+  }
   const ShaderInterface *interface = unwrap(shader)->interface;
   return interface->attr_len_;
 }
 
 int GPU_shader_get_attribute(const GPUShader *shader, const char *name)
 {
+  if (!shader || !unwrap(shader)->interface) {
+    return -1;
+  }
   const ShaderInterface *interface = unwrap(shader)->interface;
   const ShaderInput *attr = interface->attr_get(name);
   return attr ? attr->location : -1;
@@ -613,6 +640,9 @@ bool GPU_shader_get_attribute_info(const GPUShader *shader,
                                    char r_name[256],
                                    int *r_type)
 {
+  if (!shader || !unwrap(shader)->interface) {
+    return false;
+  }
   const ShaderInterface *interface = unwrap(shader)->interface;
 
   const ShaderInput *attr = interface->attr_get(attr_location);
